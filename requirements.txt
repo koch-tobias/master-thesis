@@ -4,4 +4,5 @@ xlrd==2.0.1 #For loading excel files
 openpyxl==3.1.2
 openai
 lightgbm==3.3.5
+nltk==3.8.1
 ## Install PyTorch for your system (https://pytorch.org/)
