@@ -7,7 +7,11 @@ from shutil import copy2
 
 # create sidebar to upload the csv file and display the possible labels
 st.set_page_config(page_title="Car Part Classification", page_icon="../plots_images/logos/BMWGrey.svg")
-st.image("../plots_images/logos/BMW_Group_Grey.svg", use_column_width=False, width=25, output_format="SVG", align="right")
+
+st.image("logo2.svg", use_column_width=False, width=50, output_format="SVG", style="position: absolute; top: 10px; left: 10px;")
+
+#st.image("../plots_images/logos/BMW_Group_Grey.svg", use_column_width=False, width=25, output_format="SVG", align="right")
+
 st.title("Car Part Classification")
 col1, col2 = st.columns(2)
 st.sidebar.write("## Excel-Datei hochladen")
