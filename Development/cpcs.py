@@ -8,12 +8,26 @@ from pathlib import Path
 from loguru import logger
 import pickle
 import numpy as np
+from io import BytesIO
+from pyxlsb import open_workbook as open_xlsb
 from nltk.tokenize import WhitespaceTokenizer
 from ipynb.fs.defs.Feature_Engineering import add_new_features
 from ipynb.fs.full.Prepare_data import load_csv_into_df
 from ipynb.fs.defs.Feature_Engineering import preprocess_dataset
 from ipynb.fs.full.Prepare_data import prepare_and_add_labels
 from ipynb.fs.full.Prepare_data import prepare_text
+
+def to_excel(df):
+    output = BytesIO()
+    writer = pd.ExcelWriter(output, engine='xlsxwriter')
+    df.to_excel(writer, index=False, sheet_name='Sheet1')
+    workbook = writer.book
+    worksheet = writer.sheets['Sheet1']
+    format1 = workbook.add_format({'num_format': '0.00'}) 
+    worksheet.set_column('A:A', None, format1)  
+    writer.save()
+    processed_data = output.getvalue()
+    return processed_data
 
 # create sidebar to upload the csv file and display the possible labels
 st.set_page_config(page_title="Car Part Classification", page_icon="../plots_images/logos/BMWGrey.svg")
@@ -97,13 +111,9 @@ if uploaded_file is not None:
     st.write("## Uploaded file:")
     st.write(df_preprocessed)
 
-    st.write("## Download the predictions:")
-    output_file = pd.ExcelWriter(f"{ncars[0]}_relevant_car_parts.xlsx")
-
-    st.download_button(
-        label="Download",
-        data=df_preprocessed.to_excel(output_file, index=False),
-        file_name=f"{ncars[0]}_relevant_car_parts.xlsx"
-        )
+    df_xlsx = to_excel(df)
+    st.download_button(label='📥 Download Current Result',
+                                    data=df_xlsx ,
+                                    file_name= f'{ncars[0]}_relevant_car_parts.xlsx')
 else:
     st.write("## No file uploaded yet.")
