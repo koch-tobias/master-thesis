@@ -98,9 +98,11 @@ if uploaded_file is not None:
     st.write(df_preprocessed)
 
     st.write("## Download the predictions:")
+    output_file = pd.ExcelWriter(f"{ncars[0]}_relevant_car_parts.xlsx")
+
     st.download_button(
         label="Download",
-        data=df_preprocessed.to_excel(index=False),
+        data=df_preprocessed.to_excel(output_file, index=False),
         file_name=f"{ncars[0]}_relevant_car_parts.xlsx"
         )
 else:
