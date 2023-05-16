@@ -9,7 +9,7 @@ from loguru import logger
 import pickle
 import numpy as np
 from io import BytesIO
-from xlsxwriter import Workbook
+from pyxlsb import open_workbook as open_xlsb
 from nltk.tokenize import WhitespaceTokenizer
 from ipynb.fs.defs.Feature_Engineering import add_new_features
 from ipynb.fs.full.Prepare_data import load_csv_into_df
