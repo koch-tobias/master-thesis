@@ -5,4 +5,5 @@ openpyxl==3.1.2
 openai
 lightgbm==3.3.5
 nltk==3.8.1
+xlsxwriter
 ## Install PyTorch for your system (https://pytorch.org/)
