@@ -8,7 +8,7 @@ from shutil import copy2
 # create sidebar to upload the csv file and display the possible labels
 st.set_page_config(page_title="Car Part Classification", page_icon="../plots_images/logos/BMWGrey.svg")
 
-st.image("../plots_images/logos/BMW_Group_Grey.svg", use_column_width=False, width=25, output_format="SVG")
+st.image("../plots_images/logos/BMW_Group_Grey.svg", use_column_width=False, width=5, output_format="SVG")
 
 st.title("Car Part Classification")
 col1, col2 = st.columns(2)
