@@ -100,7 +100,7 @@ if uploaded_file is not None:
     st.write("## Download the predictions:")
     st.download_button(
         label="Download",
-        data=df.to_excel(index=False),
+        data=df_preprocessed.to_excel(index=False),
         file_name=f"{ncars[0]}_relevant_car_parts.xlsx"
         )
 else:
