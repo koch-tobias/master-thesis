@@ -6,7 +6,7 @@ from datetime import datetime
 from shutil import copy2
 
 # create sidebar to upload the csv file and display the possible labels
-st.set_page_config(page_title="Car Part Classification", page_icon="../plots_images/logos/BMWGrey.svg") plots_images/logos\BMW_Group_Grey.svg
+st.set_page_config(page_title="Car Part Classification", page_icon="../plots_images/logos/BMWGrey.svg")
 st.title("Car Part Classification")
 col1, col2 = st.columns(2)
 st.sidebar.write("## Excel-Datei hochladen")
