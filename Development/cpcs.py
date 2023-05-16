@@ -10,6 +10,7 @@ import pickle
 import numpy as np
 from nltk.tokenize import WhitespaceTokenizer
 from ipynb.fs.defs.Feature_Engineering import add_new_features
+from ipynb.fs.full.Prepare_data import load_csv_into_df
 from ipynb.fs.defs.Feature_Engineering import preprocess_dataset
 from ipynb.fs.full.Prepare_data import prepare_and_add_labels
 from ipynb.fs.full.Prepare_data import prepare_text
@@ -41,10 +42,11 @@ st.sidebar.markdown(
 )
 
 dataframes = []
-
 # Display the uploaded file as a pandas dataframe
 if uploaded_file is not None:
-    df = pd.read_excel(uploaded_file)
+    df = pd.read_excel(uploaded_file, header=None, skiprows=1)
+    df.columns = df.iloc[0]
+    df = df.iloc[1:]
     dataframes.append(df)
     df, ncars = prepare_and_add_labels(dataframes, save_as_excel=False)
         
