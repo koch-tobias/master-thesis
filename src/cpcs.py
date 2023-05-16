@@ -31,3 +31,10 @@ st.sidebar.markdown(
     unsafe_allow_html=True
 )
 
+# Display the uploaded file as a pandas dataframe
+if uploaded_file is not None:
+    df = pd.read_excel(uploaded_file)
+    st.write("## Uploaded file:")
+    st.write(df)
+else:
+    st.write("## No file uploaded yet.")
