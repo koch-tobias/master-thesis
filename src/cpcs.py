@@ -5,15 +5,14 @@ import os
 from datetime import datetime
 from shutil import copy2
 
-# initialize labels
-labels = {0: "Label 1", 1: "Label 2", 2: "Label 3", 3: "Label 4", 4: "Label 5"}
-labels_keys = labels.keys()
-
 # create sidebar to upload the csv file and display the possible labels
-st.title("Data Labeling Tool")
+st.set_page_config(page_title="Car Part Classification", page_icon="../plots_images/BMWGrey.svg")
+st.title("Car Part Classification")
 col1, col2 = st.columns(2)
 st.sidebar.write("## Excel-Datei hochladen")
 uploaded_file = st.sidebar.file_uploader("# Excel-Datei hochladen", type="xlsx")
+st.sidebar.image("../plots_images/BMWGrey.svg", use_column_width=True)
+
 
 # CSS, to display the text centered
 st.sidebar.markdown(
@@ -29,10 +28,4 @@ st.sidebar.markdown(
     unsafe_allow_html=True
 )
 
-st.sidebar.write("## Mögliche Labels:")
-col1, col2 = st.sidebar.columns((1, 1))
-for i in range(len(labels)):
-    with col1:
-        st.write(f"<div class='centered-bold'>{i}:</div>", unsafe_allow_html=True)
-    with col2:
-        st.write(f"<div class='centered-bold'>{labels[i]}</div>", unsafe_allow_html=True)
+st.image("../plots_images/BMW_Group_Grey.svg", use_column_width=False, width=100, output_format="SVG")
