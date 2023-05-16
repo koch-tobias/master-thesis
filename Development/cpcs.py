@@ -96,5 +96,12 @@ if uploaded_file is not None:
 
     st.write("## Uploaded file:")
     st.write(df_preprocessed)
+
+    st.write("## Download the predictions:")
+    st.download_button(
+        label="Download",
+        data=df.to_excel(index=False),
+        file_name=f"{ncars[0]}_relevant_car_parts.xlsx"
+        )
 else:
     st.write("## No file uploaded yet.")
