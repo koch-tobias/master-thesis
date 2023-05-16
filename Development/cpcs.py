@@ -9,6 +9,7 @@ from loguru import logger
 import pickle
 import numpy as np
 from io import BytesIO
+from xlsxwriter import Workbook
 from nltk.tokenize import WhitespaceTokenizer
 from ipynb.fs.defs.Feature_Engineering import add_new_features
 from ipynb.fs.full.Prepare_data import load_csv_into_df
@@ -16,7 +17,7 @@ from ipynb.fs.defs.Feature_Engineering import preprocess_dataset
 from ipynb.fs.full.Prepare_data import prepare_and_add_labels
 from ipynb.fs.full.Prepare_data import prepare_text
 
-def to_excel(df):
+def df_to_excel(df):
     output = BytesIO()
     writer = pd.ExcelWriter(output, engine='xlsxwriter')
     df.to_excel(writer, index=False, sheet_name='Sheet1')
@@ -110,7 +111,7 @@ if uploaded_file is not None:
     st.write("## Uploaded file:")
     st.write(df_preprocessed)
 
-    df_xlsx = to_excel(df)
+    df_xlsx = df_to_excel(df)
     st.download_button(label='📥 Download Current Result',
                                     data=df_xlsx ,
                                     file_name= f'{ncars[0]}_relevant_car_parts.xlsx')
