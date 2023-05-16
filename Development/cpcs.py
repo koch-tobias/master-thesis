@@ -111,7 +111,7 @@ if uploaded_file is not None:
     st.write("## Uploaded file:")
     st.write(df_preprocessed)
 
-    df_xlsx = df_to_excel(df)
+    df_xlsx = df_to_excel(df_preprocessed)
     st.download_button(label='📥 Download Current Result',
                                     data=df_xlsx ,
                                     file_name= f'{ncars[0]}_relevant_car_parts.xlsx')
