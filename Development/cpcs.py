@@ -65,17 +65,17 @@ if uploaded_file is not None:
     df, ncars = prepare_and_add_labels(dataframes, save_as_excel=False)
         
     # Load model
-    model_path = "../models/lgbm_16052023_1729/model_9552238805970149.pkl"
+    model_path = "models/lgbm_16052023_1729/model_9552238805970149.pkl"
     with open(model_path, "rb") as fid:
         lgbm = pickle.load(fid)
 
     # Load the vectorizer from the file
-    vectorizer_path = "../models/lgbm_16052023_1729/vectorizer.pkl"
+    vectorizer_path = "models/lgbm_16052023_1729/vectorizer.pkl"
     with open(vectorizer_path, 'rb') as f:
         vectorizer = pickle.load(f)
 
     # Get the vocabulary of the training data
-    vocab_path = '../models/lgbm_16052023_1729/vocabulary.pkl'
+    vocab_path = 'models/lgbm_16052023_1729/vocabulary.pkl'
     with open(vocab_path, 'rb') as f:
         vocabulary = pickle.load(f)
 
