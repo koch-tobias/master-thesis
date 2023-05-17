@@ -7,4 +7,5 @@ lightgbm==3.3.5
 nltk==3.8.1
 pyxlsb
 ipynb
+matplotlib
 ## Install PyTorch for your system (https://pytorch.org/)
