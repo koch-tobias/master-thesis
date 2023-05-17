@@ -30,7 +30,7 @@ def df_to_excel(df):
     return processed_data
 
 # create sidebar to upload the csv file and display the possible labels
-st.set_page_config(page_title="Car Part Classification", page_icon="../plots_images/logos/BMWGrey.svg")
+st.set_page_config(page_title="Car Part Classification", page_icon="plots_images/logos/BMWGrey.svg")
 
 #st.image("../plots_images/logos/BMW_Group_Grey.svg", use_column_width=False, width=5, output_format="SVG")
 
@@ -38,7 +38,7 @@ st.title("Car Part Classification")
 col1, col2 = st.columns(2)
 st.sidebar.write("## Excel-Datei hochladen")
 uploaded_file = st.sidebar.file_uploader("# Excel-Datei hochladen", type="xls")
-st.sidebar.image("../plots_images/logos/BMWGrey.svg", use_column_width=True)
+st.sidebar.image("plots_images/logos/BMWGrey.svg", use_column_width=True)
 
 
 # CSS, to display the text centered
