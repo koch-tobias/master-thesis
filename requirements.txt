@@ -8,4 +8,5 @@ nltk==3.8.1
 pyxlsb
 ipynb
 matplotlib
+xlsxwriter
 ## Install PyTorch for your system (https://pytorch.org/)
