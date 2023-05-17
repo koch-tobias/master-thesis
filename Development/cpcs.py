@@ -36,7 +36,8 @@ st.set_page_config(page_title="Car Part Classification", page_icon="plots_images
 
 st.title("Car Part Classification")
 col1, col2 = st.columns(2)
-uploaded_file = st.sidebar.file_uploader("# Upload Excel-file", type="xls")
+st.sidebar.write("## Upload Excel file")
+uploaded_file = st.sidebar.file_uploader(type="xls")
 st.sidebar.image("plots_images/logos/BMWGrey.svg", use_column_width=True)
 
 
