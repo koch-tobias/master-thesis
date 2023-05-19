@@ -9,7 +9,7 @@ from ipynb.fs.full.Prepare_data import load_csv_into_df
 from ipynb.fs.defs.Feature_Engineering import preprocess_dataset
 from ipynb.fs.full.Prepare_data import prepare_and_add_labels
 from ipynb.fs.full.Prepare_data import prepare_text
-from streamlit.hashing import _CodeHasher
+from streamlit.legacy_caching.hashing import _CodeHasher
 from streamlit.report_thread import get_report_ctx
 from streamlit.server.server import Server
 import base64
