@@ -11,13 +11,13 @@ from ipynb.fs.full.Prepare_data import prepare_and_add_labels
 from ipynb.fs.full.Prepare_data import prepare_text
 #from streamlit.hashing import _CodeHasher
 try:
-    from streamlit.script_run_context import get_script_run_ctx
-except ModuleNotFoundError:
-    # streamlit < 1.4
-    from streamlit.report_thread import (  # type: ignore
-        get_report_ctx as get_script_run_ctx,
-    )
-from streamlit.server.server import Server
+    import streamlit.ReportThread as ReportThread
+    from streamlit.server.Server import Server
+except Exception:
+    # Streamlit >= 0.65.0
+    import streamlit.report_thread as ReportThread
+    from streamlit.server.server import Server
+#from streamlit.server.server import Server
 import base64
 
 def df_to_excel(df):
