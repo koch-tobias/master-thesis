@@ -1,17 +1,12 @@
 credentials:
   usernames:
-    jsmith:
-      email: jsmith@gmail.com
-      name: John Smith
-      password: abc # To be replaced with hashed password
-    rbriggs:
-      email: rbriggs@gmail.com
-      name: Rebecca Briggs
-      password: def # To be replaced with hashed password
+    tkoch:
+      name: Tobias Koch
+      password: $2b$12$IIvHSSuxvK88Fr.j6fiGjOZg2HzAMrbfQs6l9lYJRJEs8ei8n7FaG # To be replaced with hashed password
+    bmwUser:
+      name: User
+      password: $2b$12$4b3KAsHNFujbrMFX4sxdtus9mMibNXyUo8f3Kd18COD8fL7NhHnbO # To be replaced with hashed password
 cookie:
   expiry_days: 30
-  key: 'random_signature_key' # Must be string
-  name: random_cookie_name
-preauthorized:
-  emails:
-  - melsby@gmail.com
+  key: some_signature_key # Must be string
+  name: some_cookie_name
