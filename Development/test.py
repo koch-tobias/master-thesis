@@ -10,13 +10,8 @@ from ipynb.fs.defs.Feature_Engineering import preprocess_dataset
 from ipynb.fs.full.Prepare_data import prepare_and_add_labels
 from ipynb.fs.full.Prepare_data import prepare_text
 #from streamlit.hashing import _CodeHasher
-try:
-    import streamlit.ReportThread as ReportThread
-    from streamlit.server.Server import Server
-except Exception:
-    # Streamlit >= 0.65.0
-    import streamlit.report_thread as ReportThread
-    from streamlit.server.server import Server
+from streamlit.script_run_context import add_script_run_ctx
+from streamlit.server.server import Server
 #from streamlit.server.server import Server
 import base64
 
