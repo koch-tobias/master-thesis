@@ -10,7 +10,13 @@ from ipynb.fs.defs.Feature_Engineering import preprocess_dataset
 from ipynb.fs.full.Prepare_data import prepare_and_add_labels
 from ipynb.fs.full.Prepare_data import prepare_text
 #from streamlit.hashing import _CodeHasher
-from streamlit.report_thread import get_report_ctx
+try:
+    from streamlit.script_run_context import get_script_run_ctx
+except ModuleNotFoundError:
+    # streamlit < 1.4
+    from streamlit.report_thread import (  # type: ignore
+        get_report_ctx as get_script_run_ctx,
+    )
 from streamlit.server.server import Server
 import base64
 
