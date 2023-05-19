@@ -10,7 +10,7 @@ from ipynb.fs.defs.Feature_Engineering import preprocess_dataset
 from ipynb.fs.full.Prepare_data import prepare_and_add_labels
 from ipynb.fs.full.Prepare_data import prepare_text
 #from streamlit.hashing import _CodeHasher
-from streamlit.script_run_context import add_script_run_ctx
+from streamlit.scriptrunner import add_script_run_ctx
 from streamlit.server.server import Server
 #from streamlit.server.server import Server
 import base64
