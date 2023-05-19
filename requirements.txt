@@ -9,4 +9,5 @@ pyxlsb
 ipynb
 matplotlib
 xlsxwriter
+streamlit-authenticator
 ## Install PyTorch for your system (https://pytorch.org/)
