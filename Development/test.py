@@ -13,10 +13,13 @@ import streamlit_authenticator as stauth
 import yaml
 from yaml.loader import SafeLoader
 
+# create sidebar to upload the csv file and display the possible labels
+st.set_page_config(page_title="Car Part Classification", page_icon="plots_images/logos/BMWGrey.svg")
+
 with open('../config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
 
-authenticator = Authenticate(
+authenticator = stauth.Authenticate(
     config['credentials'],
     config['cookie']['name'],
     config['cookie']['key'],
@@ -39,8 +42,6 @@ def df_to_excel(df):
     processed_data = output.getvalue()
     return processed_data
 
-# create sidebar to upload the csv file and display the possible labels
-st.set_page_config(page_title="Car Part Classification", page_icon="plots_images/logos/BMWGrey.svg")
 
 if authentication_status:
     authenticator.logout('Logout', 'main')
