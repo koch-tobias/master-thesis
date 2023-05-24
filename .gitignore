@@ -129,3 +129,6 @@ dmypy.json
 .pyre/
 data/
 models/
+Development/df_preprocessed.xlsx
+.gitignore
+Development/df_test.xlsx
