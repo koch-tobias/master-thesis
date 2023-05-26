@@ -113,7 +113,7 @@ if authentication_status:
 
             df_preprocessed = df_preprocessed[df_preprocessed['Relevant fuer Messung'] == 'Ja']
 
-            df_preprocessed = df_preprocessed.loc[:,["Sachnummer", "Benennung (bereinigt)", "Einheitsname"]]
+            df_preprocessed = df_preprocessed.loc[:,["Sachnummer", "Benennung (dt)", "Einheitsname"]]
         
         st.write(f"## Relevant car parts for the {ncars[0]}:")
         st.write(df_preprocessed)
@@ -123,7 +123,7 @@ if authentication_status:
                                         data=df_xlsx ,
                                         file_name= f'{ncars[0]}_relevant_car_parts.xlsx')
     else:
-        st.write("## No file uploaded yet.")
+        st.write("## No file uploaded yet")
 elif authentication_status == False:
     st.error('Username/password is incorrect')
 elif authentication_status == None:
