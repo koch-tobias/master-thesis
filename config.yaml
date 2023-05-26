@@ -2,10 +2,10 @@ credentials:
   usernames:
     tkoch:
       name: Tobias Koch
-      password: $2b$12$IIvHSSuxvK88Fr.j6fiGjOZg2HzAMrbfQs6l9lYJRJEs8ei8n7FaG # To be replaced with hashed password
-    bmwUser:
+      password: $2b$12$IIvHSSuxvK88Fr.j6fiGjOZg2HzAMrbfQs6l9lYJRJEs8ei8n7FaG # admin
+    bmwuser:
       name: User
-      password: $2b$12$4b3KAsHNFujbrMFX4sxdtus9mMibNXyUo8f3Kd18COD8fL7NhHnbO # To be replaced with hashed password
+      password: $2b$12$4b3KAsHNFujbrMFX4sxdtus9mMibNXyUo8f3Kd18COD8fL7NhHnbO # user
 cookie:
   expiry_days: 30
   key: some_signature_key # Must be string

@@ -118,8 +118,10 @@ if authentication_status:
             df_preprocessed = df_preprocessed[df_preprocessed['Relevant fuer Messung'] == 'Ja']
 
             df_preprocessed = df_preprocessed.loc[:,["Sachnummer", "Benennung (dt)", "Relevant fuer Messung", "Einheitsname"]]
+        
+        ncar = dataframes[i]['Benennung (dt)'][1][:3]
 
-        st.write("## Uploaded file:")
+        st.write(f"## Relevant car parts for the {ncar}:")
         st.write(df_preprocessed)
 
         df_xlsx = df_to_excel(df_preprocessed)
