@@ -4,7 +4,7 @@ import numpy as np
 import pickle
 from io import BytesIO
 from pyxlsb import open_workbook as open_xlsb
-from ipynb.fs.full.Feature_Engineering import preprocess_dataset
+from ipynb.fs.defs.Feature_Engineering import preprocess_dataset
 from ipynb.fs.full.Prepare_data import prepare_and_add_labels
 from ipynb.fs.full.Prepare_data import prepare_text
 import streamlit_authenticator as stauth
@@ -91,8 +91,6 @@ if authentication_status:
         for i in range(len(df)):
 
             df_preprocessed, df_for_plot = preprocess_dataset(df[i], cut_percent_of_front=0.20)
-
-            df_preprocessed["Benennung (dt)"] = df_preprocessed.apply(lambda x: prepare_text(x["Benennung (dt)"]), axis=1)
 
             # Convert the vocabulary list to a dictionary
             vocabulary_dict = {word: index for index, word in enumerate(vocabulary)}
