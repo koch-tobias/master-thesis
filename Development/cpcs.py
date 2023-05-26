@@ -45,8 +45,8 @@ if authentication_status:
 
     st.title("Car Part Classification")
     col1, col2 = st.columns(2)
-    st.sidebar.write("## Upload Excel-File")
-    uploaded_file = st.sidebar.file_uploader("# Short break after upload, the prediction takes a few seconds", type="xls")
+    uploaded_file = st.sidebar.file_uploader("# Upload your Excel file here...", type="xls")
+    st.sidebar.write("After a successful upload, it takes a few seconds for the AI ​​to find the car parts")
     st.sidebar.image("plots_images/logos/BMWGrey.svg", use_column_width=True)
 
 
