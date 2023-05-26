@@ -2,10 +2,10 @@ credentials:
   usernames:
     tkoch:
       name: Tobias Koch
-      password: $2b$12$IIvHSSuxvK88Fr.j6fiGjOZg2HzAMrbfQs6l9lYJRJEs8ei8n7FaG # admin
+      password: $2b$12$FQJlqdF4OZVuAYCI5iC/ku5VyVAYFq72lz4Aj5P/5q.og7LSo.OvW
     bmwuser:
       name: User
-      password: $2b$12$4b3KAsHNFujbrMFX4sxdtus9mMibNXyUo8f3Kd18COD8fL7NhHnbO # user
+      password: $2b$12$yyk72tPkCdPHLd/qHo.YYeW7PWknZ2XwBT/9gzuiWgEkicdYQFfwG
 cookie:
   expiry_days: 30
   key: some_signature_key # Must be string
