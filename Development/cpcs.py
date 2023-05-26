@@ -119,9 +119,7 @@ if authentication_status:
 
             df_preprocessed = df_preprocessed.loc[:,["Sachnummer", "Benennung (dt)", "Relevant fuer Messung", "Einheitsname"]]
         
-        ncar = dataframes[i]['Benennung (dt)'][1][:3]
-
-        st.write(f"## Relevant car parts for the {ncar}:")
+        st.write(f"## Relevant car parts for the {ncars[0]}:")
         st.write(df_preprocessed)
 
         df_xlsx = df_to_excel(df_preprocessed)
