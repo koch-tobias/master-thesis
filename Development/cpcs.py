@@ -97,7 +97,7 @@ if authentication_status:
 
             # Set the vocabulary of the vectorizer to the loaded vocabulary
             vectorizer.vocabulary_ = vocabulary_dict
-            X = vectorizer.transform(df_preprocessed['Benennung (dt)']).toarray()
+            X = vectorizer.transform(df_preprocessed['Benennung (bereinigt)']).toarray()
 
             # Combine text features with other features
             #X = np.concatenate((X, df_preprocessed[['center_x', 'center_y', 'center_z','length','width','height','theta_x','theta_y','theta_z']].values), axis=1)
@@ -113,7 +113,7 @@ if authentication_status:
 
             df_preprocessed = df_preprocessed[df_preprocessed['Relevant fuer Messung'] == 'Ja']
 
-            df_preprocessed = df_preprocessed.loc[:,["Sachnummer", "Benennung (dt)", "Relevant fuer Messung", "Einheitsname"]]
+            df_preprocessed = df_preprocessed.loc[:,["Sachnummer", "Benennung (bereinigt)", "Einheitsname"]]
         
         st.write(f"## Relevant car parts for the {ncars[0]}:")
         st.write(df_preprocessed)
