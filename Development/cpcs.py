@@ -92,7 +92,7 @@ if authentication_status:
 
         for i in range(len(df)):
 
-            df_preprocessed, df_for_plot = preprocess_dataset(df[i], cut_percent_of_front=0.25)
+            df_preprocessed, df_for_plot = preprocess_dataset(df[i], cut_percent_of_front=0.20)
 
             df_preprocessed["Benennung (dt)"] = df_preprocessed.apply(lambda x: prepare_text(x["Benennung (dt)"]), axis=1)
 
