@@ -4,7 +4,7 @@ import numpy as np
 import pickle
 from io import BytesIO
 from pyxlsb import open_workbook as open_xlsb
-from ipynb.fs.defs.Feature_Engineering import preprocess_dataset
+from ipynb.fs.full.Feature_Engineering import preprocess_dataset
 from ipynb.fs.full.Prepare_data import prepare_and_add_labels
 from ipynb.fs.full.Prepare_data import prepare_text
 import streamlit_authenticator as stauth
