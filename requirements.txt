@@ -10,4 +10,5 @@ ipynb
 matplotlib
 xlsxwriter
 streamlit-authenticator
+nbformat
 ## Install PyTorch for your system (https://pytorch.org/)
