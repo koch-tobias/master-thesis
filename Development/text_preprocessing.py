@@ -2,6 +2,7 @@ import re
 import pandas as pd
 import pickle
 from sklearn.feature_extraction.text import CountVectorizer
+import os
 
 # %%
 def prepare_text(designation: str) -> str:
