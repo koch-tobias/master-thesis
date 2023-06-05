@@ -132,3 +132,6 @@ models/
 Development/df_preprocessed.xlsx
 .gitignore
 Development/df_test.xlsx
+
+# Folder
+plots_images/
