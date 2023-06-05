@@ -250,64 +250,6 @@ def augmented_boundingbox(df_original, df_temp):
     return df_temp
 
 # %%
-def data_augmentation_old(df: pd.DataFrame, rand_order:bool, rand_mistakes:bool, gpt:bool, df_to_excel:bool) -> pd.DataFrame:
-    ''' 
-    This function generates synthetic data to extend the data set. 
-    Only the data points that are relevant for a measurement are expanded, since this class is very underrepresented. 
-    A component name is expanded if it contains more than 2 words and at least one of the three data augmentation techniques is activated.
-    Return: New dataset 
-    '''
-    init_openai()
-
-    logger.info("Start adding artificial designations...")
-
-    df = df.drop_duplicates(subset=["Sachnummer"], ignore_index=True)
-
-    # Create a new empty dataframe with the same columns as the original dataframe
-    new_df = df.iloc[[0]]
-
-    # Iterate over the rows in the original dataframe
-    for i, row in df.iterrows():
-        # Copy the orignal sample to a temporary dataframe
-        temp_df = df.iloc[[i]]
-        
-        # Add a new sample to the new dataframe
-        if i>0:
-            new_df = pd.concat([new_df, temp_df], ignore_index=True)
-
-        if row["Relevant fuer Messung"]=="Ja":
-            if len(row["Benennung (dt)"].split()) > 2:
-                if rand_order:
-                    # Generate a new description by random ordering and adding the new sample to the dataset
-                    temp_df.loc[i,"Benennung (dt)"] = random_order(row["Benennung (dt)"])
-                    new_df = pd.concat([new_df, temp_df], ignore_index=True)
-
-                if rand_mistakes:
-                    # Create a new description by incorporating random mistakes and adding the new sample to the dataset
-                    temp_df.loc[i,"Benennung (dt)"] = random_mistakes(row["Benennung (dt)"])
-                    new_df = pd.concat([new_df, temp_df], ignore_index=True)
-            if len(row["Benennung (dt)"].split()) > 1:
-                if gpt:
-                    # Create a new description with GPT and adding the new sample to the dataset
-                    temp_df.loc[i,"Benennung (dt)"] = gpt35_designation(row["Benennung (dt)"])
-                    if len(temp_df["Benennung (dt)"][i]) < 40:
-                        new_df = pd.concat([new_df, temp_df], ignore_index=True)
-            else:
-                continue
-        else: 
-            continue
-    
-    if df_to_excel == True:
-        dateTimeObj = datetime.now()
-        timestamp = dateTimeObj.strftime("%d%m%Y_%H%M")
-
-        new_df.to_excel(f"../data/artificial_dataset_{timestamp}.xlsx")
-
-    logger.success(f"Creating a new dataset with artificial designations was succeccfull!")
-
-    return new_df
-
-# %%
 def data_augmentation(df: pd.DataFrame, rand_order:bool, rand_mistakes:bool, gpt:bool, df_to_excel:bool) -> pd.DataFrame:
     ''' 
     This function generates synthetic data to extend the data set. 
