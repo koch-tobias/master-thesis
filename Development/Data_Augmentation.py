@@ -280,11 +280,11 @@ def data_augmentation(df: pd.DataFrame, rand_order:bool, rand_mistakes:bool, gpt
                 if len(df_temp["Benennung (bereinigt)"][0]) < 40 and df_temp.loc[0,"volume"] > 0:
                     df_temp = augmented_boundingbox(df_new, df_temp)
                     df = pd.concat([df, df_temp], ignore_index=True).reset_index(drop=True)
+    if df_to_excel:
+        dateTimeObj = datetime.now()
+        timestamp = dateTimeObj.strftime("%d%m%Y_%H%M")
 
-    dateTimeObj = datetime.now()
-    timestamp = dateTimeObj.strftime("%d%m%Y_%H%M")
-
-    df.to_excel(f"../data/artificial_dataset_{timestamp}.xlsx")
+        df.to_excel(f"../data/artificial_dataset_{timestamp}.xlsx")
 
     return df
 
