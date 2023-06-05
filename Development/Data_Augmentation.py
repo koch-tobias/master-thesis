@@ -5,16 +5,7 @@ import numpy as np
 import random
 from loguru import logger
 from datetime import datetime
-from scipy.spatial.transform import Rotation
-import math
-
-# %%
-def init_openai():
-    openai.api_type = "azure"
-    openai.api_base = "https://convaip-sbx-openai.openai.azure.com/"
-    # openai.api_version = "2022-12-01" # For GPT3.0
-    openai.api_version = "2023-03-15-preview" # For GPT 3.5
-    openai.api_key = '9e6fa24631f54cf58866766bd31a2bff' #os.getenv("OPENAI_API_KEY")
+from boundingbox_calculations import find_valid_space, random_centerpoint_in_valid_space, calculate_corners
 
 # %%
 def random_order(description: str) -> str:
@@ -104,6 +95,28 @@ def random_mistakes(description: str) -> str:
         return new_description
 
 # %%
+def remove_prefix(response: str) -> str:
+    ''' 
+    The output of GPT has always a prefix like "Answer: " or "Modified Designation: ". This prefix will be deleted that we keep only the generated text.
+    '''
+    index = response.find(":")
+
+    if index != -1:
+        new_response = response[index+1:].lstrip()
+    else:
+        new_response = response
+    
+    return new_response
+
+# %%
+def init_openai():
+    openai.api_type = "azure"
+    openai.api_base = "https://convaip-sbx-openai.openai.azure.com/"
+    # openai.api_version = "2022-12-01" # For GPT3.0
+    openai.api_version = "2023-03-15-preview" # For GPT 3.5
+    openai.api_key = '9e6fa24631f54cf58866766bd31a2bff' #os.getenv("OPENAI_API_KEY")
+
+# %%
 def create_prompt(text: str) -> str:
     prompt = f'''
                 Task:
@@ -139,20 +152,6 @@ def create_prompt(text: str) -> str:
                 """
             '''
     return prompt
-
-# %%
-def remove_prefix(response: str) -> str:
-    ''' 
-    The output of GPT has always a prefix like "Answer: " or "Modified Designation: ". This prefix will be deleted that we keep only the generated text.
-    '''
-    index = response.find(":")
-
-    if index != -1:
-        new_response = response[index+1:].lstrip()
-    else:
-        new_response = response
-    
-    return new_response
 
 # %%
 def gpt30_designation(text: str) -> str:
@@ -192,175 +191,10 @@ def gpt35_designation(text:str) -> str:
     return new_response
 
 # %%
-def find_valid_space(df):
-    x_min = df.loc[0, 'X-Min_transf']
-    x_max = df.loc[0, 'X-Max_transf']
-    y_min = df.loc[0, 'Y-Min_transf']
-    y_max = df.loc[0, 'Y-Max_transf']
-    z_min = df.loc[0, 'Z-Min_transf']
-    z_max = df.loc[0, 'Z-Max_transf']
-
-    for index, row in df.iterrows():
-        if row['X-Min_transf'] < x_min:
-            x_min = row['X-Min_transf']
-        if row['X-Max_transf'] > x_max:
-            x_max = row['X-Max_transf']
-        if row['Y-Min_transf'] < y_min:
-            y_min = row['Y-Min_transf']
-        if row['Y-Max_transf'] > y_max:
-            y_max = row['Y-Max_transf']
-        if row['Z-Min_transf'] < z_min:
-            z_min = row['Z-Min_transf']
-        if row['Z-Max_transf'] > z_max:
-            z_max = row['Z-Max_transf']
-
-    # Add 10% to each side
-    expand_box_percent = 0.10
-    add_length = (x_max - x_min) * expand_box_percent
-    add_width = (y_max - y_min) * expand_box_percent
-    add_height = (z_max - z_min) * expand_box_percent
-    x_min = x_min-add_length
-    x_max = x_max+add_length
-    y_min = y_min-add_width
-    y_max = y_max+add_width
-    z_min = z_min-add_height
-    z_max = z_max+add_height
-
-    length = x_max - x_min 
-    width = y_max - y_min
-    height = z_max - z_min
-
-    # Define the corner matrix
-    corners = np.array([[x_min, y_min, z_min],
-                [x_min, y_min, z_max],
-                [x_min, y_max, z_min],
-                [x_min, y_max, z_max],
-                [x_max, y_min, z_min],
-                [x_max, y_min, z_max],
-                [x_max, y_max, z_min],
-                [x_max, y_max, z_max]])
-
-    return corners, length, width, height
-
-# %%
-def random_centerpoint_in_valid_space(corners, length, width, height):
-    x_min, y_min, z_min = corners[0]
-    x_max, y_max, z_max = corners[7]
-    x_min = x_min + (length/2)
-    x_max = x_max - (length/2)
-    y_min = y_min + (width/2)
-    y_max = y_max - (width/2)
-    z_min = z_min + (height/2)
-    z_max = z_max - (height/2)    
-    x = np.random.uniform(x_min, x_max)
-    y = np.random.uniform(y_min, y_max)
-    z = np.random.uniform(z_min, z_max)
-    return np.array([x, y, z])
-
-# %%
-def get_bounding_box_limits(center_point, length, width, height, theta_x, theta_y, theta_z):
-    # Convert Euler angles to rotation matrix
-    angles = [theta_x, theta_y, theta_z]
-    angles = np.squeeze(angles)
-    r = Rotation.from_euler('xyz', angles, degrees=True)
-    R = r.as_matrix()
-
-    # Define vertices of bounding box in local coordinate system
-    vertices = np.array([
-        [-length/2, -width/2, -height/2],
-        [length/2, -width/2, -height/2],
-        [-length/2, width/2, -height/2],
-        [length/2, width/2, -height/2],
-        [-length/2, -width/2, height/2],
-        [length/2, -width/2, height/2],
-        [-length/2, width/2, height/2],
-        [length/2, width/2, height/2]
-    ])
-
-    # Apply rotation matrix to vertices to transform to global coordinate system
-    transformed_vertices = np.dot(vertices, R.T)
-
-    # Calculate minimum and maximum values of x, y, and z coordinates
-    x_min = np.min(transformed_vertices[:, 0]) + center_point[0]
-    x_max = np.max(transformed_vertices[:, 0]) + center_point[0]
-    y_min = np.min(transformed_vertices[:, 1]) + center_point[1]
-    y_max = np.max(transformed_vertices[:, 1]) + center_point[1]
-    z_min = np.min(transformed_vertices[:, 2]) + center_point[2]
-    z_max = np.max(transformed_vertices[:, 2]) + center_point[2]
-
-    return x_min, x_max, y_min, y_max, z_min, z_max
-
-# %%
-def calculate_corners(center_point, length, width, height, theta_x, theta_y, theta_z): 
-    # Calculate the rotation matrix using the Euler angles
-    rotation_matrix = np.array([
-        [math.cos(float(theta_y.iloc[0])) * math.cos(float(theta_z.iloc[0])), -math.cos(float(theta_y.iloc[0])) * math.sin(float(theta_z.iloc[0])), math.sin(float(theta_y.iloc[0]))],
-        [math.cos(float(theta_x.iloc[0])) * math.sin(float(theta_z.iloc[0])) + math.sin(float(theta_x.iloc[0])) * math.sin(float(theta_y.iloc[0])) * math.cos(float(theta_z.iloc[0])), math.cos(float(theta_x.iloc[0])) * math.cos(float(theta_z.iloc[0])) - math.sin(float(theta_x.iloc[0])) * math.sin(float(theta_y.iloc[0])) * math.sin(float(theta_z.iloc[0])), -math.sin(float(theta_x.iloc[0])) * math.cos(float(theta_y.iloc[0]))],
-        [math.sin(float(theta_x.iloc[0])) * math.sin(float(theta_z.iloc[0])) - math.cos(float(theta_x.iloc[0])) * math.sin(float(theta_y.iloc[0])) * math.cos(float(theta_z.iloc[0])), math.sin(float(theta_x.iloc[0])) * math.cos(float(theta_z.iloc[0])) + math.cos(float(theta_x.iloc[0])) * math.sin(float(theta_y.iloc[0])) * math.sin(float(theta_z.iloc[0])), math.cos(float(theta_x.iloc[0])) * math.cos(float(theta_y.iloc[0]))]
-    ])
-
-    # Calculate the half-lengths of the box along each axis
-    half_length = length / 2
-    half_width = width / 2
-    half_height = height / 2
-
-    # Calculate the coordinates of the eight corners of the box
-    corners = np.array([
-        [-half_length, -half_width, -half_height],
-        [half_length, -half_width, -half_height],
-        [half_length, half_width, -half_height],
-        [-half_length, half_width, -half_height],
-        [-half_length, -half_width, half_height],
-        [half_length, -half_width, half_height],
-        [half_length, half_width, half_height],
-        [-half_length, half_width, half_height]
-    ])
-
-    # Rotate the corners using the rotation matrix
-    rotated_corners = np.dot(corners, rotation_matrix)
-
-    # Translate the corners to the center point
-    translated_corners = rotated_corners + np.array([center_point[0], center_point[1], center_point[2]])
-
-    # Calculate the minimum and maximum x, y, and z coordinates of the new bounding box
-    x_min = np.min(translated_corners[:, 0])
-    x_max = np.max(translated_corners[:, 0])
-    y_min = np.min(translated_corners[:, 1])
-    y_max = np.max(translated_corners[:, 1])
-    z_min = np.min(translated_corners[:, 2])
-    z_max = np.max(translated_corners[:, 2])
-
-    return x_min, x_max, y_min, y_max, z_min, z_max
-    return translated_corners
-# %%
-def get_minmax(list_transformed_bboxes):
-    x_min = np.inf
-    x_max = -np.inf
-    y_min = np.inf
-    y_max = -np.inf
-    z_min = np.inf
-    z_max = -np.inf
-
-    for arr in list_transformed_bboxes:
-        x_coords = arr[:, 0]
-        y_coords = arr[:, 1]
-        z_coords = arr[:, 2]
-        
-        x_min = min(x_min, np.min(x_coords))
-        x_max = max(x_max, np.max(x_coords))
-        y_min = min(y_min, np.min(y_coords))
-        y_max = max(y_max, np.max(y_coords))
-        z_min = min(z_min, np.min(z_coords))
-        z_max = max(z_max, np.max(z_coords))
-
-    return x_min, x_max, y_min, y_max, z_min, z_max
-
-# %%
 def augmented_boundingbox(df_original, df_temp):
     corners, valid_length, valid_width, valid_height = find_valid_space(df_original)
     list_corners = []
     list_corners.append(corners)
-    valid_x_min, valid_x_max, valid_y_min, valid_y_max, valid_z_min, valid_z_max = get_minmax(list_corners)
 
     # Generate random values for length, width, and height until the volume is within the desired range
     min_volume = df_original['volume'].min()
@@ -386,22 +220,16 @@ def augmented_boundingbox(df_original, df_temp):
     length = 0
     width = 0
     height = 0
-    #logger.info(f"{min_volume}, {max_volume}, {valid_x_max}, {valid_x_min}, {valid_y_max}, {valid_y_min}, {valid_z_min}, {valid_z_max}, {valid_length}, {valid_width}, {valid_height}")
     
     while(volume < min_volume or volume > max_volume):
         length = np.random.uniform(min_length, max_length)
-        #min_width = math.sqrt(min_volume / length)
         width = np.random.uniform(min_width, max_width)
-        #min_height = min_volume / (length*width)
         height = np.random.uniform(min_height, max_height)
         volume = length * width * height
         
 
     center_point = random_centerpoint_in_valid_space(corners, length, width, height)
-    #logger.info(f"x:{center_point[0]} y: {center_point[1]} z: {center_point[2]}")
-    #while (x_min > valid_x_min or x_max < valid_x_max or y_min > valid_y_min or y_max < valid_y_max or z_min > valid_z_min or z_max < valid_x_max): 
     x_min, x_max, y_min, y_max, z_min, z_max = calculate_corners(center_point, length, width, height, df_temp["theta_x"], df_temp["theta_y"], df_temp["theta_z"])
-    #logger.info(f"L:{length}, W:{width}, H:{height}, {x_min}, {x_max}, {y_min}, {y_max}, {z_min}, {z_max}, V:{volume}")
 
     # Modify the bounding box information
     df_temp.loc[0, "X-Min_transf"] = x_min

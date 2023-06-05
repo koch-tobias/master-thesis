@@ -1,6 +1,9 @@
-lgbm_params = {
+general_params = {
     "seed": 42,
     "cut_percent_of_front": 0.20,
+}
+
+lgbm_params = {
     "test_size": 0.4,
     "metrics": ['auc', 'binary_logloss'],
      "n_estimators": 1000,

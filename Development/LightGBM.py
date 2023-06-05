@@ -1,11 +1,8 @@
 # %%
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 
-import random
 import pickle
-from datetime import datetime
 from loguru import logger
 
 import lightgbm as lgb
@@ -15,20 +12,9 @@ from sklearn.metrics import accuracy_score
 from sklearn.model_selection import KFold
 from sklearn.metrics import ConfusionMatrixDisplay
 
-from Prepare_data import train_test_val, train_test_val_kfold, load_csv_into_df, combine_dataframes
-from Feature_Engineering import preprocess_dataset
-from Data_Augmentation import data_augmentation
+from Prepare_data import load_prepare_dataset
 from config import lgbm_params
 from config import lgbm_hyperparameter as lgbm_hp
-
-# %%
-def get_vocabulary(column):
-    text = ' '.join(column.astype(str))
-    words = text.upper().split()
-    word_counts = pd.Series(words).value_counts()
-    vocabulary = word_counts.index.tolist()
-
-    return vocabulary
 
 # %%
 def store_predictions(model, X_test, y_test, y_pred, probs, features, timestamp):
@@ -78,47 +64,7 @@ def store_predictions(model, X_test, y_test, y_pred, probs, features, timestamp)
 
             print('------------------------')
 
-# %%
-def load_prepare_dataset(folder_path, only_text, augmentation, kfold):
-    dataframes_list = load_csv_into_df(folder_path, original_prisma_data=False, move_to_archive=False)
-    random.seed(33)
-    # Take random dataset from list as test set and drop it from the list
-    random_index = random.randint(0, len(dataframes_list) - 1)
-    ncar = ['G14', 'G15', 'G22', 'G23', 'G61', 'G65', 'NA5', 'NA7']
-    df_test = dataframes_list[random_index]
-    dataframes_list.pop(random_index)
-    logger.info(f"Car {ncar[random_index]} is used to test the model on unseen data!")
-    df_combined = combine_dataframes(dataframes_list)
-    df_preprocessed, df_for_plot = preprocess_dataset(df_combined, cut_percent_of_front=lgbm_params["cut_percent_of_front"])
-    df_test, df_test_for_plot = preprocess_dataset(df_test, cut_percent_of_front=lgbm_params["cut_percent_of_front"])
 
-    df_preprocessed.to_excel("df_preprocessed.xlsx")
-    df_test.to_excel("df_test.xlsx")
-
-    vocab = get_vocabulary(df_preprocessed['Benennung (bereinigt)'])
-
-    if augmentation:
-        # Declare which data augmentation techniques should be used
-        rand_order = True
-        rand_mistakes = False
-        gpt = True
-
-        # Generate the new dataset
-        df_preprocessed = data_augmentation(df_preprocessed, rand_order, rand_mistakes, gpt, df_to_excel = False)
-        df_preprocessed.to_excel("augmented_data.xlsx")
-
-    weight_factor = round(df_preprocessed[df_preprocessed["Relevant fuer Messung"]=="Nein"].shape[0] / df_preprocessed[df_preprocessed["Relevant fuer Messung"]=="Ja"].shape[0])
-
-    dateTimeObj = datetime.now()
-    timestamp = dateTimeObj.strftime("%d%m%Y_%H%M")
-
-    # Split dataset
-    if kfold:
-        X, y, X_test, y_test, features = train_test_val_kfold(df_preprocessed, df_test, only_text, test_size=lgbm_params["test_size"], timestamp=timestamp)
-        return X, y, X_test, y_test, features, weight_factor, timestamp, vocab
-    else:
-        X_train, y_train, X_val, y_val, X_test, y_test, features = train_test_val(df_preprocessed, df_test, only_text, test_size=lgbm_params["test_size"], timestamp=timestamp)
-        return X_train, y_train, X_val, y_val, X_test, y_test, features, weight_factor, timestamp, vocab
 
 # %%
 def train_model(X_train, y_train, X_val, y_val, weight_factor):
@@ -181,7 +127,7 @@ def main(crossvalidation: bool):
     if crossvalidation == False:
         # Split dataset
         folder_path = "../data/labeled_data/"
-        X_train, y_train, X_val, y_val, X_test, y_test, features, weight_factor, timestamp, vocab = load_prepare_dataset(folder_path, only_text=False, augmentation=True, kfold=False)
+        X_train, y_train, X_val, y_val, X_test, y_test, features, weight_factor, timestamp, vocab = load_prepare_dataset(folder_path, only_text=False, test_size=lgbm_params["test_size"], augmentation=True, kfold=False)
 
         store_model = False
         show_preds = True
@@ -202,7 +148,7 @@ def main(crossvalidation: bool):
         store_model = False
         show_preds = False
 
-        X_train, y_train, X_test, y_test, features, weight_factor, timestamp, vocab = load_prepare_dataset(folder_path, augmentation=True, kfold=True)
+        X_train, y_train, X_test, y_test, features, weight_factor, timestamp, vocab = load_prepare_dataset(folder_path, augmentation=True, test_size=lgbm_params["test_size"], kfold=True)
 
         kfold = KFold(n_splits=7, shuffle=True, random_state=42)
         evals_list = []

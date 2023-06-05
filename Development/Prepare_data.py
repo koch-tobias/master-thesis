@@ -1,15 +1,18 @@
 # %%
 import pandas as pd
 import os
-import re
 from loguru import logger
 from pathlib import Path
 from datetime import datetime
 import shutil
 from sklearn.model_selection import train_test_split
-from sklearn.feature_extraction.text import CountVectorizer
 import numpy as np
-import pickle
+import random
+from text_preprocessing import vectorize_data
+from Feature_Engineering import preprocess_dataset
+from text_preprocessing import get_vocabulary
+from Data_Augmentation import data_augmentation
+from config import general_params
 
 # %% [markdown]
 # ### Functions
@@ -181,65 +184,6 @@ def prepare_and_add_labels(dataframes: list, save_as_excel: bool):
     
     return dataframes_with_labels, ncars
 
-
-# %%
-def prepare_text(designation: str) -> str:
-    # transform to lower case
-    text = str(designation).upper()
-
-    # Removing punctations
-    text = re.sub(r"[^\w\s]", "", text)
-
-    # Removing numbers
-    text = ''.join([i for i in text if not i.isdigit()])
-
-    # tokenize text
-    text = text.split(" ")
-
-    # Remove predefined words
-    predefined_words = ['ZB', 'AF', 'LI', 'RE', 'MD', 'LL', 'TAB', 'TB']
-    if len(predefined_words) > 0:
-        text = [word for word in text if word not in predefined_words]
-
-    # Remove words with only one letter
-    text = [word for word in text if len(word) > 1]
-
-    # remove empty tokens
-    text = [t for t in text if len(t) > 0]
-
-    # join all
-    prepared_designation = " ".join(text)
-
-    return prepared_designation
-
-# %%
-def vectorize_data(data: pd.DataFrame, df_val, timestamp) -> tuple:
-    #token = WhitespaceTokenizer()
-    #vectorizer = TfidfVectorizer(analyzer="word", tokenizer=token.tokenize)
-
-    vectorizer = CountVectorizer(analyzer='char', ngram_range=(3, 8))
-
-    X_text = vectorizer.fit_transform(data['Benennung (bereinigt)']).toarray()
-    X_test = vectorizer.transform(df_val['Benennung (bereinigt)']).toarray()
-
-    # Store the vocabulary
-    vocabulary = vectorizer.get_feature_names_out()
-
-    # Save the vectorizer and vocabulary to files
-    os.makedirs(f'../models/lgbm_{timestamp}')
-    with open(f'../models/lgbm_{timestamp}/vectorizer.pkl', 'wb') as f:
-        pickle.dump(vectorizer, f)
-    with open(f'../models/lgbm_{timestamp}/vocabulary.pkl', 'wb') as f:
-        pickle.dump(vocabulary, f)
-
-    return X_text, X_test
-
-# %%
-def clean_text(df):
-    df["Benennung (bereinigt)"] = df.apply(lambda x: prepare_text(x["Benennung (dt)"]), axis=1)
-
-    return df
-
 # %%
 def train_test_val(df, df_test,only_text: bool, test_size:float, timestamp):
     
@@ -263,8 +207,6 @@ def train_test_val(df, df_test,only_text: bool, test_size:float, timestamp):
 
 # %%
 def train_test_val_kfold(df, df_test, timestamp):
-    #df["Benennung (dt)"] = df.apply(lambda x: prepare_text(x["Benennung (dt)"]), axis=1)
-    #df_test["Benennung (dt)"] = df_test.apply(lambda x: prepare_text(x["Benennung (dt)"]), axis=1)
 
     X, X_test = vectorize_data(df, df_test, timestamp)
 
@@ -279,6 +221,48 @@ def train_test_val_kfold(df, df_test, timestamp):
     y_test = y_test.map({'Ja': 1, 'Nein': 0})
 
     return X, y, X_test, y_test, features
+
+# %%
+def load_prepare_dataset(folder_path, only_text, augmentation, test_size, kfold):
+    dataframes_list = load_csv_into_df(folder_path, original_prisma_data=False, move_to_archive=False)
+    random.seed(33)
+    # Take random dataset from list as test set and drop it from the list
+    random_index = random.randint(0, len(dataframes_list) - 1)
+    ncar = ['G14', 'G15', 'G22', 'G23', 'G61', 'G65', 'NA5', 'NA7']
+    df_test = dataframes_list[random_index]
+    dataframes_list.pop(random_index)
+    logger.info(f"Car {ncar[random_index]} is used to test the model on unseen data!")
+    df_combined = combine_dataframes(dataframes_list)
+    df_preprocessed, df_for_plot = preprocess_dataset(df_combined, cut_percent_of_front=general_params["cut_percent_of_front"])
+    df_test, df_test_for_plot = preprocess_dataset(df_test, cut_percent_of_front=general_params["cut_percent_of_front"])
+
+    df_preprocessed.to_excel("df_preprocessed.xlsx")
+    df_test.to_excel("df_test.xlsx")
+
+    vocab = get_vocabulary(df_preprocessed['Benennung (bereinigt)'])
+
+    if augmentation:
+        # Declare which data augmentation techniques should be used
+        rand_order = True
+        rand_mistakes = False
+        gpt = True
+
+        # Generate the new dataset
+        df_preprocessed = data_augmentation(df_preprocessed, rand_order, rand_mistakes, gpt, df_to_excel = False)
+        df_preprocessed.to_excel("augmented_data.xlsx")
+
+    weight_factor = round(df_preprocessed[df_preprocessed["Relevant fuer Messung"]=="Nein"].shape[0] / df_preprocessed[df_preprocessed["Relevant fuer Messung"]=="Ja"].shape[0])
+
+    dateTimeObj = datetime.now()
+    timestamp = dateTimeObj.strftime("%d%m%Y_%H%M")
+
+    # Split dataset
+    if kfold:
+        X, y, X_test, y_test, features = train_test_val_kfold(df_preprocessed, df_test, only_text, test_size=test_size, timestamp=timestamp)
+        return X, y, X_test, y_test, features, weight_factor, timestamp, vocab
+    else:
+        X_train, y_train, X_val, y_val, X_test, y_test, features = train_test_val(df_preprocessed, df_test, only_text, test_size=test_size, timestamp=timestamp)
+        return X_train, y_train, X_val, y_val, X_test, y_test, features, weight_factor, timestamp, vocab
 
 # %% [markdown]
 # ### Main
