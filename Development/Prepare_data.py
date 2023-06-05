@@ -12,7 +12,7 @@ from text_preprocessing import vectorize_data
 from Feature_Engineering import preprocess_dataset
 from text_preprocessing import get_vocabulary
 from Data_Augmentation import data_augmentation
-from config import general_params
+from config import general_params, convert_dict, paths
 
 # %% [markdown]
 # ### Functions
@@ -90,14 +90,7 @@ def combine_dataframes(dataframes: list) -> pd.DataFrame:
     return merged_df    
 
 # %%
-def df_info_to_excel(df: pd.DataFrame):
-    '''
-    This function saves feature informations in an excel file
-    '''
-    pd.DataFrame({"name": df.columns, "non-nulls": len(df)-df.isnull().sum().values, "nulls": df.isnull().sum().values, "type": df.dtypes.values}).to_excel("data_infos.xlsx")
-
-# %%
-def prepare_and_add_labels(dataframes: list, save_as_excel: bool):
+def prepare_and_add_labels(dataframes: list):
 
     logger.info("Start preprocessing the data...")
     dataframes_with_labels = []
@@ -105,62 +98,36 @@ def prepare_and_add_labels(dataframes: list, save_as_excel: bool):
 
     for i in range(len(dataframes)):
         # Store the ncar abbreviation for file paths
-        ncar = dataframes[i]['Benennung (dt)'][1][:3]
+        ncar = dataframes[i][general_params["car_part_designation"]][1][:3]
         ncars.append(ncar)
 
-        # Temporary store the modul for the interior mirror
-        level_interor_mirror = dataframes[i][dataframes[i]['Benennung (dt)'].str.startswith(f'{ncar} CE05')]["Ebene"].values[0]
-        startindex_interor_mirror = dataframes[i][dataframes[i]['Benennung (dt)'].str.startswith(f'{ncar} CE05')].index[-1]+1
-        endindex_interor_mirror = dataframes[i].loc[(dataframes[i]["Ebene"] == level_interor_mirror) & (dataframes[i].index > startindex_interor_mirror)].index[0]-1
-        temp_interor_mirror = dataframes[i].loc[startindex_interor_mirror:endindex_interor_mirror]
+        for modules in general_params["keep_modules"]:
+            # Temporary store the module for the interior mirror
+            level = dataframes[i][dataframes[i][general_params["car_part_designation"]].str.startswith(f'{ncar} {modules}')]["Ebene"].values[0]
+            startindex = dataframes[i][dataframes[i][general_params["car_part_designation"]].str.startswith(f'{ncar} {modules}')].index[-1]+1
+            endindex = dataframes[i].loc[(dataframes[i]["Ebene"] == level) & (dataframes[i].index > startindex)].index[0]-1
+            temp = dataframes[i].loc[startindex:endindex]
+            dataframes[i] = pd.concat([dataframes[i], temp]).reset_index(drop=True)
 
-        # Temporary store the modul for the roof antenna
-        level_roof_antenna = dataframes[i][dataframes[i]['Benennung (dt)'].str.startswith(f'{ncar} CD07')]["Ebene"].values[0]
-        startindex_roof_antenna = dataframes[i][dataframes[i]['Benennung (dt)'].str.startswith(f'{ncar} CD07')].index[-1]+1
+        # Temporary store the module for the roof antenna
+        level_roof_antenna = dataframes[i][dataframes[i][general_params["car_part_designation"]].str.startswith(f'{ncar} CD07')]["Ebene"].values[0]
+        startindex_roof_antenna = dataframes[i][dataframes[i][general_params["car_part_designation"]].str.startswith(f'{ncar} CD07')].index[-1]+1
         endindex_roof_antenna = dataframes[i].loc[(dataframes[i]["Ebene"] == level_roof_antenna) & (dataframes[i].index > startindex_roof_antenna)].index[0]-1
         temp_roof_antenna = dataframes[i].loc[startindex_roof_antenna:endindex_roof_antenna]
 
-        # Keep only car parts of module group EP
-        index_EF_module = dataframes[i][dataframes[i]['Benennung (dt)'].str.startswith(f'EF {ncar}')].index[-1]
+        # Keep only car parts of module group EF
+        index_EF_module = dataframes[i][dataframes[i][general_params["car_part_designation"]].str.startswith(f'EF {ncar}')].index[-1]
         dataframes[i] = dataframes[i].loc[:index_EF_module-1]
-
-        # Add interor mirror 
-        dataframes[i] = pd.concat([dataframes[i], temp_interor_mirror]).reset_index(drop=True)
-    
-        # Add roof antenna 
-        dataframes[i] = pd.concat([dataframes[i], temp_roof_antenna]).reset_index(drop=True)
 
         # Keep only the relevant samples with Dok-Format=5P. This samples are on the last level of the car structure
         dataframes[i] = dataframes[i][dataframes[i]["Dok-Format"]=='5P'].reset_index(drop=True)
 
         # Delete the NCAR abbreviation because of data security reasons
-        dataframes[i]["Benennung (dt)"] = dataframes[i]["Benennung (dt)"].apply(lambda x: x.replace(ncar, ""))
+        dataframes[i][general_params["car_part_designation"]] = dataframes[i][general_params["car_part_designation"]].apply(lambda x: x.replace(ncar, ""))
 
         # Keep only features which are identified as relevant for the preprocessing, the predictions or for the users' next steps
-        dataframes[i] = dataframes[i][['Sachnummer','Benennung (dt)', 'X-Min','X-Max','Y-Min','Y-Max','Z-Min','Z-Max', 'Wert','Einheit','Gewichtsart','Kurzname','L-Kz.', 'L/R-Kz.', 'Modul (Nr)', 'ox','oy', 'oz', 'xx','xy','xz', 'yx','yy','yz','zx','zy','zz']]
-
-        # using dictionary to convert specific columns
-        convert_dict = {'X-Min': float,
-                        'X-Max': float,
-                        'Y-Min': float,
-                        'Y-Max': float,
-                        'Z-Min': float,
-                        'Z-Max': float,
-                        'Wert': float,
-                        'ox': float,
-                        'oy': float,
-                        'oz': float,
-                        'xx': float,
-                        'xy': float,
-                        'xz': float,
-                        'yx': float,
-                        'yy': float,
-                        'yz': float,
-                        'zx': float,
-                        'zy': float,
-                        'zz': float                     
-                        }
-        
+        dataframes[i] = dataframes[i][general_params["relevant_features"]]
+       
         dataframes[i] = dataframes[i].astype(convert_dict)
 
         # Add columns for the label "Relevant für Messung" and "Allgemeine Bezeichnung"
@@ -169,7 +136,7 @@ def prepare_and_add_labels(dataframes: list, save_as_excel: bool):
         data_labeled.insert(len(data_labeled.columns), 'Einheitsname', 'Dummy')
         dataframes_with_labels.append(data_labeled)
 
-        if save_as_excel==True:
+        if general_params["save_prepared_dataset_for_labeling"]:
             # Date
             dateTimeObj = datetime.now()
             timestamp = dateTimeObj.strftime("%d%m%Y_%H%M")
@@ -177,21 +144,20 @@ def prepare_and_add_labels(dataframes: list, save_as_excel: bool):
             # Store preprocessed dataframes
             dataframes_with_labels[i].to_excel(f"../data/preprocessed_data/{ncar}_preprocessed_{timestamp}.xlsx")
 
-    if save_as_excel == True:
-        logger.success(f"The features are reduced and formated to the correct data type. The new dataset is stored as {ncar}_preprocessed_{timestamp}.xlsx!")
-    else:
-        logger.success(f"The features are reduced and formated to the correct data type!")
+            logger.success(f"The features are reduced and formated to the correct data type. The new dataset is stored as {ncar}_preprocessed_{timestamp}.xlsx!")
+        else:
+            logger.success(f"The features are reduced and formated to the correct data type!")
     
     return dataframes_with_labels, ncars
 
 # %%
-def train_test_val(df, df_test,only_text: bool, test_size:float, timestamp):
+def train_test_val(df, df_test, test_size:float, timestamp):
     
     X, X_test = vectorize_data(df, df_test, timestamp)
 
     # Combine text features with other features
-    features = ['center_x', 'center_y', 'center_z','length','width','height','theta_x','theta_y','theta_z']
-    if only_text == False:
+    features = general_params["features_for_model"]
+    if general_params["use_only_text"]:
         X = np.concatenate((X, df[features].values), axis=1)
         X_test = np.concatenate((X_test, df_test[features].values), axis=1)
 
@@ -211,8 +177,9 @@ def train_test_val_kfold(df, df_test, timestamp):
     X, X_test = vectorize_data(df, df_test, timestamp)
 
     # Combine text features with other features
-    features = ['center_x', 'center_y', 'center_z','length','width','height','theta_x','theta_y','theta_z']
-    #X = np.concatenate((X, df[features].values), axis=1)
+    if general_params["use_only_text"]:
+        features = general_params["features_for_model"]
+        X = np.concatenate((X, df[features].values), axis=1)
 
     y = df['Relevant fuer Messung']
     y = y.map({'Ja': 1, 'Nein': 0})
@@ -228,7 +195,7 @@ def load_prepare_dataset(folder_path, only_text, augmentation, test_size, kfold)
     random.seed(33)
     # Take random dataset from list as test set and drop it from the list
     random_index = random.randint(0, len(dataframes_list) - 1)
-    ncar = ['G14', 'G15', 'G22', 'G23', 'G61', 'G65', 'NA5', 'NA7']
+    ncar = general_params["ncars"]
     df_test = dataframes_list[random_index]
     dataframes_list.pop(random_index)
     logger.info(f"Car {ncar[random_index]} is used to test the model on unseen data!")
@@ -236,8 +203,9 @@ def load_prepare_dataset(folder_path, only_text, augmentation, test_size, kfold)
     df_preprocessed, df_for_plot = preprocess_dataset(df_combined, cut_percent_of_front=general_params["cut_percent_of_front"])
     df_test, df_test_for_plot = preprocess_dataset(df_test, cut_percent_of_front=general_params["cut_percent_of_front"])
 
-    df_preprocessed.to_excel("df_preprocessed.xlsx")
-    df_test.to_excel("df_test.xlsx")
+    if general_params["save_preprocessed_data"]:
+        df_preprocessed.to_excel("df_preprocessed.xlsx")
+        df_test.to_excel("df_test.xlsx")
 
     vocab = get_vocabulary(df_preprocessed['Benennung (bereinigt)'])
 
@@ -269,7 +237,7 @@ def load_prepare_dataset(folder_path, only_text, augmentation, test_size, kfold)
 # %%
 def main():
     # Define the path to the folder containing the data (xls files)
-    data_folder = Path("../data/labeled_data")
+    data_folder = Path(paths["labeled_data"])
     dataframes = load_csv_into_df(data_folder, original_prisma_data=False, move_to_archive=False)
     df = combine_dataframes(dataframes)
 
