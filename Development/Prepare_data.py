@@ -248,8 +248,7 @@ def load_prepare_dataset(folder_path, only_text, augmentation, test_size, kfold)
         gpt = True
 
         # Generate the new dataset
-        df_preprocessed = data_augmentation(df_preprocessed, rand_order, rand_mistakes, gpt, df_to_excel = False)
-        df_preprocessed.to_excel("augmented_data.xlsx")
+        df_preprocessed = data_augmentation(df_preprocessed, rand_order, rand_mistakes, gpt, df_to_excel = general_params["save_artificial_dataset"])
 
     weight_factor = round(df_preprocessed[df_preprocessed["Relevant fuer Messung"]=="Nein"].shape[0] / df_preprocessed[df_preprocessed["Relevant fuer Messung"]=="Ja"].shape[0])
 

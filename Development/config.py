@@ -1,6 +1,7 @@
 general_params = {
     "seed": 42,
     "cut_percent_of_front": 0.20,
+    "save_artificial_dataset": False
 }
 
 lgbm_params = {
