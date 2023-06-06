@@ -41,9 +41,10 @@ def df_to_excel(df):
     processed_data = output.getvalue()
     return processed_data
 
+@st.cache_data
 def logout():
     authenticator.logout('Logout', 'main')
-    caching.clear_cache()
+    
 
 if authentication_status:
     #authenticator.logout('Logout', 'main')
