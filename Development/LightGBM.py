@@ -127,24 +127,18 @@ def main():
         # Split dataset
         X_train, y_train, X_val, y_val, X_test, y_test, weight_factor, timestamp, vocab = load_prepare_dataset(test_size=lgbm_params["test_size"])
 
-        store_model = False
-        show_preds = True
-
         gbm, evals = train_model(X_train, y_train, X_val, y_val, weight_factor)
         y_pred, probs, test_acc = evaluate_model(gbm, X_test, y_test, evals, timestamp)
 
-        if show_preds:
+        if train_settings["print_predictions"]:
             store_predictions(gbm, X_test, y_test, y_pred, probs, timestamp)
 
-        if store_model:
+        if train_settings["store_trained_model"]:
             store_trained_model(gbm, test_acc, timestamp)
 
         plot_importance(gbm, max_num_features=10)
     else:
         # Split dataset
-        store_model = train_settings["store_trained_model"]
-        show_preds = train_settings["print_predictions"]
-
         X_train, y_train, X_test, y_test, weight_factor, timestamp, vocab = load_prepare_dataset(test_size=lgbm_params["test_size"])
 
         kfold = KFold(n_splits=train_settings["k-folds"], shuffle=True, random_state=42)
@@ -159,10 +153,10 @@ def main():
 
             y_pred, test_acc = evaluate_model(gbm, X_test, y_test, evals, timestamp)
 
-        if show_preds:
+        if train_settings["print_predictions"]:
             store_predictions(gbm, X_test, y_test, y_pred, timestamp)
 
-        if store_model:
+        if train_settings["store_trained_model"]:
             store_trained_model(gbm, test_acc, timestamp) 
 
 

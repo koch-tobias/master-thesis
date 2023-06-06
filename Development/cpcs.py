@@ -4,9 +4,11 @@ import numpy as np
 import pickle
 from io import BytesIO
 from pyxlsb import open_workbook as open_xlsb
-from ipynb.fs.defs.Feature_Engineering import preprocess_dataset
-from ipynb.fs.full.Prepare_data import prepare_and_add_labels
+from Feature_Engineering import preprocess_dataset
+from Prepare_data import prepare_and_add_labels
+from config import general_params, train_settings, website_setting
 import streamlit_authenticator as stauth
+import os
 import yaml
 from yaml.loader import SafeLoader
 
@@ -70,20 +72,23 @@ if authentication_status:
         df.columns = df.iloc[0]
         df = df.iloc[1:]
         dataframes.append(df)
-        df, ncars = prepare_and_add_labels(dataframes, save_as_excel=False)
+        df, ncars = prepare_and_add_labels(dataframes)
             
         # Load model
-        model_path = "models/lgbm_16052023_1729/model_9552238805970149.pkl"
+        for file in os.listdir(website_setting["model"]):
+            if file.startswith("model"):
+                model_path =  os.path.join(website_setting["model"], file)
+
         with open(model_path, "rb") as fid:
             lgbm = pickle.load(fid)
 
         # Load the vectorizer from the file
-        vectorizer_path = "models/lgbm_16052023_1729/vectorizer.pkl"
+        vectorizer_path = website_setting["model"] + "/vectorizer.pkl"
         with open(vectorizer_path, 'rb') as f:
             vectorizer = pickle.load(f)
 
         # Get the vocabulary of the training data
-        vocab_path = 'models/lgbm_16052023_1729/vocabulary.pkl'
+        vocab_path = website_setting["model"] + "/vocabulary.pkl"
         with open(vocab_path, 'rb') as f:
             vocabulary = pickle.load(f)
 
@@ -99,7 +104,8 @@ if authentication_status:
             X = vectorizer.transform(df_preprocessed['Benennung (bereinigt)']).toarray()
 
             # Combine text features with other features
-            #X = np.concatenate((X, df_preprocessed[['center_x', 'center_y', 'center_z','length','width','height','theta_x','theta_y','theta_z']].values), axis=1)
+            if train_settings["use_only_text"] == False:
+                X = np.concatenate((X, df_preprocessed[general_params["features_for_model"]].values), axis=1)
 
             y_pred = lgbm.predict(X)
             y_pred = np.round(y_pred)
