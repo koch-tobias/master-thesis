@@ -143,25 +143,26 @@ if authentication_status:
         Please let me know your feedback if you notice anything missing in the predictions. Positive feedback also helps to improve the model. 
         \n Thank you very much for your support! 
         """)
-        st.markdown("""
-        For your feedback email, you can use the following template:
+        with st.expander("Feedback Template", expanded=False):
+            st.markdown("""
+            For your feedback email, you can use the following template:
 
-        **To:** tobias.ko.koch@bmw.de
+            **To:** tobias.ko.koch@bmw.de
 
-        **Subject:** Feedback AI Model (Website)
+            **Subject:** Feedback AI Model (Website)
 
-        **Body:**
+            **Body:**
 
-        Internal Model Name: [G65]
+            Internal Model Name: [G65]
 
-        Model Name: [X5]
+            Model Name: [X5]
 
-        Part Number (Sachnummer): [P0HL8W7]
+            Part Number (Sachnummer): [P0HL8W7]
 
-        Negative Feedback: [Leider fehlt der Himmel]
+            Negative Feedback: [Leider fehlt der Himmel]
 
-        Positive Feedback: [Alle anderen Bauteile wurden richtig ausgegeben]
-        """)
+            Positive Feedback: [Alle anderen Bauteile wurden richtig ausgegeben]
+            """)
     else:
         st.subheader("Instructions to download the car part structure tree:")
         st.image("plots_images/Anleitung_ExcelDownload.PNG")
