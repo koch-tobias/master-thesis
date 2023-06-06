@@ -45,7 +45,7 @@ gpt_settings = {
 }
 
 website_setting = {
-    "model": "models/lgbm_16052023_1729"
+    "model": "models/lgbm_06062023_0959"
 }
 
 train_settings = {
