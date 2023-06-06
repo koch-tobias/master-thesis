@@ -133,9 +133,9 @@ if authentication_status:
         st.markdown("""
         The AI is still in the development process so it is important to identify and analyze errors. 
         Please let me know your feedback if you notice anything missing in the predictions. Positive feedback also helps to improve the model. 
-        Thank you very much for your support! 
+        \n Thank you very much for your support! 
 
-        To create a feedback email, please use the following template and send it to the specified email address.
+        For your feedback email, you can use the following template.
 
         **To:** tobias.ko.koch@bmw.de
 
