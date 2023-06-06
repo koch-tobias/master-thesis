@@ -12,19 +12,20 @@ from text_preprocessing import vectorize_data
 from Feature_Engineering import preprocess_dataset
 from text_preprocessing import get_vocabulary
 from Data_Augmentation import data_augmentation
-from config import general_params, convert_dict, paths
+from config import general_params, convert_dict, paths, train_settings
 
 # %% [markdown]
 # ### Functions
 
 # %%
-def load_csv_into_df(folder_name: Path, original_prisma_data: bool, move_to_archive: bool) -> list:
+def load_csv_into_df(original_prisma_data: bool) -> list:
     '''
     This function searches for all .xls files in a given directory, loads each file into a Pandas dataframe and changes the header line.
     If move_to_archive is set True, then all processed files will be moved to the archive.
     return: List with all created dataframes
     '''
     # Check if the folder exists
+    folder_name = paths["labeled_data"]
     if not os.path.exists(folder_name):
         logger.error(f"The path {folder_name} does not exist.")
         exit()
@@ -48,10 +49,6 @@ def load_csv_into_df(folder_name: Path, original_prisma_data: bool, move_to_arch
 
                     # Add the created dataframe to the list of dataframes
                     dataframes.append(df)
-
-                    if move_to_archive == True:
-                        # Move file to archive
-                        shutil.move(os.path.join(folder_name, file), os.path.join(folder_name, "original_data_archive", file))
 
                 except:
                     logger.info(f"Error reading file {file}. Skipping...")
@@ -157,7 +154,7 @@ def train_test_val(df, df_test, test_size:float, timestamp):
 
     # Combine text features with other features
     features = general_params["features_for_model"]
-    if general_params["use_only_text"]:
+    if train_settings["use_only_text"] == False:
         X = np.concatenate((X, df[features].values), axis=1)
         X_test = np.concatenate((X_test, df_test[features].values), axis=1)
 
@@ -169,7 +166,7 @@ def train_test_val(df, df_test, test_size:float, timestamp):
 
     X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=test_size, random_state=42)
 
-    return X_train, y_train, X_val, y_val, X_test, y_test, features
+    return X_train, y_train, X_val, y_val, X_test, y_test
 
 # %%
 def train_test_val_kfold(df, df_test, timestamp):
@@ -177,7 +174,7 @@ def train_test_val_kfold(df, df_test, timestamp):
     X, X_test = vectorize_data(df, df_test, timestamp)
 
     # Combine text features with other features
-    if general_params["use_only_text"]:
+    if train_settings["use_only_text"] == False:
         features = general_params["features_for_model"]
         X = np.concatenate((X, df[features].values), axis=1)
 
@@ -187,11 +184,11 @@ def train_test_val_kfold(df, df_test, timestamp):
     y_test = df_test['Relevant fuer Messung']
     y_test = y_test.map({'Ja': 1, 'Nein': 0})
 
-    return X, y, X_test, y_test, features
+    return X, y, X_test, y_test
 
 # %%
-def load_prepare_dataset(folder_path, only_text, augmentation, test_size, kfold):
-    dataframes_list = load_csv_into_df(folder_path, original_prisma_data=False, move_to_archive=False)
+def load_prepare_dataset(test_size):
+    dataframes_list = load_csv_into_df(original_prisma_data=False)
     random.seed(33)
     # Take random dataset from list as test set and drop it from the list
     random_index = random.randint(0, len(dataframes_list) - 1)
@@ -209,14 +206,9 @@ def load_prepare_dataset(folder_path, only_text, augmentation, test_size, kfold)
 
     vocab = get_vocabulary(df_preprocessed['Benennung (bereinigt)'])
 
-    if augmentation:
-        # Declare which data augmentation techniques should be used
-        rand_order = True
-        rand_mistakes = False
-        gpt = True
-
+    if train_settings["augmentation"]:
         # Generate the new dataset
-        df_preprocessed = data_augmentation(df_preprocessed, rand_order, rand_mistakes, gpt, df_to_excel = general_params["save_artificial_dataset"])
+        df_preprocessed = data_augmentation(df_preprocessed)
 
     weight_factor = round(df_preprocessed[df_preprocessed["Relevant fuer Messung"]=="Nein"].shape[0] / df_preprocessed[df_preprocessed["Relevant fuer Messung"]=="Ja"].shape[0])
 
@@ -224,12 +216,12 @@ def load_prepare_dataset(folder_path, only_text, augmentation, test_size, kfold)
     timestamp = dateTimeObj.strftime("%d%m%Y_%H%M")
 
     # Split dataset
-    if kfold:
-        X, y, X_test, y_test, features = train_test_val_kfold(df_preprocessed, df_test, only_text, test_size=test_size, timestamp=timestamp)
-        return X, y, X_test, y_test, features, weight_factor, timestamp, vocab
+    if train_settings["cross_validation"]:
+        X, y, X_test, y_test = train_test_val_kfold(df_preprocessed, df_test, test_size=test_size, timestamp=timestamp)
+        return X, y, X_test, y_test, weight_factor, timestamp, vocab
     else:
-        X_train, y_train, X_val, y_val, X_test, y_test, features = train_test_val(df_preprocessed, df_test, only_text, test_size=test_size, timestamp=timestamp)
-        return X_train, y_train, X_val, y_val, X_test, y_test, features, weight_factor, timestamp, vocab
+        X_train, y_train, X_val, y_val, X_test, y_test = train_test_val(df_preprocessed, df_test, test_size=test_size, timestamp=timestamp)
+        return X_train, y_train, X_val, y_val, X_test, y_test, weight_factor, timestamp, vocab
 
 # %% [markdown]
 # ### Main
@@ -237,8 +229,7 @@ def load_prepare_dataset(folder_path, only_text, augmentation, test_size, kfold)
 # %%
 def main():
     # Define the path to the folder containing the data (xls files)
-    data_folder = Path(paths["labeled_data"])
-    dataframes = load_csv_into_df(data_folder, original_prisma_data=False, move_to_archive=False)
+    dataframes = load_csv_into_df(original_prisma_data=False)
     df = combine_dataframes(dataframes)
 
 

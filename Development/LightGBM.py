@@ -13,11 +13,11 @@ from sklearn.model_selection import KFold
 from sklearn.metrics import ConfusionMatrixDisplay
 
 from Prepare_data import load_prepare_dataset
-from config import lgbm_params
+from config import lgbm_params, paths, general_params, train_settings
 from config import lgbm_hyperparameter as lgbm_hp
 
 # %%
-def store_predictions(model, X_test, y_test, y_pred, probs, features, timestamp):
+def store_predictions(model, X_test, y_test, y_pred, probs, timestamp):
     vectorizer_path = f"../models/lgbm_{timestamp}/vectorizer.pkl"
     # Load the vectorizer from the file
     with open(vectorizer_path, 'rb') as f:
@@ -34,11 +34,11 @@ def store_predictions(model, X_test, y_test, y_pred, probs, features, timestamp)
     feature_names = boost.feature_name()
     sorted_idx = np.argsort(importance)[::-1]
 
-    feature_dict = {vocabulary.shape[0]+index: key for index, key in enumerate(features)}
+    feature_dict = {vocabulary.shape[0]+index: key for index, key in enumerate(general_params["features_for_model"])}
 
     true_label = y_test.reset_index(drop=True)
 
-    X_test_restored = vectorizer.inverse_transform(X_test[:,:vocabulary.shape[0]-len(features)])
+    X_test_restored = vectorizer.inverse_transform(X_test[:,:vocabulary.shape[0]-len(general_params["features_for_model"])])
     original_designation = [' '.join(words) for words in X_test_restored]
 
     print('Wichtigsten Features:')
@@ -73,7 +73,7 @@ def train_model(X_train, y_train, X_val, y_val, weight_factor):
     evals = {}
     callbacks = [lgb.early_stopping(lgbm_params["early_stopping"]), lgb.record_evaluation(evals)]
 
-    gbm = LGBMClassifier(boosting_type='dart',
+    gbm = LGBMClassifier(boosting_type=lgbm_params["boosting_type"],
                         objective='binary',
                         metric=['auc', 'binary_logloss'],
                         num_leaves=lgbm_hp["num_leaves"],
@@ -101,9 +101,8 @@ def store_trained_model(model, test_acc, timestamp):
 
 # %%
 def evaluate_model(model, X_test, y_test, evals, timestamp):
-    threshold = 0.75
     probs = model.predict_proba(X_test)
-    y_pred = (probs[:,1] >= threshold)
+    y_pred = (probs[:,1] >= lgbm_params["prediction_threshold"])
     y_pred =  np.where(y_pred, 1, 0) 
 
     # Print accuracy score
@@ -123,11 +122,10 @@ def evaluate_model(model, X_test, y_test, evals, timestamp):
     return y_pred, probs, accuracy
 
 # %%
-def main(crossvalidation: bool):
-    if crossvalidation == False:
+def main():
+    if train_settings["cross_validation"]==False:
         # Split dataset
-        folder_path = "../data/labeled_data/"
-        X_train, y_train, X_val, y_val, X_test, y_test, features, weight_factor, timestamp, vocab = load_prepare_dataset(folder_path, only_text=False, test_size=lgbm_params["test_size"], augmentation=True, kfold=False)
+        X_train, y_train, X_val, y_val, X_test, y_test, weight_factor, timestamp, vocab = load_prepare_dataset(test_size=lgbm_params["test_size"])
 
         store_model = False
         show_preds = True
@@ -136,7 +134,7 @@ def main(crossvalidation: bool):
         y_pred, probs, test_acc = evaluate_model(gbm, X_test, y_test, evals, timestamp)
 
         if show_preds:
-            store_predictions(gbm, X_test, y_test, y_pred, probs, features, timestamp)
+            store_predictions(gbm, X_test, y_test, y_pred, probs, timestamp)
 
         if store_model:
             store_trained_model(gbm, test_acc, timestamp)
@@ -144,13 +142,12 @@ def main(crossvalidation: bool):
         plot_importance(gbm, max_num_features=10)
     else:
         # Split dataset
-        folder_path = "../data/labeled_data/"
-        store_model = False
-        show_preds = False
+        store_model = train_settings["store_trained_model"]
+        show_preds = train_settings["print_predictions"]
 
-        X_train, y_train, X_test, y_test, features, weight_factor, timestamp, vocab = load_prepare_dataset(folder_path, augmentation=True, test_size=lgbm_params["test_size"], kfold=True)
+        X_train, y_train, X_test, y_test, weight_factor, timestamp, vocab = load_prepare_dataset(test_size=lgbm_params["test_size"])
 
-        kfold = KFold(n_splits=7, shuffle=True, random_state=42)
+        kfold = KFold(n_splits=train_settings["k-folds"], shuffle=True, random_state=42)
         evals_list = []
 
         for train_index, val_index in kfold.split(X_train):
@@ -163,7 +160,7 @@ def main(crossvalidation: bool):
             y_pred, test_acc = evaluate_model(gbm, X_test, y_test, evals, timestamp)
 
         if show_preds:
-            store_predictions(gbm, X_test, y_test, y_pred, features, timestamp)
+            store_predictions(gbm, X_test, y_test, y_pred, timestamp)
 
         if store_model:
             store_trained_model(gbm, test_acc, timestamp) 
@@ -172,8 +169,5 @@ def main(crossvalidation: bool):
 # %%
 if __name__ == "__main__":
     
-    main(crossvalidation=False)
-
-
-
+    main()
 # %%

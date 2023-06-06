@@ -6,6 +6,7 @@ import random
 from loguru import logger
 from datetime import datetime
 from boundingbox_calculations import find_valid_space, random_centerpoint_in_valid_space, calculate_corners
+from config import general_params, gpt_settings
 
 # %%
 def random_order(description: str) -> str:
@@ -181,10 +182,10 @@ def gpt35_designation(text:str) -> str:
         response = openai.ChatCompletion.create(
             engine="chat-gpt-0301",
             messages=[{"role":"system","content":"You are an AI assistant that helps to create a car component designation."},{"role":"user","content": prompt}],
-            temperature=0.6,
-            max_tokens=200,
-            top_p=1,
-            n=1
+            temperature = gpt_settings["temperature"],
+            max_tokens = gpt_settings["max_tokens"],
+            top_p = gpt_settings["top_p"],
+            n = gpt_settings["n"]
         )
         response = [choice.message.content for choice in response.choices]
         new_response = remove_prefix(response[0])
@@ -250,7 +251,7 @@ def augmented_boundingbox(df_original, df_temp):
     return df_temp
 
 # %%
-def data_augmentation(df: pd.DataFrame, rand_order:bool, rand_mistakes:bool, gpt:bool, df_to_excel:bool) -> pd.DataFrame:
+def data_augmentation(df: pd.DataFrame) -> pd.DataFrame:
     ''' 
     This function generates synthetic data to extend the data set. 
     Only the data points that are relevant for a measurement are expanded, since this class is very underrepresented. 
@@ -280,7 +281,8 @@ def data_augmentation(df: pd.DataFrame, rand_order:bool, rand_mistakes:bool, gpt
                 if len(df_temp["Benennung (bereinigt)"][0]) < 40 and df_temp.loc[0,"volume"] > 0:
                     df_temp = augmented_boundingbox(df_new, df_temp)
                     df = pd.concat([df, df_temp], ignore_index=True).reset_index(drop=True)
-    if df_to_excel:
+
+    if general_params["save_artificial_dataset"]:
         dateTimeObj = datetime.now()
         timestamp = dateTimeObj.strftime("%d%m%Y_%H%M")
 
@@ -295,14 +297,9 @@ def data_augmentation(df: pd.DataFrame, rand_order:bool, rand_mistakes:bool, gpt
 def main():
     # Define the path to the labeled dataset
     data = pd.read_excel("../data/G65_bounding_pp.xlsx", index_col=0)
-    
-    # Declare which data augmentation techniques should be used
-    rand_order = True
-    rand_mistakes = True
-    gpt = True
 
     # Generate the new dataset
-    new_data = data_augmentation(data, rand_order, rand_mistakes, gpt, save_as_excel=False)
+    new_data = data_augmentation(data)
 
 # %%
 if __name__ == "__main__":

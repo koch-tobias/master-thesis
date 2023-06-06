@@ -4,7 +4,6 @@ general_params = {
     "save_preprocessed_data": False,
     "save_artificial_dataset": False,
     "save_prepared_dataset_for_labeling": False,
-    "use_only_text": False,
     "ncars": ['G14', 'G15', 'G22', 'G23', 'G61', 'G65', 'NA5', 'NA7'],
     "relevant_features": ['Sachnummer','Benennung (dt)', 'X-Min','X-Max','Y-Min','Y-Max','Z-Min','Z-Max', 'Wert','Einheit','Gewichtsart','Kurzname','L-Kz.', 'L/R-Kz.', 'Modul (Nr)', 'ox','oy', 'oz', 'xx','xy','xz', 'yx','yy','yz','zx','zy','zz'],
     "features_for_model": ['center_x', 'center_y', 'center_z','length','width','height','theta_x','theta_y','theta_z'],
@@ -38,11 +37,29 @@ convert_dict = {'X-Min': float,
                 'zz': float                     
                 }
 
+gpt_settings = {
+    "temperature": 0.6,
+    "max_tokens": 200,
+    "top_p": 1,
+    "n": 1
+}
+
+train_settings = {
+    "cross_validation": False,
+    "k-folds": 7,
+    "augmentation": True,
+    "store_trained_model": False,
+    "print_predictions": True,
+    "use_only_text": False
+}
+
 lgbm_params = {
+    "boosting_type": 'dart',
     "test_size": 0.4,
     "metrics": ['auc', 'binary_logloss'],
      "n_estimators": 1000,
-    "early_stopping": 30
+    "early_stopping": 30,
+    "prediction_threshold": 0.75
 }
 
 lgbm_hyperparameter = {
