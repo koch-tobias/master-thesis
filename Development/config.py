@@ -44,11 +44,15 @@ gpt_settings = {
     "n": 1
 }
 
+website_setting = {
+    "model": "models/lgbm_16052023_1729"
+}
+
 train_settings = {
     "cross_validation": False,
     "k-folds": 7,
     "augmentation": True,
-    "store_trained_model": False,
+    "store_trained_model": True,
     "print_predictions": True,
     "use_only_text": False
 }
