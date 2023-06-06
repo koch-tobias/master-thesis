@@ -155,6 +155,7 @@ if authentication_status:
         """)
     else:
         st.write("## No file uploaded yet")
+        st.image("plots_images/File_generation.PNG")
 elif authentication_status == False:
     st.error('Username/password is incorrect')
 elif authentication_status == None:
