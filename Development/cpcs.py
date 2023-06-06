@@ -13,7 +13,7 @@ import yaml
 from yaml.loader import SafeLoader
 
 # create sidebar to upload the csv file and display the possible labels
-st.set_page_config(page_title="Car Part Identification", page_icon="plots_images/logos/BMWGrey.svg", layout="wide")
+st.set_page_config(page_title="Car Part Identification", page_icon="plots_images/logos/BMWGrey.svg")
 
 with open('config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
@@ -46,17 +46,6 @@ def logout():
     
 
 if authentication_status:
-    st.markdown(
-        f"""
-        <style>
-            .title {{
-                position: relative;
-                top: +10px;
-            }}
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
 
     st.title("Car Part Identification")
     col1, col2 = st.columns(2)
