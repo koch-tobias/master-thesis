@@ -154,7 +154,7 @@ if authentication_status:
         Positive Feedback: [Alle anderen Bauteile wurden richtig ausgegeben]
         """)
     else:
-        st.subheader("Instruction to download the car part structure tree:")
+        st.subheader("Instructions to download the car part structure tree:")
         st.image("plots_images/Anleitung_ExcelDownload.PNG")
         st.image("plots_images/Anleitung_ExcelDownload2.PNG")
 elif authentication_status == False:
