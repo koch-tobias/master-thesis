@@ -51,13 +51,13 @@ if authentication_status:
         <style>
             .title {{
                 position: relative;
-                top: -50px;
+                top: -10px;
             }}
         </style>
         """,
         unsafe_allow_html=True
     )
-    
+
     st.title("Car Part Identification")
     col1, col2 = st.columns(2)
     uploaded_file = st.sidebar.file_uploader("Upload your Excel file here...", type="xls")
