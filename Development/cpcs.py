@@ -53,6 +53,8 @@ if authentication_status:
     st.sidebar.write("After a successful upload, it takes a few seconds for the AI ​​to find the car parts")
   
     st.sidebar.button('Logout', on_click=logout)
+
+    st.sidebar.image("plots_images/logos/BMWGrey.svg")
     st.sidebar.markdown(
         """
         <style>
@@ -66,9 +68,7 @@ if authentication_status:
         </style>
         """,
         unsafe_allow_html=True
-    )
-    st.sidebar.image("plots_images/logos/BMWGrey.svg")
-    
+    )    
     # CSS, to display the text centered
     st.sidebar.markdown(
         """
