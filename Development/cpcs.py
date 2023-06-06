@@ -131,6 +131,10 @@ if authentication_status:
         st.subheader("Feedback Email Template")
 
         st.markdown("""
+        The AI is still in the development process so it is important to identify and analyze errors. 
+        Please let me know your feedback if you notice anything missing in the predictions. Positive feedback also helps to improve the model. 
+        Thank you very much for your support! 
+
         To create a feedback email, please use the following template and send it to the specified email address.
 
         **To:** tobias.ko.koch@bmw.de
@@ -145,9 +149,9 @@ if authentication_status:
 
         Part Number (Sachnummer): [P0HL8W7]
 
-        Negative Feedback: [Himmel is missing]
+        Negative Feedback: [Leider fehlt der Himmel]
 
-        Positive Feedback: [All other parts have been found]
+        Positive Feedback: [Alle anderen Bauteile wurden richtig ausgegeben]
         """)
     else:
         st.write("## No file uploaded yet")
