@@ -136,8 +136,8 @@ if authentication_status:
         st.subheader("Feedback Email Template")
 
         st.markdown("""
-        The AI is still in the development process so it is important to identify and analyze errors. 
-        Please let me know if you notice anything missing in the list of relevant car parts. Positive feedback also helps to improve the model. 
+        The AI is still in the development process so it is important to detect and analyze errors. 
+        Please let me know if you are missing something in the list of relevant car parts. Positive feedback also helps to improve the model. 
         \n Thank you very much for your support! 
         """)
         with st.expander("Template", expanded=False):
