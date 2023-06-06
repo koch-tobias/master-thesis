@@ -65,7 +65,7 @@ if authentication_status:
     st.sidebar.write(" ")
     st.sidebar.button('Logout', on_click=logout)
     st.sidebar.write(" ")
-    st.sidebar.image("plots_images/logos/BMWGrey.svg", use_column_width=True)
+    st.sidebar.image("plots_images/logos/BMWGrey.svg")
     
     # CSS, to display the text centered
     st.sidebar.markdown(
