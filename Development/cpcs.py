@@ -137,7 +137,7 @@ if authentication_status:
 
         st.markdown("""
         The AI is still in the development process so it is important to identify and analyze errors. 
-        Please let me know your feedback if you notice anything missing in the predictions. Positive feedback also helps to improve the model. 
+        Please let me know if you notice anything missing in the predictions. Positive feedback also helps to improve the model. 
         \n Thank you very much for your support! 
         """)
         with st.expander("Template", expanded=False):
