@@ -51,7 +51,7 @@ if authentication_status:
         <style>
             .title {{
                 position: relative;
-                top: -10px;
+                top: +10px;
             }}
         </style>
         """,
