@@ -142,8 +142,6 @@ if authentication_status:
         """)
         with st.expander("Template", expanded=False):
             st.markdown("""
-            For your feedback email, you can use the following template:
-
             **To:** tobias.ko.koch@bmw.de
 
             **Subject:** Feedback AI Model (Website)
