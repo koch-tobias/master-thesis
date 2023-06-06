@@ -50,7 +50,7 @@ if authentication_status:
     st.title("Car Part Identification")
     col1, col2 = st.columns(2)
     uploaded_file = st.sidebar.file_uploader("Upload your Excel file here...", type="xls")
-    st.sidebar.write("After a successful upload, it takes a few seconds for the AI ​​to find the car parts")
+    st.sidebar.write("After a successful upload, it takes a few seconds for the AI ​​to identify the relevant car parts")
   
     st.sidebar.button('Logout', on_click=logout)
 
