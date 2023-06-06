@@ -51,6 +51,10 @@ if authentication_status:
     col1, col2 = st.columns(2)
     uploaded_file = st.sidebar.file_uploader("Upload your Excel file here...", type="xls")
     st.sidebar.write("After a successful upload, it takes a few seconds for the AI ​​to find the car parts")
+    st.sidebar.write(" ")
+    st.sidebar.write(" ")
+    st.sidebar.write(" ")
+    st.sidebar.write(" ")
     st.sidebar.image("plots_images/logos/BMWGrey.svg", use_column_width=True)
     st.sidebar.button('Logout', on_click=logout)
 
@@ -140,7 +144,7 @@ if authentication_status:
         \n Thank you very much for your support! 
         """)
         st.markdown("""
-        For your feedback email, you can use the following template.
+        For your feedback email, you can use the following template:
 
         **To:** tobias.ko.koch@bmw.de
 
