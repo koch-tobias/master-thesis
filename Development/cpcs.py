@@ -55,20 +55,7 @@ if authentication_status:
     st.sidebar.button('Logout', on_click=logout)
 
     st.sidebar.image("plots_images/logos/BMWGrey.svg")
-    st.sidebar.markdown(
-        """
-        <style>
-        .sidebar .sidebar-content {
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            align-items: flex-start;
-            height: 100%;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )    
+
     # CSS, to display the text centered
     st.sidebar.markdown(
         """
