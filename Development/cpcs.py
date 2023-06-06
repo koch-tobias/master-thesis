@@ -8,7 +8,6 @@ from Feature_Engineering import preprocess_dataset
 from Prepare_data import prepare_and_add_labels
 from config import general_params, train_settings, website_setting
 import streamlit_authenticator as stauth
-from streamlit import caching
 import os
 import yaml
 from yaml.loader import SafeLoader
