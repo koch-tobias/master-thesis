@@ -121,6 +121,28 @@ if authentication_status:
         st.download_button(label='📥 Download Prediction',
                                         data=df_xlsx ,
                                         file_name= f'{ncars[0]}_relevant_car_parts.xlsx')
+        
+        st.subheader("Feedback Email Template")
+
+        st.markdown("""
+        To create a feedback email, please use the following template and send it to the specified email address.
+
+        **To:** tobias.ko.koch@bmw.de
+
+        **Subject:** Feedback AI Model (Website)
+
+        **Body:**
+
+        Internal Model Name: [G65]
+
+        Model Name: [X5]
+
+        Part Number (Sachnummer): [P0HL8W7]
+
+        Negative Feedback: [Himmel is missing]
+
+        Positive Feedback: [All other parts have been found]
+        """)
     else:
         st.write("## No file uploaded yet")
 elif authentication_status == False:
