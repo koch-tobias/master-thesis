@@ -55,10 +55,17 @@ if authentication_status:
     st.sidebar.write(" ")
     st.sidebar.write(" ")
     st.sidebar.write(" ")
-    st.sidebar.image("plots_images/logos/BMWGrey.svg", use_column_width=True)
+    st.sidebar.write(" ")
+    st.sidebar.write(" ")
+    st.sidebar.write(" ")
+    st.sidebar.write(" ")
+    st.sidebar.write(" ")
+    st.sidebar.write(" ")
+    st.sidebar.write(" ")
+    st.sidebar.write(" ")
     st.sidebar.button('Logout', on_click=logout)
-
-
+    st.sidebar.image("plots_images/logos/BMWGrey.svg", use_column_width=True)
+    
     # CSS, to display the text centered
     st.sidebar.markdown(
         """
@@ -143,7 +150,7 @@ if authentication_status:
         Please let me know your feedback if you notice anything missing in the predictions. Positive feedback also helps to improve the model. 
         \n Thank you very much for your support! 
         """)
-        with st.expander("Feedback Template", expanded=False):
+        with st.expander("Template", expanded=False):
             st.markdown("""
             For your feedback email, you can use the following template:
 
