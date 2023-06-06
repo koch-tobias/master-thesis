@@ -128,7 +128,7 @@ if authentication_status:
         st.write(df_preprocessed)
 
         df_xlsx = df_to_excel(df_preprocessed)
-        st.download_button(label='📥 Download Prediction',
+        st.download_button(label='🚘 Download List',
                                         data=df_xlsx ,
                                         file_name= f'{ncars[0]}_relevant_car_parts.xlsx')
         
