@@ -6,6 +6,7 @@ from pathlib import Path
 from datetime import datetime
 import shutil
 from sklearn.model_selection import train_test_split
+from sklearn import preprocessing
 import numpy as np
 import random
 from text_preprocessing import vectorize_data
@@ -158,11 +159,17 @@ def train_test_val(df, df_test, test_size:float, timestamp):
         X = np.concatenate((X, df[features].values), axis=1)
         X_test = np.concatenate((X_test, df_test[features].values), axis=1)
 
-    y = df['Relevant fuer Messung']
-    y = y.map({'Ja': 1, 'Nein': 0})
-
-    y_test = df_test['Relevant fuer Messung']
-    y_test = y_test.map({'Ja': 1, 'Nein': 0})
+    if train_settings["classify_einheitsnamen"] == False:
+        y = df['Relevant fuer Messung']
+        y = y.map({'Ja': 1, 'Nein': 0})
+        y_test = df_test['Relevant fuer Messung']
+        y_test = y_test.map({'Ja': 1, 'Nein': 0})
+    else:
+        y = df['Einheitsnamen']
+        le = preprocessing.LabelEncoder()
+        y = le.fit_transform(y)
+        y_test = df_test['Einheitsnamen']
+        y_test = le.transform(y_test)     
 
     X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=test_size, random_state=42)
 
@@ -178,11 +185,17 @@ def train_test_val_kfold(df, df_test, timestamp):
         features = general_params["features_for_model"]
         X = np.concatenate((X, df[features].values), axis=1)
 
-    y = df['Relevant fuer Messung']
-    y = y.map({'Ja': 1, 'Nein': 0})
-
-    y_test = df_test['Relevant fuer Messung']
-    y_test = y_test.map({'Ja': 1, 'Nein': 0})
+    if train_settings["classify_einheitsnamen"] == False:
+        y = df['Relevant fuer Messung']
+        y = y.map({'Ja': 1, 'Nein': 0})
+        y_test = df_test['Relevant fuer Messung']
+        y_test = y_test.map({'Ja': 1, 'Nein': 0})
+    else:
+        y = df['Einheitsnamen']
+        le = preprocessing.LabelEncoder()
+        y = le.fit_transform(y)
+        y_test = df_test['Einheitsnamen']
+        y_test = le.transform(y_test)     
 
     return X, y, X_test, y_test
 

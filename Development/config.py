@@ -54,7 +54,8 @@ train_settings = {
     "augmentation": True,
     "store_trained_model": True,
     "print_predictions": True,
-    "use_only_text": False
+    "use_only_text": False,
+    "classify_einheitsnamen": False
 }
 
 lgbm_params = {
@@ -67,8 +68,8 @@ lgbm_params = {
 }
 
 lgbm_hyperparameter = {
-    "lr": [0.1],    
-    "max_depth": [7],
-    "num_leaves": [128],
-    "feature_fraction": [0.9],
+    "lr": [0.01, 0.05, 0.1],    
+    "max_depth": [3, 5, 7],
+    "feature_fraction": [0.5, 0.7, 0.9],
+    "min_child_samples": [10, 20, 30]
 }
