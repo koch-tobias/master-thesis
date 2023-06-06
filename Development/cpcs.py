@@ -42,7 +42,7 @@ def df_to_excel(df):
 
 
 if authentication_status:
-    authenticator.logout('Logout', 'main')
+    #authenticator.logout('Logout', 'main')
 
     st.title("Car Part Identification")
     col1, col2 = st.columns(2)
