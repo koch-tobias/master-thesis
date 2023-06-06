@@ -8,6 +8,7 @@ from Feature_Engineering import preprocess_dataset
 from Prepare_data import prepare_and_add_labels
 from config import general_params, train_settings, website_setting
 import streamlit_authenticator as stauth
+from streamlit import caching
 import os
 import yaml
 from yaml.loader import SafeLoader
@@ -40,6 +41,9 @@ def df_to_excel(df):
     processed_data = output.getvalue()
     return processed_data
 
+def logout():
+    authenticator.logout('Logout', 'main')
+    caching.clear_cache()
 
 if authentication_status:
     #authenticator.logout('Logout', 'main')
@@ -49,7 +53,7 @@ if authentication_status:
     uploaded_file = st.sidebar.file_uploader("Upload your Excel file here...", type="xls")
     st.sidebar.write("After a successful upload, it takes a few seconds for the AI ​​to find the car parts")
     st.sidebar.image("plots_images/logos/BMWGrey.svg", use_column_width=True)
-    st.sidebar.authenticator.logout('Logout', 'main')
+    st.sidebar.button('Logout', on_click=logout)
 
 
     # CSS, to display the text centered
