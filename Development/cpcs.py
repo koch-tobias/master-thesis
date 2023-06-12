@@ -147,7 +147,7 @@ if authentication_status:
 
             df_preprocessed = df_preprocessed[df_preprocessed['Relevant fuer Messung'] == 'Ja']
 
-            df_preprocessed = df_preprocessed.loc[:,["Sachnummer", "Benennung (dt)", "Einheitsname"]]
+            df_preprocessed = df_preprocessed.loc[:,["Sachnummer", "Benennung (dt)", "Einheitsname", "L/R-Kz."]]
         
         st.write(f"## Relevant car parts for the {ncars[0]}:")
         st.write(df_preprocessed)
