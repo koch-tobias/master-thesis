@@ -143,11 +143,11 @@ if authentication_status:
 
                 df_preprocessed.loc[index,'Einheitsname'] = y_pred_multiclass[index]
                 df_preprocessed.loc[index,'Wahrscheinlichkeit Relevanz'] = probs_binary[:, 1][index]
-                #df_preprocessed.loc[index,'Probability Names'] = y_pred_multiclass[index]
+                df_preprocessed.loc[index,'Wahrscheinlichkeit Einheitsname'] = y_pred_multiclass[index]
 
             df_preprocessed = df_preprocessed[df_preprocessed['Relevant fuer Messung'] == 'Ja']
 
-            df_preprocessed = df_preprocessed.loc[:,["Sachnummer", "Benennung (dt)", "Einheitsname", "L/R-Kz.", "Wahrscheinlichkeit Relevanz"]]
+            df_preprocessed = df_preprocessed.loc[:,["Sachnummer", "Benennung (dt)", "Einheitsname", "L/R-Kz.", "Wahrscheinlichkeit Relevanz", "Wahrscheinlichkeit Einheitsname"]]
         
         st.write(f"## Relevant car parts for the {ncars[0]}:")
         st.write(df_preprocessed)
