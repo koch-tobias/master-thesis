@@ -67,13 +67,13 @@ def get_model(folder_path):
 
     return lgbm, vectorizer, vocabulary
 
-def get_X(vocab):
+def get_X(vocab, vectorizer):
     # Convert the vocabulary list to a dictionary
     vocabulary_dict = {word: index for index, word in enumerate(vocab)}
 
     # Set the vocabulary of the vectorizer to the loaded vocabulary
-    vectorizer_relevance.vocabulary_ = vocabulary_dict
-    X = vectorizer_relevance.transform(df_preprocessed['Benennung (bereinigt)']).toarray()
+    vectorizer.vocabulary_ = vocabulary_dict
+    X = vectorizer.transform(df_preprocessed['Benennung (bereinigt)']).toarray()
 
     # Combine text features with other features
     if train_settings["use_only_text"] == False:
@@ -95,7 +95,7 @@ def hide_streamlit_header_footer():
 
 if authentication_status:
     hide_streamlit_header_footer()
-    
+
     st.title("Car Part Identification")
     col1, col2 = st.columns(2)
     uploaded_file = st.sidebar.file_uploader("Upload your Excel file here...", type="xls")
@@ -104,22 +104,6 @@ if authentication_status:
     st.sidebar.button('Logout', on_click=logout)
 
     st.sidebar.image("plots_images/logos/BMWGrey.svg")
-
-
-    # CSS, to display the text centered
-    
-    #st.sidebar.markdown(
-    #    """
-    #    <style>
-    #    .centered-bold {
-    #        text-align: center;
-    #        font-weight: bold;
-    #    }
-
-    #    </style>
-    #    """,
-    #    unsafe_allow_html=True
-    #)
 
     dataframes = []
     # Display the uploaded file as a pandas dataframe
@@ -130,20 +114,23 @@ if authentication_status:
         dataframes.append(df)
         df, ncars = prepare_and_add_labels(dataframes)
             
-        lgbm_relevance, vectorizer_relevance, vocabulary_relevance = get_model(website_setting["model_binary"])
-        lgbm_name, vectorizer_name, vocabulary_name = get_model(website_setting["model_multiclass"])
+        lgbm_binary, vectorizer_binary, vocabulary_binary = get_model(website_setting["model_binary"])
+        lgbm_multiclass, vectorizer_multiclass, vocabulary_multiclass = get_model(website_setting["model_multiclass"])
 
         for i in range(len(df)):
 
             df_preprocessed, df_for_plot = preprocess_dataset(df[i], cut_percent_of_front=0.20)
 
-            X_binary = get_X(vocabulary_relevance)
-            y_pred = lgbm_relevance.predict(X_binary)
-            y_pred = np.round(y_pred)
+            X_binary = get_X(vocabulary_binary, vectorizer_binary)
+            probs_binary = lgbm_binary.predict_proba(X_binary)
+            y_pred_binary = np.round(probs_binary[:, 1])
+            df['Wahrscheinlichkeit Relevanz'] = probs_binary[:, 1]
 
-            X_multiclass = get_X(vocabulary_name)
-            probs = lgbm_name.predict_proba(X_multiclass)
-            y_pred_multiclass = probs.argmax(axis=1)
+
+            X_multiclass = get_X(vocabulary_multiclass, vectorizer_multiclass)
+            probs_multiclass = lgbm_multiclass.predict_proba(X_multiclass)
+            y_pred_multiclass = probs_multiclass.argmax(axis=1)
+            df['Wahrscheinlichkeit Einheitsnamen'] = probs_multiclass.argmax(axis=1)
 
             # Load the LabelEncoder
             with open(website_setting["model_multiclass"] + '/label_encoder.pkl', 'rb') as f:
@@ -152,12 +139,14 @@ if authentication_status:
             y_pred_multiclass = le.inverse_transform(y_pred_multiclass) 
 
             for index, row in df_preprocessed.iterrows():
-                if y_pred[index] == 1: 
+                if y_pred_binary[index] == 1: 
                     df_preprocessed.loc[index,'Relevant fuer Messung'] = 'Ja'
                 else:
                     df_preprocessed.loc[index,'Relevant fuer Messung'] = 'Nein'
 
                 df_preprocessed.loc[index,'Einheitsname'] = y_pred_multiclass[index]
+                df_preprocessed.loc[index,'Probaility Relevance'] = y_pred_multiclass[index]
+                df_preprocessed.loc[index,'Probability Names'] = y_pred_multiclass[index]
 
             df_preprocessed = df_preprocessed[df_preprocessed['Relevant fuer Messung'] == 'Ja']
 
@@ -198,7 +187,7 @@ if authentication_status:
             """)
         
     else:
-        st.subheader("Instructions to download the car part structure tree:")
+        st.subheader("Instructions for downloading the car part structure tree:")
         st.image("plots_images/Anleitung_ExcelDownload.PNG")
         st.image("plots_images/Anleitung_ExcelDownload2.PNG")
 elif authentication_status == False:
