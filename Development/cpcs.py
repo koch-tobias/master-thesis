@@ -80,10 +80,22 @@ def get_X(vocab):
         X = np.concatenate((X, df_preprocessed[general_params["features_for_model"]].values), axis=1)
     
     return X
+
+def hide_streamlit_header_footer():
+    hide_st_style = """
+            <style>
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            header {visibility: hidden;}
+            #root > div:nth-child(1) > div > div > div > div > section > div {padding-top: 0rem;}
+            </style>
+            """
+    st.markdown(hide_st_style, unsafe_allow_html=True)
     
 
 if authentication_status:
-
+    hide_streamlit_header_footer()
+    
     st.title("Car Part Identification")
     col1, col2 = st.columns(2)
     uploaded_file = st.sidebar.file_uploader("Upload your Excel file here...", type="xls")
