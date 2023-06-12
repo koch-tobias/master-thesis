@@ -91,26 +91,7 @@ if authentication_status:
 
     st.sidebar.button('Logout', on_click=logout)
 
-    url = "plots_images/logos/BMWGrey.svg"
-    st.markdown(
-        f"""
-        <style>
-            [data-testid="stSidebarNav"] + div {{
-                position:relative;
-                bottom: 0;
-                height:50%;
-                background-image: url({url});
-                background-size: 85% auto;
-                background-repeat: no-repeat;
-                background-position-x: center;
-                background-position-y: bottom;
-            }}
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    #st.sidebar.image("plots_images/logos/BMWGrey.svg")
+    st.sidebar.image("plots_images/logos/BMWGrey.svg")
 
     # CSS, to display the text centered
     st.sidebar.markdown(
