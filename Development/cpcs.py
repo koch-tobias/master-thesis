@@ -143,7 +143,7 @@ if authentication_status:
 
                 df_preprocessed.loc[index,'Einheitsname'] = y_pred_multiclass_names[index]
                 df_preprocessed.loc[index,'Wahrscheinlichkeit Relevanz'] = probs_binary[:, 1][index]
-                df_preprocessed.loc[index,'Wahrscheinlichkeit Einheitsname'] = y_pred_multiclass[index]
+                df_preprocessed.loc[index,'Wahrscheinlichkeit Einheitsname'] = probs_multiclass[index, y_pred_multiclass[index]]
 
             df_preprocessed = df_preprocessed[df_preprocessed['Relevant fuer Messung'] == 'Ja']
 
