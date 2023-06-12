@@ -9,6 +9,7 @@ from sklearn.model_selection import train_test_split
 from sklearn import preprocessing
 import numpy as np
 import random
+import pickle
 from text_preprocessing import vectorize_data
 from Feature_Engineering import preprocess_dataset
 from text_preprocessing import get_vocabulary
@@ -165,15 +166,20 @@ def train_test_val(df, df_test, test_size:float, timestamp):
         y_test = df_test['Relevant fuer Messung']
         y_test = y_test.map({'Ja': 1, 'Nein': 0})
     else:
-        y = df['Einheitsnamen']
+        y = df['Einheitsname']
         le = preprocessing.LabelEncoder()
         y = le.fit_transform(y)
-        y_test = df_test['Einheitsnamen']
-        y_test = le.transform(y_test)     
+        y_test = df_test['Einheitsname']
+        y_test = le.transform(y_test)
+
+        with open(f'../models/Einheitsnamen/lgbm_{timestamp}/label_encoder.pkl', 'wb') as f: 
+            pickle.dump(le, f)  
+
+    weight_factor = get_weight_factor(y, df)     
 
     X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=test_size, random_state=42)
 
-    return X_train, y_train, X_val, y_val, X_test, y_test
+    return X_train, y_train, X_val, y_val, X_test, y_test, weight_factor
 
 # %%
 def train_test_val_kfold(df, df_test, timestamp):
@@ -191,49 +197,71 @@ def train_test_val_kfold(df, df_test, timestamp):
         y_test = df_test['Relevant fuer Messung']
         y_test = y_test.map({'Ja': 1, 'Nein': 0})
     else:
-        y = df['Einheitsnamen']
+        y = df['Einheitsname']
         le = preprocessing.LabelEncoder()
         y = le.fit_transform(y)
-        y_test = df_test['Einheitsnamen']
-        y_test = le.transform(y_test)     
+        y_test = df_test['Einheitsname']
+        y_test = le.transform(y_test)
 
-    return X, y, X_test, y_test
+        with open(f'../models/Einheitsnamen/lgbm_{timestamp}/label_encoder.pkl', 'wb') as f: 
+            pickle.dump(le, f)
+
+    weight_factor = get_weight_factor(y, df)     
+
+    return X, y, X_test, y_test, weight_factor
+
+# %%
+def get_weight_factor(y, df):
+    if train_settings["classify_einheitsnamen"]:
+        # Get list of unique values in column "Einheitsname"
+
+        unique_einheitsnamen = np.unique(y)
+        weight_factor = {}
+        for name in unique_einheitsnamen:
+            weight_factor[name] = round(np.count_nonzero(y != name) / np.count_nonzero(y == name))
+            if weight_factor[name] == 0:
+                weight_factor[name] = 1
+    else:    
+        weight_factor = round(df[df["Relevant fuer Messung"]=="Nein"].shape[0] / df[df["Relevant fuer Messung"]=="Ja"].shape[0])
+
+    return weight_factor
+
 
 # %%
 def load_prepare_dataset(test_size):
-    dataframes_list = load_csv_into_df(original_prisma_data=False)
-    random.seed(33)
-    # Take random dataset from list as test set and drop it from the list
-    random_index = random.randint(0, len(dataframes_list) - 1)
-    ncar = general_params["ncars"]
-    df_test = dataframes_list[random_index]
-    dataframes_list.pop(random_index)
-    logger.info(f"Car {ncar[random_index]} is used to test the model on unseen data!")
-    df_combined = combine_dataframes(dataframes_list)
-    df_preprocessed, df_for_plot = preprocess_dataset(df_combined, cut_percent_of_front=general_params["cut_percent_of_front"])
-    df_test, df_test_for_plot = preprocess_dataset(df_test, cut_percent_of_front=general_params["cut_percent_of_front"])
+    if train_settings["already_preprocessed"] == False:
+        dataframes_list = load_csv_into_df(original_prisma_data=False)
+        random.seed(33)
+        # Take random dataset from list as test set and drop it from the list
+        random_index = random.randint(0, len(dataframes_list) - 1)
+        ncar = general_params["ncars"]
+        df_test = dataframes_list[random_index]
+        dataframes_list.pop(random_index)
+        logger.info(f"Car {ncar[random_index]} is used to test the model on unseen data!")
+        df_combined = combine_dataframes(dataframes_list)
+        df_preprocessed, df_for_plot = preprocess_dataset(df_combined, cut_percent_of_front=general_params["cut_percent_of_front"])
+        df_test, df_test_for_plot = preprocess_dataset(df_test, cut_percent_of_front=general_params["cut_percent_of_front"])
 
-    if general_params["save_preprocessed_data"]:
+        if train_settings["augmentation"]:
+            # Generate the new dataset
+            df_preprocessed = data_augmentation(df_preprocessed)
+
         df_preprocessed.to_excel("df_preprocessed.xlsx")
         df_test.to_excel("df_test.xlsx")
-
-    vocab = get_vocabulary(df_preprocessed['Benennung (bereinigt)'])
-
-    if train_settings["augmentation"]:
-        # Generate the new dataset
-        df_preprocessed = data_augmentation(df_preprocessed)
-
-    weight_factor = round(df_preprocessed[df_preprocessed["Relevant fuer Messung"]=="Nein"].shape[0] / df_preprocessed[df_preprocessed["Relevant fuer Messung"]=="Ja"].shape[0])
+    else:
+        df_preprocessed = pd.read_excel("df_preprocessed.xlsx")
+        df_test = pd.read_excel("df_test.xlsx")
 
     dateTimeObj = datetime.now()
     timestamp = dateTimeObj.strftime("%d%m%Y_%H%M")
+    vocab = get_vocabulary(df_preprocessed['Benennung (bereinigt)'])
 
     # Split dataset
     if train_settings["cross_validation"]:
-        X, y, X_test, y_test = train_test_val_kfold(df_preprocessed, df_test, test_size=test_size, timestamp=timestamp)
+        X, y, X_test, y_test, weight_factor = train_test_val_kfold(df_preprocessed, df_test, test_size=test_size, timestamp=timestamp)
         return X, y, X_test, y_test, weight_factor, timestamp, vocab
     else:
-        X_train, y_train, X_val, y_val, X_test, y_test = train_test_val(df_preprocessed, df_test, test_size=test_size, timestamp=timestamp)
+        X_train, y_train, X_val, y_val, X_test, y_test, weight_factor = train_test_val(df_preprocessed, df_test, test_size=test_size, timestamp=timestamp)
         return X_train, y_train, X_val, y_val, X_test, y_test, weight_factor, timestamp, vocab
 
 # %% [markdown]
