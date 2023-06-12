@@ -124,6 +124,7 @@ if authentication_status:
             X_binary = get_X(vocabulary_binary, vectorizer_binary)
             probs_binary = lgbm_binary.predict_proba(X_binary)
             y_pred_binary = np.round(probs_binary[:, 1])
+            st.write(probs_binary[:, 1])
             df['Wahrscheinlichkeit Relevanz'] = probs_binary[:, 1]
 
 
