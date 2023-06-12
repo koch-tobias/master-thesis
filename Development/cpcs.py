@@ -93,19 +93,37 @@ if authentication_status:
 
     st.sidebar.image("plots_images/logos/BMWGrey.svg")
 
-    # CSS, to display the text centered
-    st.sidebar.markdown(
-        """
-        <style>
-        .centered-bold {
-            text-align: center;
-            font-weight: bold;
-        }
+    st.markdown(
+            """
+            <style>
+            div[data-testid="stHorizontalBlock"]:nth-of-type(2) {
+        background-color: #E1DCDC;
+        padding:10px;
+                }
 
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
+            div.stMarkdown:nth-of-type(3) {
+                }
+
+            div[data-testid="column"] {
+        padding:10px;
+                }
+            </style>
+            """,unsafe_allow_html=True)
+
+    # CSS, to display the text centered
+    
+    #st.sidebar.markdown(
+    #    """
+    #    <style>
+    #    .centered-bold {
+    #        text-align: center;
+    #        font-weight: bold;
+    #    }
+
+    #    </style>
+    #    """,
+    #    unsafe_allow_html=True
+    #)
 
     dataframes = []
     # Display the uploaded file as a pandas dataframe
