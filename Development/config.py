@@ -45,7 +45,8 @@ gpt_settings = {
 }
 
 website_setting = {
-    "model": "models/lgbm_06062023_0959"
+    "model_relevance": "models/lgbm_06062023_0959",
+    "model_names": "models/Einheitsnamen/lgbm_07062023_1432"
 }
 
 train_settings = {
@@ -55,17 +56,26 @@ train_settings = {
     "store_trained_model": True,
     "print_predictions": True,
     "use_only_text": False,
-    "classify_einheitsnamen": False
+    "classify_einheitsnamen": True,
+    "already_preprocessed": True
 }
 
 lgbm_params = {
     "boosting_type": 'dart',
-    "test_size": 0.4,
+    "test_size": 0.2,
     "metrics": ['auc', 'binary_logloss'],
-     "n_estimators": 1000,
+     "n_estimators": 800,
     "early_stopping": 30,
     "prediction_threshold": 0.75
 }
+
+lgbm_params_multiclass = {
+    "boosting_type": 'dart',
+    "test_size": 0.2,
+    "metrics": ['multi_logloss'],
+     "n_estimators": 400,
+    "early_stopping": 30
+    }
 
 lgbm_hyperparameter = {
     "lr": [0.01, 0.05, 0.1],    
