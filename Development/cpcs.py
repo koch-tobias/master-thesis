@@ -8,6 +8,7 @@ from Feature_Engineering import preprocess_dataset
 from Prepare_data import prepare_and_add_labels
 from config import general_params, train_settings, website_setting
 import streamlit_authenticator as stauth
+from sklearn import preprocessing
 import os
 import yaml
 from yaml.loader import SafeLoader
@@ -43,6 +44,28 @@ def df_to_excel(df):
 @st.cache_data
 def logout():
     authenticator.logout('Logout', 'main')
+
+
+def get_model(folder_path):
+    # Load model for relevance
+    for file in os.listdir(folder_path):
+        if file.startswith("model"):
+            model_path =  os.path.join(folder_path, file)
+
+    with open(model_path, "rb") as fid:
+        lgbm = pickle.load(fid)
+
+    # Load the vectorizer from the file
+    vectorizer_path = folder_path + "/vectorizer.pkl"
+    with open(vectorizer_path, 'rb') as f:
+        vectorizer = pickle.load(f)
+
+    # Get the vocabulary of the training data
+    vocab_path = folder_path + "/vocabulary.pkl"
+    with open(vocab_path, 'rb') as f:
+        vocabulary = pickle.load(f) 
+
+    return lgbm, vectorizer, vocabulary   
     
 
 if authentication_status:
@@ -79,47 +102,42 @@ if authentication_status:
         dataframes.append(df)
         df, ncars = prepare_and_add_labels(dataframes)
             
-        # Load model
-        for file in os.listdir(website_setting["model"]):
-            if file.startswith("model"):
-                model_path =  os.path.join(website_setting["model"], file)
-
-        with open(model_path, "rb") as fid:
-            lgbm = pickle.load(fid)
-
-        # Load the vectorizer from the file
-        vectorizer_path = website_setting["model"] + "/vectorizer.pkl"
-        with open(vectorizer_path, 'rb') as f:
-            vectorizer = pickle.load(f)
-
-        # Get the vocabulary of the training data
-        vocab_path = website_setting["model"] + "/vocabulary.pkl"
-        with open(vocab_path, 'rb') as f:
-            vocabulary = pickle.load(f)
+        lgbm_relevance, vectorizer_relevance, vocabulary_relevance = get_model(website_setting["model_relevance"])
+        lgbm_name, vectorizer_name, vocabulary_name = get_model(website_setting["model_name"])
 
         for i in range(len(df)):
 
             df_preprocessed, df_for_plot = preprocess_dataset(df[i], cut_percent_of_front=0.20)
 
             # Convert the vocabulary list to a dictionary
-            vocabulary_dict = {word: index for index, word in enumerate(vocabulary)}
+            vocabulary_dict = {word: index for index, word in enumerate(vocabulary_relevance)}
 
             # Set the vocabulary of the vectorizer to the loaded vocabulary
-            vectorizer.vocabulary_ = vocabulary_dict
-            X = vectorizer.transform(df_preprocessed['Benennung (bereinigt)']).toarray()
+            vectorizer_relevance.vocabulary_ = vocabulary_dict
+            X = vectorizer_relevance.transform(df_preprocessed['Benennung (bereinigt)']).toarray()
 
             # Combine text features with other features
             if train_settings["use_only_text"] == False:
                 X = np.concatenate((X, df_preprocessed[general_params["features_for_model"]].values), axis=1)
 
-            y_pred = lgbm.predict(X)
+            y_pred = lgbm_relevance.predict(X)
             y_pred = np.round(y_pred)
+
+            probs = lgbm_name.predict_proba(X)
+            y_pred_name = probs.argmax(axis=1)
+            # Load the LabelEncoder
+            with open(website_setting["model_name"] + '/label_encoder.pkl', 'rb') as f:
+                le = pickle.load(f) 
+
+            y_pred_name = le.inverse_transform(y_pred_name) 
 
             for index, row in df_preprocessed.iterrows():
                 if y_pred[index] == 1: 
                     df_preprocessed.loc[index,'Relevant fuer Messung'] = 'Ja'
                 else:
                     df_preprocessed.loc[index,'Relevant fuer Messung'] = 'Nein'
+
+                df_preprocessed.loc[index,'Einheitsname'] = y_pred_name[index]
 
             df_preprocessed = df_preprocessed[df_preprocessed['Relevant fuer Messung'] == 'Ja']
 
