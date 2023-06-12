@@ -133,7 +133,7 @@ if authentication_status:
             with open(website_setting["model_multiclass"] + '/label_encoder.pkl', 'rb') as f:
                 le = pickle.load(f) 
 
-            y_pred_multiclass = le.inverse_transform(y_pred_multiclass) 
+            y_pred_multiclass_names = le.inverse_transform(y_pred_multiclass) 
 
             for index, row in df_preprocessed.iterrows():
                 if y_pred_binary[index] == 1: 
@@ -141,7 +141,7 @@ if authentication_status:
                 else:
                     df_preprocessed.loc[index,'Relevant fuer Messung'] = 'Nein'
 
-                df_preprocessed.loc[index,'Einheitsname'] = y_pred_multiclass[index]
+                df_preprocessed.loc[index,'Einheitsname'] = y_pred_multiclass_names[index]
                 df_preprocessed.loc[index,'Wahrscheinlichkeit Relevanz'] = probs_binary[:, 1][index]
                 df_preprocessed.loc[index,'Wahrscheinlichkeit Einheitsname'] = y_pred_multiclass[index]
 
