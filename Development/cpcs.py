@@ -135,6 +135,7 @@ if authentication_status:
 
             y_pred_multiclass_names = le.inverse_transform(y_pred_multiclass) 
 
+            df_preprocessed = df_preprocessed.reset_index(drop=True)
             for index, row in df_preprocessed.iterrows():
                 if y_pred_binary[index] == 1: 
                     df_preprocessed.loc[index,'Relevant fuer Messung'] = 'Ja'
