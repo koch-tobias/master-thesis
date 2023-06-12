@@ -149,8 +149,11 @@ if authentication_status:
 
             df_preprocessed = df_preprocessed[df_preprocessed['Relevant fuer Messung'] == 'Ja']
 
-            df_preprocessed = df_preprocessed.loc[:,["Sachnummer", "Benennung (dt)", "Einheitsname", "L/R-Kz.", "Wahrscheinlichkeit Relevanz", "Wahrscheinlichkeit Einheitsname"]]
-        
+            if username == "tkoch":
+                df_preprocessed = df_preprocessed.loc[:,["Sachnummer", "Benennung (dt)", "Einheitsname", "L/R-Kz.", "Wahrscheinlichkeit Relevanz", "Wahrscheinlichkeit Einheitsname"]]
+            else:
+                df_preprocessed = df_preprocessed.loc[:,["Sachnummer", "Benennung (dt)", "Einheitsname", "L/R-Kz."]]
+
         st.write(f"## Relevant car parts for the {ncars[0]}:")
         st.write(df_preprocessed)
 
