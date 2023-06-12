@@ -185,22 +185,6 @@ if authentication_status:
             Positive Feedback: [Alle anderen Bauteile wurden richtig ausgegeben]
             """)
         
-        st.markdown(
-                """
-                <style>
-                div[data-testid="stHorizontalBlock"]:nth-of-type(2) {
-            background-color: #E1DCDC;
-            padding:10px;
-                    }
-
-                div.stMarkdown:nth-of-type(3) {
-                    }
-
-                div[data-testid="column"] {
-            padding:10px;
-                    }
-                </style>
-            """,unsafe_allow_html=True)
     else:
         st.subheader("Instructions to download the car part structure tree:")
         st.image("plots_images/Anleitung_ExcelDownload.PNG")
