@@ -124,7 +124,7 @@ if authentication_status:
             X_binary = get_X(vocabulary_binary, vectorizer_binary)
             probs_binary = lgbm_binary.predict_proba(X_binary)
             y_pred_binary = np.round(probs_binary[:, 1])
-            st.write(probs_binary[:, 1])
+            st.write(probs_binary[:, 1][0])
             df['Wahrscheinlichkeit Relevanz'] = probs_binary[:, 1]
 
 
@@ -146,7 +146,7 @@ if authentication_status:
                     df_preprocessed.loc[index,'Relevant fuer Messung'] = 'Nein'
 
                 df_preprocessed.loc[index,'Einheitsname'] = y_pred_multiclass[index]
-                df_preprocessed.loc[index,'Probaility Relevance'] = y_pred_multiclass[index]
+                df_preprocessed.loc[index,'Probaility Relevance'] = probs_binary[:, 1][index]
                 df_preprocessed.loc[index,'Probability Names'] = y_pred_multiclass[index]
 
             df_preprocessed = df_preprocessed[df_preprocessed['Relevant fuer Messung'] == 'Ja']
