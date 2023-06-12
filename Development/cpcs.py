@@ -124,14 +124,11 @@ if authentication_status:
             X_binary = get_X(vocabulary_binary, vectorizer_binary)
             probs_binary = lgbm_binary.predict_proba(X_binary)
             y_pred_binary = np.round(probs_binary[:, 1])
-            st.write(probs_binary[:, 1][0])
-            df['Wahrscheinlichkeit Relevanz'] = probs_binary[:, 1]
-
 
             X_multiclass = get_X(vocabulary_multiclass, vectorizer_multiclass)
             probs_multiclass = lgbm_multiclass.predict_proba(X_multiclass)
             y_pred_multiclass = probs_multiclass.argmax(axis=1)
-            df['Wahrscheinlichkeit Einheitsnamen'] = probs_multiclass.argmax(axis=1)
+            st.write(y_pred_multiclass[0])
 
             # Load the LabelEncoder
             with open(website_setting["model_multiclass"] + '/label_encoder.pkl', 'rb') as f:
@@ -146,7 +143,7 @@ if authentication_status:
                     df_preprocessed.loc[index,'Relevant fuer Messung'] = 'Nein'
 
                 df_preprocessed.loc[index,'Einheitsname'] = y_pred_multiclass[index]
-                df_preprocessed.loc[index,'Probaility Relevance'] = probs_binary[:, 1][index]
+                df_preprocessed.loc[index,'Wahrscheinlichkeit Relevanz'] = probs_binary[:, 1][index]
                 df_preprocessed.loc[index,'Probability Names'] = y_pred_multiclass[index]
 
             df_preprocessed = df_preprocessed[df_preprocessed['Relevant fuer Messung'] == 'Ja']
