@@ -65,7 +65,21 @@ def get_model(folder_path):
     with open(vocab_path, 'rb') as f:
         vocabulary = pickle.load(f) 
 
-    return lgbm, vectorizer, vocabulary   
+    return lgbm, vectorizer, vocabulary
+
+def get_X(vocab):
+    # Convert the vocabulary list to a dictionary
+    vocabulary_dict = {word: index for index, word in enumerate(vocab)}
+
+    # Set the vocabulary of the vectorizer to the loaded vocabulary
+    vectorizer_relevance.vocabulary_ = vocabulary_dict
+    X = vectorizer_relevance.transform(df_preprocessed['Benennung (bereinigt)']).toarray()
+
+    # Combine text features with other features
+    if train_settings["use_only_text"] == False:
+        X = np.concatenate((X, df_preprocessed[general_params["features_for_model"]].values), axis=1)
+    
+    return X
     
 
 if authentication_status:
@@ -109,27 +123,19 @@ if authentication_status:
 
             df_preprocessed, df_for_plot = preprocess_dataset(df[i], cut_percent_of_front=0.20)
 
-            # Convert the vocabulary list to a dictionary
-            vocabulary_dict = {word: index for index, word in enumerate(vocabulary_relevance)}
-
-            # Set the vocabulary of the vectorizer to the loaded vocabulary
-            vectorizer_relevance.vocabulary_ = vocabulary_dict
-            X = vectorizer_relevance.transform(df_preprocessed['Benennung (bereinigt)']).toarray()
-
-            # Combine text features with other features
-            if train_settings["use_only_text"] == False:
-                X = np.concatenate((X, df_preprocessed[general_params["features_for_model"]].values), axis=1)
-
-            y_pred = lgbm_relevance.predict(X)
+            X_binary = get_X(vocabulary_relevance)
+            y_pred = lgbm_relevance.predict(X_binary)
             y_pred = np.round(y_pred)
 
-            probs = lgbm_name.predict_proba(X)
-            y_pred_name = probs.argmax(axis=1)
+            X_multiclass = get_X(vocabulary_relevance)
+            probs = lgbm_name.predict_proba(X_multiclass)
+            y_pred_multiclass = probs.argmax(axis=1)
+
             # Load the LabelEncoder
-            with open(website_setting["model_name"] + '/label_encoder.pkl', 'rb') as f:
+            with open(website_setting["model_multiclass"] + '/label_encoder.pkl', 'rb') as f:
                 le = pickle.load(f) 
 
-            y_pred_name = le.inverse_transform(y_pred_name) 
+            y_pred_multiclass = le.inverse_transform(y_pred_multiclass) 
 
             for index, row in df_preprocessed.iterrows():
                 if y_pred[index] == 1: 
@@ -137,7 +143,7 @@ if authentication_status:
                 else:
                     df_preprocessed.loc[index,'Relevant fuer Messung'] = 'Nein'
 
-                df_preprocessed.loc[index,'Einheitsname'] = y_pred_name[index]
+                df_preprocessed.loc[index,'Einheitsname'] = y_pred_multiclass[index]
 
             df_preprocessed = df_preprocessed[df_preprocessed['Relevant fuer Messung'] == 'Ja']
 
