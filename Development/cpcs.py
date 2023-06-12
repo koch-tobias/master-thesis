@@ -127,7 +127,7 @@ if authentication_status:
             y_pred = lgbm_relevance.predict(X_binary)
             y_pred = np.round(y_pred)
 
-            X_multiclass = get_X(vocabulary_relevance)
+            X_multiclass = get_X(vocabulary_name)
             probs = lgbm_name.predict_proba(X_multiclass)
             y_pred_multiclass = probs.argmax(axis=1)
 
