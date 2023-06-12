@@ -128,7 +128,7 @@ if authentication_status:
             X_multiclass = get_X(vocabulary_multiclass, vectorizer_multiclass)
             probs_multiclass = lgbm_multiclass.predict_proba(X_multiclass)
             y_pred_multiclass = probs_multiclass.argmax(axis=1)
-            st.write(y_pred_multiclass[0])
+            st.write(probs_multiclass[0])
 
             # Load the LabelEncoder
             with open(website_setting["model_multiclass"] + '/label_encoder.pkl', 'rb') as f:
