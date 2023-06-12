@@ -123,7 +123,7 @@ if authentication_status:
 
             X_binary = get_X(vocabulary_binary, vectorizer_binary)
             probs_binary = lgbm_binary.predict_proba(X_binary)
-            y_pred_binary = (probs_binary[:, 1] > 0.7).astype(int)
+            y_pred_binary = np.where(probs_binary[:, 1] > 0.7, 1, 0)
             #y_pred_binary = np.round(probs_binary[:, 1])
 
             X_multiclass = get_X(vocabulary_multiclass, vectorizer_multiclass)
