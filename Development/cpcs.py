@@ -102,8 +102,8 @@ if authentication_status:
         dataframes.append(df)
         df, ncars = prepare_and_add_labels(dataframes)
             
-        lgbm_relevance, vectorizer_relevance, vocabulary_relevance = get_model(website_setting["model_relevance"])
-        lgbm_name, vectorizer_name, vocabulary_name = get_model(website_setting["model_name"])
+        lgbm_relevance, vectorizer_relevance, vocabulary_relevance = get_model(website_setting["model_binary"])
+        lgbm_name, vectorizer_name, vocabulary_name = get_model(website_setting["model_multiclass"])
 
         for i in range(len(df)):
 
