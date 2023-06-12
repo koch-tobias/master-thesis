@@ -91,6 +91,7 @@ if authentication_status:
 
     st.sidebar.button('Logout', on_click=logout)
 
+    url = "plots_images/logos/BMWGrey.svg"
     st.markdown(
         f"""
         <style>
@@ -98,7 +99,7 @@ if authentication_status:
                 position:relative;
                 bottom: 0;
                 height:50%;
-                background-image: "plots_images/logos/BMWGrey.svg";
+                background-image: url({url});
                 background-size: 85% auto;
                 background-repeat: no-repeat;
                 background-position-x: center;
