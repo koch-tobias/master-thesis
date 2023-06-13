@@ -197,7 +197,7 @@ if authentication_status:
                                         file_name= f'{ncars[0]}_relevant_car_parts.xlsx')
         
         if len(einheitsname_not_found) > 0:
-            st.write("The following parts are not found in the dataset: ")
+            st.write("The following parts are not found in the uploaded data: ")
             st.write("\t" + "- " + "\n- ".join(einheitsname_not_found))
 
         st.subheader("Feedback Email Template")
