@@ -162,9 +162,9 @@ if authentication_status:
                     z_min = np.min(corners[:, 2])
                     z_max = np.max(corners[:, 2])
                     df_preprocessed.loc[index,'Im Boundingboxbereich von'] = 'None'
-                    if row["X-Min_transf"] > x_min and row["X-Max_transf"] < x_max:
-                       if row["Y-Min_transf"] > y_min and row["Y-Max_transf"] < y_max: 
-                            if row["Z-Min_transf"] > z_min and row["Z-Max_transf"] < z_max:
+                    if ((row["X-Min_transf"] > x_min) and (row["X-Max_transf"] < x_max)):
+                       if ((row["Y-Min_transf"] > y_min) and (row["Y-Max_transf"] < y_max)): 
+                            if ((row["Z-Min_transf"] > z_min) and (row["Z-Max_transf"] < z_max)):
                                 df_preprocessed.loc[index,'Im Boundingboxbereich von'] = name
 
             if username == "tkoch":
