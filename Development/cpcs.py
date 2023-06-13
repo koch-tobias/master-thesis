@@ -161,8 +161,9 @@ if authentication_status:
                     y_max = np.max(corners[:, 1])
                     z_min = np.min(corners[:, 2])
                     z_max = np.max(corners[:, 2])
-                    #print(x_min, x_max, y_min, y_max, z_min, z_max)
-                    #print(row["X-Min_transf"], row["X-Max_transf"], row["Y-Min_transf"], )
+                    print(name)
+                    print(x_min, x_max, y_min, y_max, z_min, z_max)
+                    print(row["X-Min_transf"], row["X-Max_transf"], row["Y-Min_transf"], row["Y-Max_transf"], row["Z-Min_transf"], row["Z-Max_transf"])
                     df_preprocessed.loc[index,'Im Boundingboxbereich von'] = 'None'
                     if ((row["X-Min_transf"] > x_min) and (row["X-Max_transf"] < x_max)):
                        if ((row["Y-Min_transf"] > y_min) and (row["Y-Max_transf"] < y_max)): 
