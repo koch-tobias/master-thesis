@@ -15,7 +15,7 @@ import yaml
 from yaml.loader import SafeLoader
 
 # create sidebar to upload the csv file and display the possible labels
-st.set_page_config(page_title="Car Part Identification", page_icon="plots_images/logos/Download.png", layout="wide")
+st.set_page_config(page_title="Car Part Identification", page_icon="plots_images/logos/Download.png")
 
 with open('config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
@@ -93,9 +93,8 @@ def hide_streamlit_header_footer():
 
 if authentication_status:
     hide_streamlit_header_footer()
-    col1, col2, col3 = st.columns([3, 5, 1])
-    with col2:
-        st.title("Car Part Identification")
+
+    st.title("Car Part Identification")
     uploaded_file = st.sidebar.file_uploader("Upload your Excel file here...", type="xls")
     st.sidebar.write("After a successful upload, it takes a few seconds for the AI ​​to identify the relevant car parts")
 
@@ -189,18 +188,9 @@ if authentication_status:
                 df_preprocessed = df_preprocessed.loc[:,["Sachnummer", "Benennung (dt)", "Einheitsname", "L/R-Kz."]]
 
         st.write(f"## Relevant car parts for the {ncars[0]}:")
-        if username == "tkoch":
-            st.write(df_preprocessed)
-            df_xlsx = df_to_excel(df_preprocessed)
-            st.download_button(label='🚘 Download List',
-                                        data=df_xlsx ,
-                                        file_name= f'{ncars[0]}_relevant_car_parts.xlsx')
-        else:
-            col1, col2, col3 = st.columns([2, 5, 1])
-            with col2:
-                st.write(df_preprocessed)
-                df_xlsx = df_to_excel(df_preprocessed)
-                st.download_button(label='🚘 Download List',
+        st.write(df_preprocessed)
+        df_xlsx = df_to_excel(df_preprocessed)
+        st.download_button(label='🚘 Download List',
                                         data=df_xlsx ,
                                         file_name= f'{ncars[0]}_relevant_car_parts.xlsx')
 
