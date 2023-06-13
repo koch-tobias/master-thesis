@@ -154,11 +154,6 @@ if authentication_status:
             df_preprocessed = df_preprocessed[df_preprocessed['Relevant fuer Messung'] == 'Ja']
             
             for index, row in df_preprocessed.iterrows():
-                print("\n\n-----------------------------------------------")
-                print(row["Benennung (dt)"])
-                print(row["X-Min_transf"], row["X-Max_transf"], row["Y-Min_transf"], row["Y-Max_transf"], row["Z-Min_transf"], row["Z-Max_transf"])
-                print(row["volume"])
-                print("\n\n-----------------------------------------------")
                 for name in unique_names:
                     trainset_name = trainset_relevant_parts[(trainset_relevant_parts["Einheitsname"] == name)].reset_index(drop=True)
                     corners, _, _, _ = find_valid_space(trainset_name)
@@ -170,11 +165,7 @@ if authentication_status:
                     z_max = np.max(corners[:, 2])
                     valid_volume_min = trainset_name["volume"].min()
                     valid_volume_max = trainset_name["volume"].max()
-
-                    print(name)
-                    print(x_min, x_max, y_min, y_max, z_min, z_max)
-                    print(valid_volume_min, valid_volume_max)
-                    
+                   
                     if ((row["X-Min_transf"] == 0) and (row["X-Max_transf"] == 0)):
                         df_preprocessed.loc[index,'Im Boundingboxbereich von'] = 'No Bounding-Box information'
                     else:
