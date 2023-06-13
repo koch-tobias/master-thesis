@@ -175,7 +175,7 @@ if authentication_status:
                     print(x_min, x_max, y_min, y_max, z_min, z_max)
                     print(valid_volume_min, valid_volume_max)
                     
-                    if ((row["X-Min_transf"] == 0) and (row["X-Max_transf" == 0])):
+                    if ((row["X-Min_transf"] == 0) and (row["X-Max_transf"] == 0)):
                         df_preprocessed.loc[index,'Im Boundingboxbereich von'] = 'No Bounding-Box information'
                     else:
                         df_preprocessed.loc[index,'Im Boundingboxbereich von'] = 'None'
