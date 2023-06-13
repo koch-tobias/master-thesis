@@ -152,7 +152,7 @@ if authentication_status:
                 df_preprocessed.loc[index,'Wahrscheinlichkeit Einheitsname'] = probs_multiclass[index, y_pred_multiclass[index]]
 
             df_preprocessed = df_preprocessed[df_preprocessed['Relevant fuer Messung'] == 'Ja']
-            
+            einheitsname_not_found = []
             for index, row in df_preprocessed.iterrows():
                 for name in unique_names:
                     trainset_name = trainset_relevant_parts[(trainset_relevant_parts["Einheitsname"] == name)].reset_index(drop=True)
@@ -178,6 +178,9 @@ if authentication_status:
                                             if (row["Wahrscheinlichkeit Relevanz"] > 0.95) and ((row["Einheitsname"] == "Dummy")):
                                                 df_preprocessed.loc[index,'Einheitsname'] = name
                                             break
+                    
+                    if name not in df_preprocessed['Einheitsname'].unique():
+                        einheitsname_not_found.append(name)
 
             if username == "tkoch":
                 df_preprocessed = df_preprocessed.loc[:,["Sachnummer", "Benennung (dt)", "Einheitsname", "L/R-Kz.", "Wahrscheinlichkeit Relevanz", "Wahrscheinlichkeit Einheitsname", "Im Boundingboxbereich von"]]
@@ -191,6 +194,11 @@ if authentication_status:
         st.download_button(label='🚘 Download List',
                                         data=df_xlsx ,
                                         file_name= f'{ncars[0]}_relevant_car_parts.xlsx')
+        
+        if len(einheitsname_not_found) > 0:
+            st.write(f"The following parts are not found in the dataset: ")
+            for i in range(len(einheitsname_not_found)):
+                st.write(f"     {einheitsname_not_found[i]}")
         
         st.subheader("Feedback Email Template")
 
