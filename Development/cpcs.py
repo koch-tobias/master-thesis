@@ -196,9 +196,11 @@ if authentication_status:
                                         data=df_xlsx ,
                                         file_name= f'{ncars[0]}_relevant_car_parts.xlsx')
         
-        if len(einheitsname_not_found) > 0:
-            st.write("The following parts are not found in the uploaded data: ")
-            st.write("\t" + "- " + "\n- ".join(einheitsname_not_found))
+        col1, col2, col3 = st.columns(3)
+        with col2:
+            if len(einheitsname_not_found) > 0:
+                st.write("The following parts are not found in the uploaded data: ")
+                st.write("\t" + "- " + "\n- ".join(einheitsname_not_found))
 
         st.subheader("Feedback Email Template")
 
