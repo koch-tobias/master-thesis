@@ -114,7 +114,7 @@ if authentication_status:
 
         trainset = pd.read_excel("data/preprocessed_data/df_preprocessed.xlsx")
         trainset_relevant_parts = trainset[trainset["Relevant fuer Messung"] == "Ja"]
-        trainset_relevant_parts = trainset_relevant_parts[(trainset_relevant_parts['X-Min'] != 0) & (trainset_relevant_parts['X-Max'] != 0)]    
+        trainset_relevant_parts = trainset_relevant_parts[(trainset_relevant_parts['X-Min_transf'] != 0) & (trainset_relevant_parts['X-Max_transf'] != 0)]    
         unique_names = trainset_relevant_parts["Einheitsname"].unique().tolist()
         unique_names.sort()
         
