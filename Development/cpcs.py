@@ -169,6 +169,7 @@ if authentication_status:
                        if ((row["Y-Min_transf"] > y_min) and (row["Y-Max_transf"] < y_max)): 
                             if ((row["Z-Min_transf"] > z_min) and (row["Z-Max_transf"] < z_max)):
                                 df_preprocessed.loc[index,'Im Boundingboxbereich von'] = name
+                                break
 
             if username == "tkoch":
                 df_preprocessed = df_preprocessed.loc[:,["Sachnummer", "Benennung (dt)", "Einheitsname", "L/R-Kz.", "Wahrscheinlichkeit Relevanz", "Wahrscheinlichkeit Einheitsname", "Im Boundingboxbereich von"]]
