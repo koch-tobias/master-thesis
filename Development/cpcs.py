@@ -112,7 +112,7 @@ if authentication_status:
         dataframes.append(df)
         df, ncars = prepare_and_add_labels(dataframes)
 
-        trainset = pd.read_excel("data/df_preprocessed.xlsx")
+        trainset = pd.read_excel("data/preprocessed_data/df_preprocessed.xlsx")
         trainset_relevant_parts = trainset[trainset["Relevant fuer Messung"] == "Ja"]    
         unique_names = trainset_relevant_parts["Einheitsname"].unique().tolist()
         unique_names.sort()
