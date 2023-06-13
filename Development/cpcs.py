@@ -182,7 +182,7 @@ if authentication_status:
                     if ((row["X-Min_transf"] > x_min) and (row["X-Max_transf"] < x_max)):
                        if ((row["Y-Min_transf"] > y_min) and (row["Y-Max_transf"] < y_max)): 
                             if ((row["Z-Min_transf"] > z_min) and (row["Z-Max_transf"] < z_max)):
-                                if ((row["volume"] >= valid_volume_max*0.8) and (row["volume"] <= valid_volume_max*1.2)):
+                                if ((row["volume"] >= valid_volume_min*0.9) and (row["volume"] <= valid_volume_max*1.1)):
                                     df_preprocessed.loc[index,'Im Boundingboxbereich von'] = name
                                     break
 
