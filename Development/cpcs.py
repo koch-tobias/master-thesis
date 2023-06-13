@@ -184,11 +184,9 @@ if authentication_status:
                                     if ((row["Z-Min_transf"] > z_min) and (row["Z-Max_transf"] < z_max)):
                                         if ((row["volume"] >= valid_volume_min*0.9) and (row["volume"] <= valid_volume_max*1.1)):
                                             df_preprocessed.loc[index,'Im Boundingboxbereich von'] = name
+                                            if (row["Wahrscheinlichkeit Relevanz"] > 0.95) and ((row["Einheitsname"] == "Dummy")):
+                                                df_preprocessed.loc[index,'Einheitsname'] = name
                                             break
-                    
-                    if (row["Wahrscheinlichkeit Relevanz"] > 0.95) and ((row["Einheitsname"] == "Dummy")):
-                        df_preprocessed.loc[index,'Einheitsname'] = name
-
 
             if username == "tkoch":
                 df_preprocessed = df_preprocessed.loc[:,["Sachnummer", "Benennung (dt)", "Einheitsname", "L/R-Kz.", "Wahrscheinlichkeit Relevanz", "Wahrscheinlichkeit Einheitsname", "Im Boundingboxbereich von"]]
