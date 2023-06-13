@@ -189,9 +189,12 @@ if authentication_status:
                 df_preprocessed = df_preprocessed.loc[:,["Sachnummer", "Benennung (dt)", "Einheitsname", "L/R-Kz."]]
 
         st.write(f"## Relevant car parts for the {ncars[0]}:")
-        col1, col2, col3 = st.columns([1, 5, 1])
-        with col2:
+        if username == "tkoch":
             st.write(df_preprocessed)
+        else:
+            col1, col2, col3 = st.columns([2, 5, 1])
+            with col2:
+                st.write(df_preprocessed)
 
         df_xlsx = df_to_excel(df_preprocessed)
         st.download_button(label='🚘 Download List',
