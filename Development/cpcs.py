@@ -198,8 +198,9 @@ if authentication_status:
         
         if len(einheitsname_not_found) > 0:
             st.write("The following parts are not found in the dataset: ")
-            st.write("\t" + "- " + "\n- ".join(einheitsname_not_found))
-        
+            #st.write("\t" + "- " + "\n- ".join(einheitsname_not_found))
+            for part in einheitsname_not_found:
+                st.write(f"\t- {part}")
         st.subheader("Feedback Email Template")
 
         st.markdown("""
