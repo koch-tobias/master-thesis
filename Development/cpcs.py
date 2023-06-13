@@ -6,6 +6,7 @@ from io import BytesIO
 from pyxlsb import open_workbook as open_xlsb
 from Feature_Engineering import preprocess_dataset
 from Prepare_data import prepare_and_add_labels
+from boundingbox_calculations import find_valid_space
 from config import general_params, train_settings, website_setting
 import streamlit_authenticator as stauth
 from sklearn import preprocessing
@@ -27,7 +28,6 @@ authenticator = stauth.Authenticate(
 )
 
 name, authentication_status, username = authenticator.login('Login', 'main')
-
  
 def df_to_excel(df):
     output = BytesIO()
@@ -44,7 +44,6 @@ def df_to_excel(df):
 @st.cache_data
 def logout():
     authenticator.logout('Logout', 'main')
-
 
 def get_model(folder_path):
     # Load model for relevance
@@ -91,7 +90,6 @@ def hide_streamlit_header_footer():
             </style>
             """
     st.markdown(hide_st_style, unsafe_allow_html=True)
-    
 
 if authentication_status:
     hide_streamlit_header_footer()
@@ -113,6 +111,12 @@ if authentication_status:
         df = df.iloc[1:]
         dataframes.append(df)
         df, ncars = prepare_and_add_labels(dataframes)
+
+        trainset = pd.read_excel("data/df_preprocessed.xlsx")
+        trainset_relevant_parts = trainset[trainset["Relevant fuer Messung"] == "Ja"]    
+        unique_names = trainset_relevant_parts["Einheitsname"].unique().tolist()
+        unique_names.sort()
+        
             
         lgbm_binary, vectorizer_binary, vocabulary_binary = get_model(website_setting["model_binary"])
         lgbm_multiclass, vectorizer_multiclass, vocabulary_multiclass = get_model(website_setting["model_multiclass"])
@@ -124,7 +128,6 @@ if authentication_status:
             X_binary = get_X(vocabulary_binary, vectorizer_binary)
             probs_binary = lgbm_binary.predict_proba(X_binary)
             y_pred_binary = np.where(probs_binary[:, 1] > 0.7, 1, 0)
-            #y_pred_binary = np.round(probs_binary[:, 1])
 
             X_multiclass = get_X(vocabulary_multiclass, vectorizer_multiclass)
             probs_multiclass = lgbm_multiclass.predict_proba(X_multiclass)
@@ -148,9 +151,24 @@ if authentication_status:
                 df_preprocessed.loc[index,'Wahrscheinlichkeit Einheitsname'] = probs_multiclass[index, y_pred_multiclass[index]]
 
             df_preprocessed = df_preprocessed[df_preprocessed['Relevant fuer Messung'] == 'Ja']
+            for index, row in df_preprocessed.iterrows():
+                for name in unique_names:
+                    trainset_name = trainset_relevant_parts[(trainset_relevant_parts["Einheitsname"] == name)].reset_index(drop=True)
+                    corners, _, _, _ = find_valid_space(trainset)
+                    x_min = np.min(corners[:, 0])
+                    x_max = np.max(corners[:, 0])
+                    y_min = np.min(corners[:, 1])
+                    y_max = np.max(corners[:, 1])
+                    z_min = np.min(corners[:, 2])
+                    z_max = np.max(corners[:, 2])
+                    df_preprocessed.loc[index,'Im Boundingboxbereich von'] = 'None'
+                    if row["X-Min_transf"] > x_min and row["X-Max_transf"] < x_max:
+                       if row["Y-Min_transf"] > y_min and row["Y-Max_transf"] < y_max: 
+                            if row["Z-Min_transf"] > z_min and row["Z-Max_transf"] < z_max:
+                                df_preprocessed.loc[index,'Im Boundingboxbereich von'] = name
 
             if username == "tkoch":
-                df_preprocessed = df_preprocessed.loc[:,["Sachnummer", "Benennung (dt)", "Einheitsname", "L/R-Kz.", "Wahrscheinlichkeit Relevanz", "Wahrscheinlichkeit Einheitsname"]]
+                df_preprocessed = df_preprocessed.loc[:,["Sachnummer", "Benennung (dt)", "Einheitsname", "L/R-Kz.", "Wahrscheinlichkeit Relevanz", "Wahrscheinlichkeit Einheitsname", "Im Boundingboxbereich von"]]
             else:
                 df_preprocessed = df_preprocessed.loc[:,["Sachnummer", "Benennung (dt)", "Einheitsname", "L/R-Kz."]]
 
