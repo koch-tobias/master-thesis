@@ -15,7 +15,7 @@ import yaml
 from yaml.loader import SafeLoader
 
 # create sidebar to upload the csv file and display the possible labels
-st.set_page_config(page_title="Car Part Identification", page_icon="plots_images/logos/Download.png")
+st.set_page_config(page_title="Car Part Identification", page_icon="plots_images/logos/Download.png", layout="wide")
 
 with open('config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
