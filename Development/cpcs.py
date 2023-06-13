@@ -93,7 +93,7 @@ def hide_streamlit_header_footer():
 
 if authentication_status:
     hide_streamlit_header_footer()
-    col1, col2, col3 = st.columns([3, 5, 1])
+    col1, col2 = st.columns([3, 5])
     with col2:
         st.title("Car Part Identification")
     col1, col2 = st.columns(2)
