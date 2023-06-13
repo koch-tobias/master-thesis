@@ -154,13 +154,15 @@ if authentication_status:
             for index, row in df_preprocessed.iterrows():
                 for name in unique_names:
                     trainset_name = trainset_relevant_parts[(trainset_relevant_parts["Einheitsname"] == name)].reset_index(drop=True)
-                    corners, _, _, _ = find_valid_space(trainset)
+                    corners, _, _, _ = find_valid_space(trainset_name)
                     x_min = np.min(corners[:, 0])
                     x_max = np.max(corners[:, 0])
                     y_min = np.min(corners[:, 1])
                     y_max = np.max(corners[:, 1])
                     z_min = np.min(corners[:, 2])
                     z_max = np.max(corners[:, 2])
+                    #print(x_min, x_max, y_min, y_max, z_min, z_max)
+                    #print(row["X-Min_transf"], row["X-Max_transf"], row["Y-Min_transf"], )
                     df_preprocessed.loc[index,'Im Boundingboxbereich von'] = 'None'
                     if ((row["X-Min_transf"] > x_min) and (row["X-Max_transf"] < x_max)):
                        if ((row["Y-Min_transf"] > y_min) and (row["Y-Max_transf"] < y_max)): 
