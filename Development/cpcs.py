@@ -113,7 +113,8 @@ if authentication_status:
         df, ncars = prepare_and_add_labels(dataframes)
 
         trainset = pd.read_excel("data/preprocessed_data/df_preprocessed.xlsx")
-        trainset_relevant_parts = trainset[trainset["Relevant fuer Messung"] == "Ja"]    
+        trainset_relevant_parts = trainset[trainset["Relevant fuer Messung"] == "Ja"]
+        trainset_relevant_parts = trainset_relevant_parts[(trainset_relevant_parts['X-Min'] != 0) & (trainset_relevant_parts['X-Max'] != 0)]    
         unique_names = trainset_relevant_parts["Einheitsname"].unique().tolist()
         unique_names.sort()
         
@@ -151,6 +152,7 @@ if authentication_status:
                 df_preprocessed.loc[index,'Wahrscheinlichkeit Einheitsname'] = probs_multiclass[index, y_pred_multiclass[index]]
 
             df_preprocessed = df_preprocessed[df_preprocessed['Relevant fuer Messung'] == 'Ja']
+            
             for index, row in df_preprocessed.iterrows():
                 print("\n\n-----------------------------------------------")
                 print(row["Benennung (dt)"])
@@ -172,8 +174,11 @@ if authentication_status:
                     print(name)
                     print(x_min, x_max, y_min, y_max, z_min, z_max)
                     print(valid_volume_min, valid_volume_max)
-
-                    df_preprocessed.loc[index,'Im Boundingboxbereich von'] = 'None'
+                    
+                    if ((row["X-Min_transf"] == 0) and (row["X-Max_transf" == 0])):
+                        df_preprocessed.loc[index,'Im Boundingboxbereich von'] = 'No Bounding-Box information'
+                    else:
+                        df_preprocessed.loc[index,'Im Boundingboxbereich von'] = 'None'
                     if ((row["X-Min_transf"] > x_min) and (row["X-Max_transf"] < x_max)):
                        if ((row["Y-Min_transf"] > y_min) and (row["Y-Max_transf"] < y_max)): 
                             if ((row["Z-Min_transf"] > z_min) and (row["Z-Max_transf"] < z_max)):
