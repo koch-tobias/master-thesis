@@ -152,6 +152,9 @@ if authentication_status:
 
             df_preprocessed = df_preprocessed[df_preprocessed['Relevant fuer Messung'] == 'Ja']
             for index, row in df_preprocessed.iterrows():
+                print("\n\n-----------------------------------------------")
+                print(row["Benennung (dt)"])
+                print(row["X-Min_transf"], row["X-Max_transf"], row["Y-Min_transf"], row["Y-Max_transf"], row["Z-Min_transf"], row["Z-Max_transf"])
                 for name in unique_names:
                     trainset_name = trainset_relevant_parts[(trainset_relevant_parts["Einheitsname"] == name)].reset_index(drop=True)
                     corners, _, _, _ = find_valid_space(trainset_name)
@@ -161,9 +164,10 @@ if authentication_status:
                     y_max = np.max(corners[:, 1])
                     z_min = np.min(corners[:, 2])
                     z_max = np.max(corners[:, 2])
+
                     print(name)
                     print(x_min, x_max, y_min, y_max, z_min, z_max)
-                    print(row["X-Min_transf"], row["X-Max_transf"], row["Y-Min_transf"], row["Y-Max_transf"], row["Z-Min_transf"], row["Z-Max_transf"])
+
                     df_preprocessed.loc[index,'Im Boundingboxbereich von'] = 'None'
                     if ((row["X-Min_transf"] > x_min) and (row["X-Max_transf"] < x_max)):
                        if ((row["Y-Min_transf"] > y_min) and (row["Y-Max_transf"] < y_max)): 
