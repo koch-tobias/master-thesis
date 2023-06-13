@@ -198,7 +198,7 @@ if authentication_status:
         
         if len(einheitsname_not_found) > 0:
             st.write("The following parts are not found in the dataset: ")
-            st.write("- " + "\n- ".join(einheitsname_not_found))
+            st.write("\t" + "- " + "\n- ".join(einheitsname_not_found))
         
         st.subheader("Feedback Email Template")
 
