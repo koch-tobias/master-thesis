@@ -195,7 +195,7 @@ if authentication_status:
                                         file_name= f'{ncars[0]}_relevant_car_parts.xlsx')
 
         if len(einheitsname_not_found) > 0:
-            st.write("The following parts are not found in the uploaded data: ")
+            st.write("The following parts are not found in the uploaded data. Please check manually: ")
         
         col1, col2, col3 = st.columns([1, 5, 1])
         with col2:
