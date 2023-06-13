@@ -178,9 +178,10 @@ if authentication_status:
                                             if (row["Wahrscheinlichkeit Relevanz"] > 0.95) and ((row["Einheitsname"] == "Dummy")):
                                                 df_preprocessed.loc[index,'Einheitsname'] = name
                                             break
-                    
-                    if name not in df_preprocessed['Einheitsname'].unique():
-                        einheitsname_not_found.append(name)
+
+            for name in unique_names:        
+                if name not in df_preprocessed['Einheitsname'].unique():
+                    einheitsname_not_found.append(name)
 
             if username == "tkoch":
                 df_preprocessed = df_preprocessed.loc[:,["Sachnummer", "Benennung (dt)", "Einheitsname", "L/R-Kz.", "Wahrscheinlichkeit Relevanz", "Wahrscheinlichkeit Einheitsname", "Im Boundingboxbereich von"]]
