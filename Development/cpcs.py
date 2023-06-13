@@ -166,26 +166,26 @@ if authentication_status:
                     valid_volume_max = trainset_name["volume"].max()
                    
                     if ((row["X-Min_transf"] == 0) and (row["X-Max_transf"] == 0)):
-                        df_preprocessed.loc[index,'Im Boundingboxbereich von'] = 'No Bounding-Box information'
+                        df_preprocessed.loc[index,'In Bounding-Box-Position von'] = 'No Bounding-Box information'
                     else:
-                        df_preprocessed.loc[index,'Im Boundingboxbereich von'] = 'None'
+                        df_preprocessed.loc[index,'In Bounding-Box-Position von'] = 'None'
                         if ((row["X-Min_transf"] > x_min) and (row["X-Max_transf"] < x_max)):
                             if ((row["Y-Min_transf"] > y_min) and (row["Y-Max_transf"] < y_max)): 
                                     if ((row["Z-Min_transf"] > z_min) and (row["Z-Max_transf"] < z_max)):
                                         if ((row["volume"] >= valid_volume_min*0.9) and (row["volume"] <= valid_volume_max*1.1)):
-                                            df_preprocessed.loc[index,'Im Boundingboxbereich von'] = name
+                                            df_preprocessed.loc[index,'In Bounding-Box-Position von'] = name
                                             if (row["Wahrscheinlichkeit Relevanz"] > 0.95) and ((row["Einheitsname"] == "Dummy")):
                                                 df_preprocessed.loc[index,'Einheitsname'] = name
                                             break
 
-            for name in unique_names:        
-                if name not in df_preprocessed['Einheitsname'].unique():
-                    einheitsname_not_found.append(name)
+        for name in unique_names:        
+            if name not in df_preprocessed['Einheitsname'].unique():
+                einheitsname_not_found.append(name)
 
-            if username == "tkoch":
-                df_preprocessed = df_preprocessed.loc[:,["Sachnummer", "Benennung (dt)", "Einheitsname", "L/R-Kz.", "Wahrscheinlichkeit Relevanz", "Wahrscheinlichkeit Einheitsname", "Im Boundingboxbereich von"]]
-            else:
-                df_preprocessed = df_preprocessed.loc[:,["Sachnummer", "Benennung (dt)", "Einheitsname", "L/R-Kz."]]
+        if username == "tkoch":
+            df_preprocessed = df_preprocessed.loc[:,["Sachnummer", "Benennung (dt)", "Einheitsname", "L/R-Kz.", "Wahrscheinlichkeit Relevanz", "Wahrscheinlichkeit Einheitsname", "Im Boundingboxbereich von"]]
+        else:
+            df_preprocessed = df_preprocessed.loc[:,["Sachnummer", "Benennung (dt)", "Einheitsname", "L/R-Kz."]]
 
         st.write(f"## Relevant car parts for the {ncars[0]}:")
         st.write(df_preprocessed)
