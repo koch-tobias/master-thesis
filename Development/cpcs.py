@@ -191,16 +191,19 @@ if authentication_status:
         st.write(f"## Relevant car parts for the {ncars[0]}:")
         if username == "tkoch":
             st.write(df_preprocessed)
+            df_xlsx = df_to_excel(df_preprocessed)
+            st.download_button(label='🚘 Download List',
+                                        data=df_xlsx ,
+                                        file_name= f'{ncars[0]}_relevant_car_parts.xlsx')
         else:
             col1, col2, col3 = st.columns([2, 5, 1])
             with col2:
                 st.write(df_preprocessed)
-
-        df_xlsx = df_to_excel(df_preprocessed)
-        st.download_button(label='🚘 Download List',
+                df_xlsx = df_to_excel(df_preprocessed)
+                st.download_button(label='🚘 Download List',
                                         data=df_xlsx ,
                                         file_name= f'{ncars[0]}_relevant_car_parts.xlsx')
-        
+
         if len(einheitsname_not_found) > 0:
             st.write("The following parts are not found in the uploaded data: ")
         
