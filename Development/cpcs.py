@@ -164,6 +164,8 @@ if authentication_status:
                     y_max = np.max(corners[:, 1])
                     z_min = np.min(corners[:, 2])
                     z_max = np.max(corners[:, 2])
+                    valid_volume_min = trainset_name["volume"].min()
+                    valid_volume_max = trainset_name["volume"].max()
 
                     print(name)
                     print(x_min, x_max, y_min, y_max, z_min, z_max)
@@ -172,8 +174,9 @@ if authentication_status:
                     if ((row["X-Min_transf"] > x_min) and (row["X-Max_transf"] < x_max)):
                        if ((row["Y-Min_transf"] > y_min) and (row["Y-Max_transf"] < y_max)): 
                             if ((row["Z-Min_transf"] > z_min) and (row["Z-Max_transf"] < z_max)):
-                                df_preprocessed.loc[index,'Im Boundingboxbereich von'] = name
-                                break
+                                if ((row["volume"] >= valid_volume_min) and (row["volume"] <= valid_volume_max)):
+                                    df_preprocessed.loc[index,'Im Boundingboxbereich von'] = name
+                                    break
 
             if username == "tkoch":
                 df_preprocessed = df_preprocessed.loc[:,["Sachnummer", "Benennung (dt)", "Einheitsname", "L/R-Kz.", "Wahrscheinlichkeit Relevanz", "Wahrscheinlichkeit Einheitsname", "Im Boundingboxbereich von"]]
