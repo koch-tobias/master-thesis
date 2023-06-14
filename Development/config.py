@@ -49,6 +49,11 @@ website_setting = {
     "model_multiclass": "models/Einheitsnamen/lgbm_07062023_2130"
 }
 
+api_setting = {
+    "model_binary": "../models/lgbm_07062023_1559",
+    "model_multiclass": "../models/Einheitsnamen/lgbm_07062023_2130"
+}
+
 train_settings = {
     "cross_validation": False,
     "k-folds": 7,
