@@ -105,13 +105,13 @@ if authentication_status:
     dataframes = []
     # Display the uploaded file as a pandas dataframe
     if uploaded_file is not None:
-        df = pd.read_excel(uploaded_file, header=None, skiprows=1)
-        st.session_state['uploaded_file'] = df
-        file_uploaded = True
+        st.session_state['uploaded_file'] = uploaded_file
 
-    if file_uploaded==True:
-        st.session_state['uploaded_file'].columns = st.session_state['uploaded_file'].iloc[0]
-        df = st.session_state['uploaded_file'].iloc[1:]
+    if 'uploaded_file' in st.session_state:
+        df = pd.read_excel(st.session_state['uploaded_file'], header=None, skiprows=1)
+
+        df.columns = df.iloc[0]
+        df = df.iloc[1:]
         dataframes.append(df)
         df, ncars = prepare_and_add_labels(dataframes)
 
