@@ -104,7 +104,7 @@ if authentication_status:
 
     dataframes = []
     # Display the uploaded file as a pandas dataframe
-    if uploaded_file is not None:
+    while uploaded_file is not None:
         df = pd.read_excel(uploaded_file, header=None, skiprows=1)
         df.columns = df.iloc[0]
         df = df.iloc[1:]
@@ -190,7 +190,7 @@ if authentication_status:
         df_preprocessed.loc[df_preprocessed['Linke/Rechte Ausfuehrung'] == "R", 'Linke/Rechte Ausfuehrung'] = 'Rechte Ausfuehrung'
 
         if username == "tkoch":
-            df_preprocessed = df_preprocessed.loc[:,["Sachnummer", "Benennung (dt)", "Einheitsname", "Linke/Rechte Ausfuehrung", "Wahrscheinlichkeit Relevanz", "Wahrscheinlichkeit Einheitsname", "Im Boundingboxbereich von"]]
+            df_preprocessed = df_preprocessed.loc[:,["Sachnummer", "Benennung (dt)", "Einheitsname", "Linke/Rechte Ausfuehrung", "Wahrscheinlichkeit Relevanz", "Wahrscheinlichkeit Einheitsname", "In Bounding-Box-Position von"]]
         else:
             df_preprocessed = df_preprocessed.loc[:,["Sachnummer", "Benennung (dt)", "Einheitsname", "Linke/Rechte Ausfuehrung"]]
 
