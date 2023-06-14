@@ -102,7 +102,6 @@ if authentication_status:
 
     st.sidebar.image("plots_images/logos/BMWGrey.svg")
 
-    file_uploaded = False
     dataframes = []
     # Display the uploaded file as a pandas dataframe
     if uploaded_file is not None:
@@ -110,7 +109,7 @@ if authentication_status:
         st.session_state['uploaded_file'] = df
         file_uploaded = True
 
-    if ('uploaded_file' in st.session_state) and (file_uploaded==True):
+    if file_uploaded==True:
         st.session_state['uploaded_file'].columns = st.session_state['uploaded_file'].iloc[0]
         df = st.session_state['uploaded_file'].iloc[1:]
         dataframes.append(df)
