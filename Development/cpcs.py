@@ -95,7 +95,7 @@ if authentication_status:
     hide_streamlit_header_footer()
 
     st.title("Car Part Identification")
-    uploaded_file = st.sidebar.file_uploader("Upload your Excel file here...", type="xls")
+    uploaded_file = st.sidebar.file_uploader("Upload your Excel file here...", type="xls", key="uploaded_file")
     st.sidebar.write("After a successful upload, it takes a few seconds for the AI ​​to identify the relevant car parts")
 
     st.sidebar.button('Logout', on_click=logout)
@@ -106,8 +106,11 @@ if authentication_status:
     # Display the uploaded file as a pandas dataframe
     if uploaded_file is not None:
         df = pd.read_excel(uploaded_file, header=None, skiprows=1)
-        df.columns = df.iloc[0]
-        df = df.iloc[1:]
+        st.session_state['uploaded_file'] = df
+
+    if 'uploaded_file' in st.session_state:
+        st.session_state['uploaded_file'].columns = st.session_state['uploaded_file'].iloc[0]
+        df = st.session_state['uploaded_file'].iloc[1:]
         dataframes.append(df)
         df, ncars = prepare_and_add_labels(dataframes)
 
