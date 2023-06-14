@@ -104,7 +104,7 @@ if authentication_status:
 
     dataframes = []
     # Display the uploaded file as a pandas dataframe
-    while uploaded_file is not None:
+    if uploaded_file is not None:
         df = pd.read_excel(uploaded_file, header=None, skiprows=1)
         df.columns = df.iloc[0]
         df = df.iloc[1:]
@@ -116,7 +116,6 @@ if authentication_status:
         trainset_relevant_parts = trainset_relevant_parts[(trainset_relevant_parts['X-Min_transf'] != 0) & (trainset_relevant_parts['X-Max_transf'] != 0)]    
         unique_names = trainset_relevant_parts["Einheitsname"].unique().tolist()
         unique_names.sort()
-        
             
         lgbm_binary, vectorizer_binary, vocabulary_binary = get_model(website_setting["model_binary"])
         lgbm_multiclass, vectorizer_multiclass, vocabulary_multiclass = get_model(website_setting["model_multiclass"])
