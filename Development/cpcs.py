@@ -229,7 +229,7 @@ if authentication_status:
             """)
         
     else:
-        st.subheader("Instructions for downloading the car part structure tree:")
+        st.subheader(f"Hello {name}, please follow the instructions for downloading the car part structure tree:")
         st.image("plots_images/Anleitung_ExcelDownload.PNG")
         st.image("plots_images/Anleitung_ExcelDownload2.PNG")
 elif authentication_status == False:
