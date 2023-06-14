@@ -41,7 +41,7 @@ def df_to_excel(df):
     processed_data = output.getvalue()
     return processed_data
 
-@st.cache_data
+@st.cache
 def logout():
     authenticator.logout('Logout', 'main')
 
