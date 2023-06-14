@@ -95,7 +95,7 @@ if authentication_status:
     hide_streamlit_header_footer()
 
     st.title("Car Part Identification")
-    uploaded_file = st.sidebar.file_uploader("Upload your Excel file here...", type="xls", key="uploaded_file")
+    uploaded_file = st.sidebar.file_uploader("Upload your Excel file here...", type="xls")
     st.sidebar.write("After a successful upload, it takes a few seconds for the AI ​​to identify the relevant car parts")
 
     st.sidebar.button('Logout', on_click=logout)
