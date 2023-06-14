@@ -11,4 +11,5 @@ matplotlib
 xlsxwriter
 streamlit-authenticator
 nbformat
+fastapi[all]
 ## Install PyTorch for your system (https://pytorch.org/)
