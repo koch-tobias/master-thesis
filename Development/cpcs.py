@@ -182,6 +182,14 @@ if authentication_status:
             if name not in df_preprocessed['Einheitsname'].unique():
                 einheitsname_not_found.append(name)
 
+        df_preprocessed = df_preprocessed.reset_index(drop=True)
+        df_preprocessed["L/R-Kz."] = df_preprocessed["L/R-Kz."].fillna(' ')
+        df_preprocessed.rename(columns={'L/R-Kz.':'Linke/Rechte Ausfuehrung'}, inplace=True)
+        df_preprocessed.loc[df_preprocessed['Einheitsname'] == "Dummy", 'Einheitsname'] = 'Kein Einheitsname gefunden'
+        df_preprocessed.loc[df_preprocessed['Linke/Rechte Ausfuehrung'] == "L", 'Linke/Rechte Ausfuehrung'] = 'Linke Ausfuehrung'
+        df_preprocessed.loc[df_preprocessed['Linke/Rechte Ausfuehrung'] == "R", 'Linke/Rechte Ausfuehrung'] = 'Rechte Ausfuehrung'
+
+
         if username == "tkoch":
             df_preprocessed = df_preprocessed.loc[:,["Sachnummer", "Benennung (dt)", "Einheitsname", "L/R-Kz.", "Wahrscheinlichkeit Relevanz", "Wahrscheinlichkeit Einheitsname", "Im Boundingboxbereich von"]]
         else:
