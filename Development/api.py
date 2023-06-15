@@ -10,12 +10,8 @@ import numpy as np
 from Feature_Engineering import preprocess_dataset
 from boundingbox_calculations import find_valid_space
 from config import general_params, train_settings, api_setting
-from sklearn import preprocessing
 import os
-import yaml
-from yaml.loader import SafeLoader
 from loguru import logger
-
 
 class UnicornException(Exception):
     def __init__(self, name: str):
@@ -65,15 +61,22 @@ def get_X(vocab, vectorizer, df):
     
     return X
 
-@app.post("/api/get_relevant_parts/")
-async def get_relevant_parts(file: UploadFile = File(...)):
-    contents = await file.read()
-    df = pd.read_excel(BytesIO(contents))
-    df.columns = df.iloc[0]
-    df = df.iloc[1:]
-    dataframes = []
-    dataframes.append(df)
+def dataframe_to_dict(df):
+    result_dict = {}
+    for index, row in df.iterrows():
+        sachnummer = row['Sachnummer']
+        benennung = row['Benennung (dt)']
+        einheitsname = row['Einheitsname']
+        ausfuehrung = row["Linke/Rechte Ausfuehrung"]
 
+        result_dict[sachnummer] = [benennung, einheitsname]
+        if (ausfuehrung == 'Linke Ausfuehrung') or (ausfuehrung == 'Rechte Ausfuehrung'):
+            result_dict[sachnummer].append(ausfuehrung)
+
+    return result_dict    
+
+def identify_relevent_parts(dataframes):
+    
     try:
         df, ncars = prepare_and_add_labels(dataframes)
     except:
@@ -99,20 +102,31 @@ async def get_relevant_parts(file: UploadFile = File(...)):
         raise UnicornException(name=f"Loading the models failed!")
 
     for i in range(len(df)):
+        try:
+            df_preprocessed, df_for_plot = preprocess_dataset(df[i], cut_percent_of_front=0.20)
+        except:
+            raise UnicornException(name=f"Data preprocessing failed!")
 
-        df_preprocessed, df_for_plot = preprocess_dataset(df[i], cut_percent_of_front=0.20)
+        try:
+            logger.info("Start using the Machine Learning model to identify the relevant car part... ")
+            X_binary = get_X(vocabulary_binary, vectorizer_binary, df_preprocessed)
+            probs_binary = lgbm_binary.predict_proba(X_binary)
+            y_pred_binary = np.where(probs_binary[:, 1] > 0.7, 1, 0)
 
-        X_binary = get_X(vocabulary_binary, vectorizer_binary, df_preprocessed)
-        probs_binary = lgbm_binary.predict_proba(X_binary)
-        y_pred_binary = np.where(probs_binary[:, 1] > 0.7, 1, 0)
+            X_multiclass = get_X(vocabulary_multiclass, vectorizer_multiclass, df_preprocessed)
+            probs_multiclass = lgbm_multiclass.predict_proba(X_multiclass)
+            y_pred_multiclass = probs_multiclass.argmax(axis=1)
+            logger.success("Done!")
+        except:
+            raise UnicornException(name=f"Label transformation failed!")
 
-        X_multiclass = get_X(vocabulary_multiclass, vectorizer_multiclass, df_preprocessed)
-        probs_multiclass = lgbm_multiclass.predict_proba(X_multiclass)
-        y_pred_multiclass = probs_multiclass.argmax(axis=1)
 
-        # Load the LabelEncoder
-        with open(api_setting["model_multiclass"] + '/label_encoder.pkl', 'rb') as f:
-            le = pickle.load(f) 
+        try:
+            # Load the LabelEncoder
+            with open(api_setting["model_multiclass"] + '/label_encoder.pkl', 'rb') as f:
+                le = pickle.load(f) 
+        except:
+            raise UnicornException(name=f"Loading Label Encoder failed!")
 
         y_pred_multiclass_names = le.inverse_transform(y_pred_multiclass) 
 
@@ -127,52 +141,94 @@ async def get_relevant_parts(file: UploadFile = File(...)):
             df_preprocessed.loc[index,'Wahrscheinlichkeit Relevanz'] = probs_binary[:, 1][index]
             df_preprocessed.loc[index,'Wahrscheinlichkeit Einheitsname'] = probs_multiclass[index, y_pred_multiclass[index]]
 
+        logger.info("Check if identified car parts are in bounding-box space... ")
         df_preprocessed = df_preprocessed[df_preprocessed['Relevant fuer Messung'] == 'Ja']
         einheitsname_not_found = []
-        for index, row in df_preprocessed.iterrows():
-            for name in unique_names:
-                trainset_name = trainset_relevant_parts[(trainset_relevant_parts["Einheitsname"] == name)].reset_index(drop=True)
-                corners, _, _, _ = find_valid_space(trainset_name)
-                x_min = np.min(corners[:, 0])
-                x_max = np.max(corners[:, 0])
-                y_min = np.min(corners[:, 1])
-                y_max = np.max(corners[:, 1])
-                z_min = np.min(corners[:, 2])
-                z_max = np.max(corners[:, 2])
-                valid_volume_min = trainset_name["volume"].min()
-                valid_volume_max = trainset_name["volume"].max()
-                
-                if ((row["X-Min_transf"] == 0) and (row["X-Max_transf"] == 0)):
-                    df_preprocessed.loc[index,'In Bounding-Box-Position von'] = 'No Bounding-Box information'
-                else:
-                    df_preprocessed.loc[index,'In Bounding-Box-Position von'] = 'None'
-                    if ((row["X-Min_transf"] > x_min) and (row["X-Max_transf"] < x_max)):
-                        if ((row["Y-Min_transf"] > y_min) and (row["Y-Max_transf"] < y_max)): 
-                                if ((row["Z-Min_transf"] > z_min) and (row["Z-Max_transf"] < z_max)):
-                                    if ((row["volume"] >= valid_volume_min*0.9) and (row["volume"] <= valid_volume_max*1.1)):
-                                        df_preprocessed.loc[index,'In Bounding-Box-Position von'] = name
-                                        if (row["Wahrscheinlichkeit Relevanz"] > 0.95) and ((row["Einheitsname"] == "Dummy")):
-                                            df_preprocessed.loc[index,'Einheitsname'] = name
-                                        break
+        try:
+            for index, row in df_preprocessed.iterrows():
+                for name in unique_names:
+                    trainset_name = trainset_relevant_parts[(trainset_relevant_parts["Einheitsname"] == name)].reset_index(drop=True)
+                    corners, _, _, _ = find_valid_space(trainset_name)
+                    x_min = np.min(corners[:, 0])
+                    x_max = np.max(corners[:, 0])
+                    y_min = np.min(corners[:, 1])
+                    y_max = np.max(corners[:, 1])
+                    z_min = np.min(corners[:, 2])
+                    z_max = np.max(corners[:, 2])
+                    valid_volume_min = trainset_name["volume"].min()
+                    valid_volume_max = trainset_name["volume"].max()
+                    
+                    if ((row["X-Min_transf"] == 0) and (row["X-Max_transf"] == 0)):
+                        df_preprocessed.loc[index,'In Bounding-Box-Position von'] = 'No Bounding-Box information'
+                    else:
+                        df_preprocessed.loc[index,'In Bounding-Box-Position von'] = 'None'
+                        if ((row["X-Min_transf"] > x_min) and (row["X-Max_transf"] < x_max)):
+                            if ((row["Y-Min_transf"] > y_min) and (row["Y-Max_transf"] < y_max)): 
+                                    if ((row["Z-Min_transf"] > z_min) and (row["Z-Max_transf"] < z_max)):
+                                        if ((row["volume"] >= valid_volume_min*0.9) and (row["volume"] <= valid_volume_max*1.1)):
+                                            df_preprocessed.loc[index,'In Bounding-Box-Position von'] = name
+                                            if (row["Wahrscheinlichkeit Relevanz"] > 0.95) and ((row["Einheitsname"] == "Dummy")):
+                                                df_preprocessed.loc[index,'Einheitsname'] = name
+                                            break
+        except:
+            raise UnicornException(name=f"Bounding-Box comparison failed!")
+        
+        logger.success("Done!")
 
-    for name in unique_names:        
-        if name not in df_preprocessed['Einheitsname'].unique():
-            einheitsname_not_found.append(name)
 
-    df_preprocessed = df_preprocessed.reset_index(drop=True)
-    df_preprocessed = df_preprocessed.loc[:,["Sachnummer", "Benennung (dt)", "Einheitsname", "L/R-Kz."]]
-    df_preprocessed["L/R-Kz."] = df_preprocessed["L/R-Kz."].fillna(' ')
-    df_preprocessed.rename(columns={'L/R-Kz.':'Linke/Rechte Ausfuehrung'}, inplace=True)
-    df_preprocessed.loc[df_preprocessed['Einheitsname'] == "Dummy", 'Einheitsname'] = 'Kein Einheitsname gefunden'
-    df_preprocessed.loc[df_preprocessed['Linke/Rechte Ausfuehrung'] == "L", 'Linke/Rechte Ausfuehrung'] = 'Linke Ausfuehrung'
-    df_preprocessed.loc[df_preprocessed['Linke/Rechte Ausfuehrung'] == "R", 'Linke/Rechte Ausfuehrung'] = 'Rechte Ausfuehrung'
+    try:
+        for name in unique_names:        
+            if name not in df_preprocessed['Einheitsname'].unique():
+                einheitsname_not_found.append(name)
+    except:
+        raise UnicornException(name=f"Searching not found Einheitsnamen failed!")
 
+    try:
+        df_preprocessed = df_preprocessed.reset_index(drop=True)
+        df_preprocessed = df_preprocessed.loc[:,["Sachnummer", "Benennung (dt)", "Einheitsname", "L/R-Kz."]]
+        df_preprocessed["L/R-Kz."] = df_preprocessed["L/R-Kz."].fillna(' ')
+        df_preprocessed.rename(columns={'L/R-Kz.':'Linke/Rechte Ausfuehrung'}, inplace=True)
+        df_preprocessed.loc[df_preprocessed['Einheitsname'] == "Dummy", 'Einheitsname'] = 'Kein Einheitsname gefunden'
+        df_preprocessed.loc[df_preprocessed['Linke/Rechte Ausfuehrung'] == "L", 'Linke/Rechte Ausfuehrung'] = 'Linke Ausfuehrung'
+        df_preprocessed.loc[df_preprocessed['Linke/Rechte Ausfuehrung'] == "R", 'Linke/Rechte Ausfuehrung'] = 'Rechte Ausfuehrung'
+    except:
+        raise UnicornException(name=f"Modifying columns failed!")
 
     try:
         df_json = df_preprocessed.to_dict(orient='series') 
     except:
         raise UnicornException(name=f"Converting the dataframe to a dict failed!")
     
-    logger.info(df_preprocessed)
+    df_json = dataframe_to_dict(df_preprocessed)
+    
+    return df_json
 
+@app.post("/api/get_relevant_parts/")
+async def post_relevant_parts(file: UploadFile = File(...)):
+    contents = await file.read()
+    df = pd.read_excel(BytesIO(contents))
+    df.columns = df.iloc[0]
+    df = df.iloc[1:]
+    dataframes = []
+    dataframes.append(df)
+
+    df_json = identify_relevent_parts(dataframes)
+    
+    return df_json
+
+
+@app.get("/get_relevant_parts/{file_path:path}")
+async def get_relevant_parts(file_path: str):
+    try:
+        df = pd.read_excel(file_path, header=None, skiprows=1)
+    except:
+        raise UnicornException(name=f"Load Excel to dataframe failed!")
+
+    df.columns = df.iloc[0]
+    df = df.iloc[1:]
+    dataframes = []
+    dataframes.append(df)
+
+    df_json = identify_relevent_parts(dataframes)
+   
     return df_json
