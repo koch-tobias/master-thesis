@@ -4,8 +4,7 @@ from loguru import logger
 import pickle
 import numpy as np
 
-from Feature_Engineering import preprocess_dataset
-from Prepare_data import prepare_and_add_labels, load_csv_into_df, prepare_text
+from Data_Preprocessing import preprocess_dataset, prepData_Preprocessingre_and_add_labels, load_csv_into_df, prepare_text
 
 # %%
 def main():

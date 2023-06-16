@@ -1,18 +1,20 @@
 import streamlit as st
+import streamlit_authenticator as stauth
+
 import pandas as pd
 import numpy as np
+
 import pickle
 from io import BytesIO
-from pyxlsb import open_workbook as open_xlsb
-from Feature_Engineering import preprocess_dataset
-from Prepare_data import prepare_and_add_labels
-from boundingbox_calculations import find_valid_space
-from config import general_params, train_settings, website_setting
-import streamlit_authenticator as stauth
-from sklearn import preprocessing
 import os
 import yaml
 from yaml.loader import SafeLoader
+from pyxlsb import open_workbook as open_xlsb
+
+from Data_Preprocessing import preprocess_dataset, prepare_and_add_labels
+from boundingbox_calculations import find_valid_space
+from config import general_params, train_settings, website_setting
+
 
 # create sidebar to upload the csv file and display the possible labels
 st.set_page_config(page_title="Car Part Identification", page_icon="plots_images/logos/Download.png")

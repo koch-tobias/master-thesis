@@ -1,8 +1,9 @@
 import re
 import pandas as pd
 import pickle
-from sklearn.feature_extraction.text import CountVectorizer
 import os
+
+from sklearn.feature_extraction.text import CountVectorizer
 from config import train_settings
 
 # %%

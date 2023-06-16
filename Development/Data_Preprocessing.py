@@ -1,18 +1,20 @@
 # %%
 import pandas as pd
+import numpy as np
+
 import os
 from loguru import logger
 from pathlib import Path
 from datetime import datetime
 import shutil
-from sklearn.model_selection import train_test_split
-from sklearn import preprocessing
-import numpy as np
 import random
 import pickle
-from text_preprocessing import vectorize_data
-from text_preprocessing import get_vocabulary, clean_text
+
+from sklearn.model_selection import train_test_split
+from sklearn import preprocessing
+
 from Data_Augmentation import data_augmentation
+from text_preprocessing import vectorize_data, get_vocabulary, clean_text
 from boundingbox_calculations import transform_boundingbox, calculate_center_point, calculate_lwh, calculate_orientation
 from plot_functions import plot_vehicle
 from config import general_params, convert_dict, paths, train_settings
