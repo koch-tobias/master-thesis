@@ -4,9 +4,7 @@ import streamlit_authenticator as stauth
 import pandas as pd
 import numpy as np
 
-import pickle
 from io import BytesIO
-import os
 import yaml
 from yaml.loader import SafeLoader
 from pyxlsb import open_workbook as open_xlsb
