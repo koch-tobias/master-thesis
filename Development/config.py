@@ -44,14 +44,9 @@ gpt_settings = {
     "n": 1
 }
 
-website_setting = {
-    "model_binary": "models/lgbm_07062023_1559",
-    "model_multiclass": "models/Einheitsnamen/lgbm_07062023_2130"
-}
-
-api_setting = {
-    "model_binary": "../models/lgbm_07062023_1559",
-    "model_multiclass": "../models/Einheitsnamen/lgbm_07062023_2130"
+model_paths = {
+    "lgbm_binary": "models/lgbm_07062023_1559",
+    "lgbm_multiclass": "models/Einheitsnamen/lgbm_07062023_2130"
 }
 
 train_settings = {

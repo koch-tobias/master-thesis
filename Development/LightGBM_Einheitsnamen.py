@@ -148,7 +148,7 @@ def plot_metrics(model, X_test, y_test, evals, weight_factor, sensitivity, times
     return accuracy
 
 # %%
-def main():
+def train_lgbm_multiclass_model():
     if train_settings["cross_validation"]==False:
         # Split dataset
         X_train, y_train, X_val, y_val, X_test, y_test, weight_factor, timestamp, vocab = load_prepare_dataset(test_size=lgbm_params_multiclass["test_size"])
@@ -204,11 +204,3 @@ def main():
 
         if train_settings["store_trained_model"]:
             store_trained_model(gbm, test_acc, timestamp) 
-
-
-# %%
-if __name__ == "__main__":
-    
-    main()
-
-# %%

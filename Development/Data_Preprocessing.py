@@ -338,6 +338,41 @@ def get_weight_factor(y, df):
 
     return weight_factor
 
+def get_model(folder_path):
+    # Load model for relevance
+    for file in os.listdir(folder_path):
+        if file.startswith("model"):
+            model_path =  os.path.join(folder_path, file)
+
+    with open(model_path, "rb") as fid:
+        lgbm = pickle.load(fid)
+
+    # Load the vectorizer from the file
+    vectorizer_path = folder_path + "/vectorizer.pkl"
+    with open(vectorizer_path, 'rb') as f:
+        vectorizer = pickle.load(f)
+
+    # Get the vocabulary of the training data
+    vocab_path = folder_path + "/vocabulary.pkl"
+    with open(vocab_path, 'rb') as f:
+        vocabulary = pickle.load(f) 
+
+    return lgbm, vectorizer, vocabulary
+
+def get_X(vocab, vectorizer):
+    # Convert the vocabulary list to a dictionary
+    vocabulary_dict = {word: index for index, word in enumerate(vocab)}
+
+    # Set the vocabulary of the vectorizer to the loaded vocabulary
+    vectorizer.vocabulary_ = vocabulary_dict
+    X = vectorizer.transform(df_preprocessed['Benennung (bereinigt)']).toarray()
+
+    # Combine text features with other features
+    if train_settings["use_only_text"] == False:
+        X = np.concatenate((X, df_preprocessed[general_params["features_for_model"]].values), axis=1)
+    
+    return X
+
 
 # %%
 def load_prepare_dataset(test_size):
