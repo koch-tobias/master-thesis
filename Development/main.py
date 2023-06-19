@@ -4,8 +4,8 @@ from pathlib import Path
 from loguru import logger
 
 from Data_Preprocessing import prepare_and_add_labels, load_csv_into_df
-from LightGBM_Relevanz import train_lgbm_binary_model
-from LightGBM_Einheitsnamen import train_lgbm_multiclass_model
+from LightGBM_Binary import train_lgbm_binary_model
+from LightGBM_Multiclass import train_lgbm_multiclass_model
 from model_predictions import predict_on_new_data
 from plot_functions import plot_vehicle
 from Data_Preprocessing import preprocess_dataset
