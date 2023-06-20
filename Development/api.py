@@ -28,25 +28,36 @@ def dataframe_to_dict(df):
     result_dict = {}
     for index, row in df.iterrows():
         sachnummer = row['Sachnummer']
-        benennung = row['Benennung (dt)']
         einheitsname = row['Einheitsname']
+        '''
+        benennung = row['Benennung (dt)']
         ausfuehrung = row["Linke/Rechte Ausfuehrung"]
-
         result_dict[sachnummer] = [benennung, einheitsname]
         if (ausfuehrung == 'Linke Ausfuehrung') or (ausfuehrung == 'Rechte Ausfuehrung'):
             result_dict[sachnummer].append(ausfuehrung)
+        '''
+        result_dict[sachnummer] = einheitsname
 
     return result_dict    
 
 @app.post("/api/get_relevant_parts/")
 async def post_relevant_parts(file: UploadFile = File(...)):
-    contents = await file.read()
-    df = pd.read_excel(BytesIO(contents))
 
-    df_predicted, einheitsname_not_found, ncars = predict_on_new_data(df)
-    df_json = dataframe_to_dict(df_predicted)
+    if not file.filename.endswith(".xlsx") or not file.filename.endswith(".xls"):
+        return JSONResponse(status_code=400, content={"error": "Ungültige Dateierweiterung. Es werden nur Excel-Dateien (.xlsx) akzeptiert."})
+
+    try:
+        contents = await file.read()
+        df = pd.read_excel(BytesIO(contents))
+
+        df_predicted, einheitsname_not_found, ncars = predict_on_new_data(df)
+        df_json = dataframe_to_dict(df_predicted)
+
+        return JSONResponse(status_code=200, content=df_json)
+    except Exception:
+        return JSONResponse(status_code=400, content={"error": "Fehler beim Lesen der Datei. Stellen Sie sicher, dass es sich um eine gültige Excel-Datei handelt."})
+
     
-    return df_json
 
 
 @app.get("/get_relevant_parts/{file_path:path}")
