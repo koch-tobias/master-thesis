@@ -7,8 +7,6 @@ from config import model_paths
 
 def predict_on_new_data(df):
 
-    #df.columns = df.iloc[0]
-    #df = df.iloc[1:]
     df, ncar = prepare_and_add_labels(df)
 
     trainset = pd.read_excel("data/preprocessed_data/df_preprocessed.xlsx")
