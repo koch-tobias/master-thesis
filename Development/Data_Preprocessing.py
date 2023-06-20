@@ -23,14 +23,18 @@ from config import general_params, convert_dict, paths, train_settings
 # ### Functions
 
 # %%
-def load_csv_into_df(original_prisma_data: bool) -> list:
+def load_csv_into_df(original_prisma_data: bool, label_new_data: bool) -> list:
     '''
     This function searches for all .xls files in a given directory, loads each file into a Pandas dataframe and changes the header line.
     If move_to_archive is set True, then all processed files will be moved to the archive.
     return: List with all created dataframes
     '''
     # Check if the folder exists
-    folder_name = paths["labeled_data"]
+    if label_new_data:
+        folder_name = paths["new_data"]
+    else:
+        folder_name = paths["labeled_data"]
+        
     if not os.path.exists(folder_name):
         logger.error(f"The path {folder_name} does not exist.")
         exit()
@@ -92,65 +96,52 @@ def combine_dataframes(dataframes: list) -> pd.DataFrame:
     return merged_df    
 
 # %%
-def prepare_and_add_labels(dataframes: list):
+def prepare_and_add_labels(dataframe: pd.DataFrame):
 
     logger.info("Start preprocessing the data...")
-    dataframes_with_labels = []
-    ncars = []
 
-    for i in range(len(dataframes)):
-        # Store the ncar abbreviation for file paths
-        ncar = dataframes[i][general_params["car_part_designation"]][1][:3]
-        ncars.append(ncar)
+    # Store the ncar abbreviation for file paths
+    ncar = dataframe[general_params["car_part_designation"]][1][:3]
 
-        for modules in general_params["keep_modules"]:
-            # Temporary store the module for the interior mirror
-            level = dataframes[i][dataframes[i][general_params["car_part_designation"]].str.startswith(f'{ncar} {modules}')]["Ebene"].values[0]
-            startindex = dataframes[i][dataframes[i][general_params["car_part_designation"]].str.startswith(f'{ncar} {modules}')].index[-1]+1
-            endindex = dataframes[i].loc[(dataframes[i]["Ebene"] == level) & (dataframes[i].index > startindex)].index[0]-1
-            temp = dataframes[i].loc[startindex:endindex]
-            dataframes[i] = pd.concat([dataframes[i], temp]).reset_index(drop=True)
+    for modules in general_params["keep_modules"]:
+        level = dataframe[dataframe[general_params["car_part_designation"]].str.startswith(f'{ncar} {modules}')]["Ebene"].values[0]
+        startindex = dataframe[dataframe[general_params["car_part_designation"]].str.startswith(f'{ncar} {modules}')].index[-1]+1
+        endindex = dataframe.loc[(dataframe["Ebene"] == level) & (dataframe.index > startindex)].index[0]-1
+        temp = dataframe.loc[startindex:endindex]
+        dataframe = pd.concat([dataframe, temp]).reset_index(drop=True)
 
-        # Temporary store the module for the roof antenna
-        level_roof_antenna = dataframes[i][dataframes[i][general_params["car_part_designation"]].str.startswith(f'{ncar} CD07')]["Ebene"].values[0]
-        startindex_roof_antenna = dataframes[i][dataframes[i][general_params["car_part_designation"]].str.startswith(f'{ncar} CD07')].index[-1]+1
-        endindex_roof_antenna = dataframes[i].loc[(dataframes[i]["Ebene"] == level_roof_antenna) & (dataframes[i].index > startindex_roof_antenna)].index[0]-1
-        temp_roof_antenna = dataframes[i].loc[startindex_roof_antenna:endindex_roof_antenna]
+    # Keep only car parts of module group EF
+    index_EF_module = dataframe[dataframe[general_params["car_part_designation"]].str.startswith(f'EF {ncar}')].index[-1]
+    dataframe = dataframe.loc[:index_EF_module-1]
 
-        # Keep only car parts of module group EF
-        index_EF_module = dataframes[i][dataframes[i][general_params["car_part_designation"]].str.startswith(f'EF {ncar}')].index[-1]
-        dataframes[i] = dataframes[i].loc[:index_EF_module-1]
+    # Keep only the relevant samples with Dok-Format=5P. This samples are on the last level of the car structure
+    dataframe = dataframe[dataframe["Dok-Format"]=='5P'].reset_index(drop=True)
 
-        # Keep only the relevant samples with Dok-Format=5P. This samples are on the last level of the car structure
-        dataframes[i] = dataframes[i][dataframes[i]["Dok-Format"]=='5P'].reset_index(drop=True)
+    # Delete the NCAR abbreviation because of data security reasons
+    dataframe[general_params["car_part_designation"]] = dataframe[general_params["car_part_designation"]].apply(lambda x: x.replace(ncar, ""))
 
-        # Delete the NCAR abbreviation because of data security reasons
-        dataframes[i][general_params["car_part_designation"]] = dataframes[i][general_params["car_part_designation"]].apply(lambda x: x.replace(ncar, ""))
-
-        # Keep only features which are identified as relevant for the preprocessing, the predictions or for the users' next steps
-        dataframes[i] = dataframes[i][general_params["relevant_features"]]
-       
-        dataframes[i] = dataframes[i].astype(convert_dict)
-
-        # Add columns for the label "Relevant für Messung" and "Allgemeine Bezeichnung"
-        data_labeled = dataframes[i]
-        data_labeled.insert(len(data_labeled.columns), 'Relevant fuer Messung', 'Nein')
-        data_labeled.insert(len(data_labeled.columns), 'Einheitsname', 'Dummy')
-        dataframes_with_labels.append(data_labeled)
-
-        if general_params["save_prepared_dataset_for_labeling"]:
-            # Date
-            dateTimeObj = datetime.now()
-            timestamp = dateTimeObj.strftime("%d%m%Y_%H%M")
-            
-            # Store preprocessed dataframes
-            dataframes_with_labels[i].to_excel(f"../data/preprocessed_data/{ncar}_preprocessed_{timestamp}.xlsx")
-
-            logger.success(f"The features are reduced and formated to the correct data type. The new dataset is stored as {ncar}_preprocessed_{timestamp}.xlsx!")
-        else:
-            logger.success(f"The features are reduced and formated to the correct data type!")
+    # Keep only features which are identified as relevant for the preprocessing, the predictions or for the users' next steps
+    dataframe = dataframe[general_params["relevant_features"]]
     
-    return dataframes_with_labels, ncars
+    dataframe = dataframe.astype(convert_dict)
+
+    # Add columns for the label "Relevant für Messung" and "Allgemeine Bezeichnung"
+    dataframe.insert(len(dataframe.columns), 'Relevant fuer Messung', 'Nein')
+    dataframe.insert(len(dataframe.columns), 'Einheitsname', 'Dummy')
+
+    if general_params["save_prepared_dataset_for_labeling"]:
+        # Date
+        dateTimeObj = datetime.now()
+        timestamp = dateTimeObj.strftime("%d%m%Y_%H%M")
+        
+        # Store preprocessed dataframes
+        dataframe.to_excel(f"../data/preprocessed_data/{ncar}_preprocessed_{timestamp}.xlsx")
+
+        logger.success(f"The features are reduced and formated to the correct data type. The new dataset is stored as {ncar}_preprocessed_{timestamp}.xlsx!")
+    else:
+        logger.success(f"The features are reduced and formated to the correct data type!")
+    
+    return dataframe, ncar
 
 # %%
 def add_new_features(df):
@@ -359,7 +350,7 @@ def get_model(folder_path):
 
     return lgbm, vectorizer, vocabulary
 
-def get_X(vocab, vectorizer):
+def get_X(vocab, vectorizer, df_preprocessed):
     # Convert the vocabulary list to a dictionary
     vocabulary_dict = {word: index for index, word in enumerate(vocab)}
 
