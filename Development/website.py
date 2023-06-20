@@ -74,7 +74,6 @@ if authentication_status:
         df = pd.read_excel(st.session_state['uploaded_file'], header=None, skiprows=1)
         df.columns = df.iloc[0]
         df = df.iloc[1:] 
-        logger.info(df["Benennung (dt)"].head())
         df_preprocessed, df_relevant_parts, einheitsname_not_found, ncar = predict_on_new_data(df)
         df_relevant_parts.rename(columns={'L/R-Kz.':'Linke/Rechte Ausfuehrung'}, inplace=True)
 
@@ -89,7 +88,7 @@ if authentication_status:
         df_xlsx = df_to_excel(df_prediction)
         st.download_button(label='🚘 Download List',
                                         data=df_xlsx ,
-                                        file_name= f'{ncar[0]}_relevant_car_parts.xlsx')
+                                        file_name= f'{ncar}_relevant_car_parts.xlsx')
 
         if len(einheitsname_not_found) > 0:
             st.write("The following parts are not found in the uploaded data. Please check manually: ")
