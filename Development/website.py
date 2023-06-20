@@ -72,6 +72,8 @@ if authentication_status:
     if 'uploaded_file' in st.session_state:
         df = pd.read_excel(st.session_state['uploaded_file'], header=None, skiprows=1)
         df_prediction, einheitsname_not_found, ncars = predict_on_new_data(df)
+        df_prediction.rename(columns={'L/R-Kz.':'Linke/Rechte Ausfuehrung'}, inplace=True)
+
 
         if username == "tkoch":
             df_prediction = df_prediction.loc[:,["Sachnummer", "Benennung (dt)", "Einheitsname", "Linke/Rechte Ausfuehrung", "Wahrscheinlichkeit Relevanz", "Wahrscheinlichkeit Einheitsname", "In Bounding-Box-Position von"]]
