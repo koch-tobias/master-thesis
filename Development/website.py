@@ -75,21 +75,21 @@ if authentication_status:
         df = pd.read_excel(st.session_state['uploaded_file'], header=None, skiprows=1)
         df.columns = df.iloc[0]
         df = df.iloc[1:] 
-        df_prediction, einheitsname_not_found, ncars = predict_on_new_data(df)
-        df_prediction.rename(columns={'L/R-Kz.':'Linke/Rechte Ausfuehrung'}, inplace=True)
+        df_preprocessed, df_relevant_parts, einheitsname_not_found, ncar = predict_on_new_data(df)
+        df_relevant_parts.rename(columns={'L/R-Kz.':'Linke/Rechte Ausfuehrung'}, inplace=True)
 
 
         if username == "tkoch":
-            df_prediction = df_prediction.loc[:,["Sachnummer", "Benennung (dt)", "Einheitsname", "Linke/Rechte Ausfuehrung", "Wahrscheinlichkeit Relevanz", "Wahrscheinlichkeit Einheitsname", "In Bounding-Box-Position von"]]
+            df_prediction = df_relevant_parts.loc[:,["Sachnummer", "Benennung (dt)", "Einheitsname", "Linke/Rechte Ausfuehrung", "Wahrscheinlichkeit Relevanz", "Wahrscheinlichkeit Einheitsname", "In Bounding-Box-Position von"]]
         else:
-            df_prediction = df_prediction.loc[:,["Sachnummer", "Benennung (dt)", "Einheitsname", "Linke/Rechte Ausfuehrung"]]
+            df_prediction = df_relevant_parts.loc[:,["Sachnummer", "Benennung (dt)", "Einheitsname", "Linke/Rechte Ausfuehrung"]]
 
-        st.write(f"## Relevant car parts for the {ncars[0]}:")
+        st.write(f"## Relevant car parts for the {ncar[0]}:")
         st.write(df_prediction)
         df_xlsx = df_to_excel(df_prediction)
         st.download_button(label='🚘 Download List',
                                         data=df_xlsx ,
-                                        file_name= f'{ncars[0]}_relevant_car_parts.xlsx')
+                                        file_name= f'{ncar[0]}_relevant_car_parts.xlsx')
 
         if len(einheitsname_not_found) > 0:
             st.write("The following parts are not found in the uploaded data. Please check manually: ")
