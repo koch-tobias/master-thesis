@@ -10,6 +10,8 @@ from yaml.loader import SafeLoader
 from pyxlsb import open_workbook as open_xlsb
 
 from model_predictions import predict_on_new_data
+from Data_Preprocessing import load_csv_into_df
+
 
 # create sidebar to upload the csv file and display the possible labels
 st.set_page_config(page_title="Car Part Identification", page_icon="plots_images/logos/Download.png")
@@ -71,6 +73,8 @@ if authentication_status:
 
     if 'uploaded_file' in st.session_state:
         df = pd.read_excel(st.session_state['uploaded_file'], header=None, skiprows=1)
+        df.columns = df.iloc[0]
+        df = df.iloc[1:] 
         df_prediction, einheitsname_not_found, ncars = predict_on_new_data(df)
         df_prediction.rename(columns={'L/R-Kz.':'Linke/Rechte Ausfuehrung'}, inplace=True)
 
