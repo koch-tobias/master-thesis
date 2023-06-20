@@ -83,7 +83,7 @@ if authentication_status:
         else:
             df_prediction = df_relevant_parts.loc[:,["Sachnummer", "Benennung (dt)", "Einheitsname", "Linke/Rechte Ausfuehrung"]]
 
-        st.write(f"## Relevant car parts for the {ncar[0]}:")
+        st.write(f"## Relevant car parts for the {ncar}:")
         st.write(df_prediction)
         df_xlsx = df_to_excel(df_prediction)
         st.download_button(label='🚘 Download List',
