@@ -12,7 +12,8 @@ general_params = {
 }
 
 paths = {
-    "labeled_data": "../data/labeled_data"
+    "labeled_data": "../data/labeled_data",
+    "new_data": "data/original_data_new"
 }
 
 # using dictionary to convert data types of specific columns
