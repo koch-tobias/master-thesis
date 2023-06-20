@@ -84,4 +84,4 @@ def predict_on_new_data(df):
     df_relevant_parts.loc[df_relevant_parts["L/R-Kz."] == "L", "L/R-Kz."] = 'Linke Ausfuehrung'
     df_relevant_parts.loc[df_relevant_parts["L/R-Kz."] == "R", "L/R-Kz."] = 'Rechte Ausfuehrung'
 
-    return df_preprocessed, df_relevant_parts, einheitsname_not_found, ncar
+    return df, df_relevant_parts, einheitsname_not_found, ncar

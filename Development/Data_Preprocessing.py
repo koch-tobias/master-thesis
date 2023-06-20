@@ -103,31 +103,31 @@ def prepare_and_add_labels(dataframe: pd.DataFrame):
     # Store the ncar abbreviation for file paths
     ncar = dataframe[general_params["car_part_designation"]][1][:3]
 
+    # Keep only car parts of module group EF
+    index_EF_module = dataframe[dataframe[general_params["car_part_designation"]].str.startswith(f'EF {ncar}')].index[-1]
+    dataframe_new = dataframe.loc[:index_EF_module-1]
+
     for modules in general_params["keep_modules"]:
         level = dataframe[dataframe[general_params["car_part_designation"]].str.startswith(f'{ncar} {modules}')]["Ebene"].values[0]
         startindex = dataframe[dataframe[general_params["car_part_designation"]].str.startswith(f'{ncar} {modules}')].index[-1]+1
         endindex = dataframe.loc[(dataframe["Ebene"] == level) & (dataframe.index > startindex)].index[0]-1
         temp = dataframe.loc[startindex:endindex]
-        dataframe = pd.concat([dataframe, temp]).reset_index(drop=True)
-
-    # Keep only car parts of module group EF
-    index_EF_module = dataframe[dataframe[general_params["car_part_designation"]].str.startswith(f'EF {ncar}')].index[-1]
-    dataframe = dataframe.loc[:index_EF_module-1]
+        dataframe_new = pd.concat([dataframe_new, temp]).reset_index(drop=True)
 
     # Keep only the relevant samples with Dok-Format=5P. This samples are on the last level of the car structure
-    dataframe = dataframe[dataframe["Dok-Format"]=='5P'].reset_index(drop=True)
+    dataframe_new = dataframe_new[dataframe_new["Dok-Format"]=='5P'].reset_index(drop=True)
 
     # Delete the NCAR abbreviation because of data security reasons
-    dataframe[general_params["car_part_designation"]] = dataframe[general_params["car_part_designation"]].apply(lambda x: x.replace(ncar, ""))
+    dataframe_new[general_params["car_part_designation"]] = dataframe_new[general_params["car_part_designation"]].apply(lambda x: x.replace(ncar, ""))
 
     # Keep only features which are identified as relevant for the preprocessing, the predictions or for the users' next steps
-    dataframe = dataframe[general_params["relevant_features"]]
+    dataframe_new = dataframe_new[general_params["relevant_features"]]
     
-    dataframe = dataframe.astype(convert_dict)
+    dataframe_new = dataframe_new.astype(convert_dict)
 
     # Add columns for the label "Relevant für Messung" and "Allgemeine Bezeichnung"
-    dataframe.insert(len(dataframe.columns), 'Relevant fuer Messung', 'Nein')
-    dataframe.insert(len(dataframe.columns), 'Einheitsname', 'Dummy')
+    dataframe_new.insert(len(dataframe_new.columns), 'Relevant fuer Messung', 'Nein')
+    dataframe_new.insert(len(dataframe_new.columns), 'Einheitsname', 'Dummy')
 
     if general_params["save_prepared_dataset_for_labeling"]:
         # Date
@@ -135,13 +135,13 @@ def prepare_and_add_labels(dataframe: pd.DataFrame):
         timestamp = dateTimeObj.strftime("%d%m%Y_%H%M")
         
         # Store preprocessed dataframes
-        dataframe.to_excel(f"../data/preprocessed_data/{ncar}_preprocessed_{timestamp}.xlsx")
+        dataframe_new.to_excel(f"../data/preprocessed_data/{ncar}_preprocessed_{timestamp}.xlsx")
 
         logger.success(f"The features are reduced and formated to the correct data type. The new dataset is stored as {ncar}_preprocessed_{timestamp}.xlsx!")
     else:
         logger.success(f"The features are reduced and formated to the correct data type!")
     
-    return dataframe, ncar
+    return dataframe_new, ncar
 
 # %%
 def add_new_features(df):

@@ -17,8 +17,7 @@ def main():
     label_new_data = True
     plot_bounding_boxes_one_vehicle = False
     plot_bounding_boxes_all_vehicle_by_name = False
-
-    dataset_path = ""
+    dataset_path = "Path which dataset should be plotted"
 
     if train_lgbm_relevance_model:
         train_lgbm_binary_model()
@@ -29,17 +28,17 @@ def main():
     if label_new_data:
         dataframes = load_csv_into_df(original_prisma_data=True, label_new_data=True)
         for df in dataframes:
-            df_preprocessed, df_relevant_parts, einheitsname_not_found, ncar = predict_on_new_data(df)
+            df_with_label_columns, df_relevant_parts, einheitsname_not_found, ncar = predict_on_new_data(df)
 
             for index, row in df_relevant_parts.iterrows():
                 sachnummer = row['Sachnummer']
                 einheitsname = row['Einheitsname']
                 
                 if sachnummer in df['Sachnummer'].values:
-                    df_preprocessed.loc[df_preprocessed['Sachnummer'] == sachnummer, 'Relevant fuer Messung'] = "Ja"
-                    df_preprocessed.loc[df_preprocessed['Sachnummer'] == sachnummer, 'Einheitsname'] = einheitsname
+                    df_with_label_columns.loc[df_with_label_columns['Sachnummer'] == sachnummer, 'Relevant fuer Messung'] = "Ja"
+                    df_with_label_columns.loc[df_with_label_columns['Sachnummer'] == sachnummer, 'Einheitsname'] = einheitsname
 
-            df_preprocessed.to_excel(f"data/pre_labeled_data/{ncar}_labeled.xlsx")
+            df_with_label_columns.to_excel(f"data/pre_labeled_data/{ncar}_labeled_test.xlsx")
 
             logger.info(f"The following car parts are not found in the data: {einheitsname_not_found}")
             logger.success(f"The prediction is done and the result is stored here: data/pre_labeled_data/{ncar}_labeled.xlsx!")
