@@ -282,31 +282,4 @@ def data_augmentation(df: pd.DataFrame) -> pd.DataFrame:
                     df_temp = augmented_boundingbox(df_new, df_temp)
                     df = pd.concat([df, df_temp], ignore_index=True).reset_index(drop=True)
 
-    if general_params["save_artificial_dataset"]:
-        dateTimeObj = datetime.now()
-        timestamp = dateTimeObj.strftime("%d%m%Y_%H%M")
-
-        df.to_excel(f"../data/artificial_dataset_{timestamp}.xlsx")
-
     return df
-
-# %% [markdown]
-# ### MAIN
-
-# %%
-def main():
-    # Define the path to the labeled dataset
-    data = pd.read_excel("../data/G65_bounding_pp.xlsx", index_col=0)
-
-    # Generate the new dataset
-    new_data = data_augmentation(data)
-
-# %%
-if __name__ == "__main__":
-    
-    main()
-
-# %%
-
-
-
