@@ -42,32 +42,26 @@ def dataframe_to_dict(df):
 
 @app.post("/api/get_relevant_parts/")
 async def post_relevant_parts(file: UploadFile = File(...)):
+    if file.filename.endswith(".xlsx") or file.filename.endswith(".xls"):
+        try:
+            contents = await file.read()
+            df = pd.read_excel(BytesIO(contents))
+            df.columns = df.iloc[0]
+            df = df.iloc[1:]
+        except Exception:
+            return JSONResponse(status_code=400, content={"error": "Fehler beim Lesen der Datei. Stellen Sie sicher, dass es sich um eine gültige Excel-Datei handelt."})
+      
+        try:
+            df_preprocessed, df_relevant_parts, einheitsname_not_found, ncar = predict_on_new_data(df, use_api=True)
+        except Exception:
+            return JSONResponse(status_code=400, content={"error": "Fehler bei der Vorhersage."})
+        
+        try:
+            df_json = dataframe_to_dict(df_relevant_parts)
 
-    if not file.filename.endswith(".xlsx") or not file.filename.endswith(".xls"):
-        return JSONResponse(status_code=400, content={"error": "Ungültige Dateierweiterung. Es werden nur Excel-Dateien (.xlsx) akzeptiert."})
+            return JSONResponse(status_code=200, content=df_json)
+        except Exception:
+            return JSONResponse(status_code=400, content={"error": "Fehler beim umwandeln der Datei."})
 
-    try:
-        contents = await file.read()
-        df = pd.read_excel(BytesIO(contents))
-
-        df_predicted, einheitsname_not_found, ncars = predict_on_new_data(df)
-        df_json = dataframe_to_dict(df_predicted)
-
-        return JSONResponse(status_code=200, content=df_json)
-    except Exception:
-        return JSONResponse(status_code=400, content={"error": "Fehler beim Lesen der Datei. Stellen Sie sicher, dass es sich um eine gültige Excel-Datei handelt."})
-
-    
-
-
-@app.get("/get_relevant_parts/{file_path:path}")
-async def get_relevant_parts(file_path: str):
-    try:
-        df = pd.read_excel(file_path, header=None, skiprows=1)
-    except:
-        raise UnicornException(name=f"Load Excel to dataframe failed!")
-
-    df_predicted, einheitsname_not_found, ncars = predict_on_new_data(df)
-    df_json = df_predicted.to_dict(orient='series') 
-
-    return df_json
+    else:
+        return JSONResponse(status_code=400, content={"error": "Ungültige Dateierweiterung. Es werden nur Excel-Dateien (.xlsx oder .xls) akzeptiert."})
