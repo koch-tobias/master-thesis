@@ -108,11 +108,7 @@ def train_lgbm_model(folder_path, binary_model):
                             best_model.append(gbm)
                             best_evals.append(evals) 
                             max_sensitivity = sensitivity
-                        break
-                    break
-                break
-            break
-
+    
         df.to_excel(model_folder_path + "lgbm_hyperparametertuning_results.xlsx")
 
         test_acc = store_metrics(best_model[-1], X_test, y_test, best_evals[-1], sensitivity, model_folder_path, binary_model=binary_model)
