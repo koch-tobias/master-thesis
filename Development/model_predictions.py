@@ -1,22 +1,31 @@
 import pandas as pd
 import numpy as np
 import pickle
+from loguru import logger
 from Data_Preprocessing import prepare_and_add_labels, preprocess_dataset, get_model, get_X
 from boundingbox_calculations import find_valid_space
-from config import model_paths
+from config import model_paths_api, paths_api, model_paths, paths
 
-def predict_on_new_data(df):
+def predict_on_new_data(df, use_api: bool):
 
     df, ncar = prepare_and_add_labels(df)
-
-    trainset = pd.read_excel("data/preprocessed_data/df_preprocessed.xlsx")
+    if use_api:
+        trainset = pd.read_excel(paths_api["trainingset"])
+    else:
+        trainset = pd.read_excel(paths["trainingset"])
     trainset_relevant_parts = trainset[trainset["Relevant fuer Messung"] == "Ja"]
     trainset_relevant_parts = trainset_relevant_parts[(trainset_relevant_parts['X-Min_transf'] != 0) & (trainset_relevant_parts['X-Max_transf'] != 0)]    
     unique_names = trainset_relevant_parts["Einheitsname"].unique().tolist()
     unique_names.sort()
-        
-    lgbm_binary, vectorizer_binary, vocabulary_binary = get_model(model_paths["lgbm_binary"])
-    lgbm_multiclass, vectorizer_multiclass, vocabulary_multiclass = get_model(model_paths["lgbm_multiclass"])
+
+    logger.info(unique_names)
+    
+    if use_api:
+        lgbm_binary, vectorizer_binary, vocabulary_binary = get_model(model_paths_api["lgbm_binary"])
+        lgbm_multiclass, vectorizer_multiclass, vocabulary_multiclass = get_model(model_paths_api["lgbm_multiclass"])
+    else:
+        lgbm_binary, vectorizer_binary, vocabulary_binary = get_model(model_paths["lgbm_binary"])
+        lgbm_multiclass, vectorizer_multiclass, vocabulary_multiclass = get_model(model_paths["lgbm_multiclass"])       
 
     df_preprocessed, df_for_plot = preprocess_dataset(df, cut_percent_of_front=0.20)
 
@@ -29,8 +38,12 @@ def predict_on_new_data(df):
     y_pred_multiclass = probs_multiclass.argmax(axis=1)
 
     # Load the LabelEncoder
-    with open(model_paths["lgbm_multiclass"] + '/label_encoder.pkl', 'rb') as f:
-        le = pickle.load(f) 
+    if use_api:
+        with open(model_paths_api["lgbm_multiclass"] + '/label_encoder.pkl', 'rb') as f:
+            le = pickle.load(f) 
+    else:
+        with open(model_paths["lgbm_multiclass"] + '/label_encoder.pkl', 'rb') as f:
+            le = pickle.load(f) 
 
     y_pred_multiclass_names = le.inverse_transform(y_pred_multiclass) 
 
@@ -84,4 +97,4 @@ def predict_on_new_data(df):
     df_relevant_parts.loc[df_relevant_parts["L/R-Kz."] == "L", "L/R-Kz."] = 'Linke Ausfuehrung'
     df_relevant_parts.loc[df_relevant_parts["L/R-Kz."] == "R", "L/R-Kz."] = 'Rechte Ausfuehrung'
 
-    return df, df_relevant_parts, einheitsname_not_found, ncar
+    return df_preprocessed, df_relevant_parts, einheitsname_not_found, ncar
