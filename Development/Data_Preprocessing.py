@@ -84,8 +84,8 @@ def combine_dataframes(dataframes: list) -> pd.DataFrame:
     # Check if all dataframes have the same columns 
     for df in dataframes:
         if set(df.columns) != columns_set:
-            print(df.columns)
-            print(columns_set)
+            logger.info(df.columns)
+            logger.info(columns_set)
             raise ValueError("All dataframes must have the same columns.")
     
     # Merge all dataframes into a single dataframe
@@ -108,11 +108,14 @@ def prepare_and_add_labels(dataframe: pd.DataFrame):
     dataframe_new = dataframe.loc[:index_EF_module-1]
 
     for modules in general_params["keep_modules"]:
-        level = dataframe[dataframe[general_params["car_part_designation"]].str.startswith(f'{ncar} {modules}')]["Ebene"].values[0]
-        startindex = dataframe[dataframe[general_params["car_part_designation"]].str.startswith(f'{ncar} {modules}')].index[-1]+1
-        endindex = dataframe.loc[(dataframe["Ebene"] == level) & (dataframe.index > startindex)].index[0]-1
-        temp = dataframe.loc[startindex:endindex]
-        dataframe_new = pd.concat([dataframe_new, temp]).reset_index(drop=True)
+        try:
+            level = dataframe[dataframe[general_params["car_part_designation"]].str.startswith(f'{ncar} {modules}')]["Ebene"].values[0]
+            startindex = dataframe[dataframe[general_params["car_part_designation"]].str.startswith(f'{ncar} {modules}')].index[-1]+1
+            endindex = dataframe.loc[(dataframe["Ebene"] == level) & (dataframe.index > startindex)].index[0]-1
+            temp = dataframe.loc[startindex:endindex]
+            dataframe_new = pd.concat([dataframe_new, temp]).reset_index(drop=True)
+        except:
+            logger.info(f"Module {modules} in structure tree not found!")
 
     # Keep only the relevant samples with Dok-Format=5P. This samples are on the last level of the car structure
     dataframe_new = dataframe_new[dataframe_new["Dok-Format"]=='5P'].reset_index(drop=True)
@@ -129,17 +132,7 @@ def prepare_and_add_labels(dataframe: pd.DataFrame):
     dataframe_new.insert(len(dataframe_new.columns), 'Relevant fuer Messung', 'Nein')
     dataframe_new.insert(len(dataframe_new.columns), 'Einheitsname', 'Dummy')
 
-    if general_params["save_prepared_dataset_for_labeling"]:
-        # Date
-        dateTimeObj = datetime.now()
-        timestamp = dateTimeObj.strftime("%d%m%Y_%H%M")
-        
-        # Store preprocessed dataframes
-        dataframe_new.to_excel(f"../data/preprocessed_data/{ncar}_preprocessed_{timestamp}.xlsx")
-
-        logger.success(f"The features are reduced and formated to the correct data type. The new dataset is stored as {ncar}_preprocessed_{timestamp}.xlsx!")
-    else:
-        logger.success(f"The features are reduced and formated to the correct data type!")
+    logger.success(f"The features are reduced and formated to the correct data type!")
     
     return dataframe_new, ncar
 
@@ -238,7 +231,10 @@ def preprocess_dataset(df, cut_percent_of_front: float):
     df_relevants = clean_text(df_relevants)
 
     # Drop the mirrored car parts (on the right sight) which have the same Sachnummer
-    df_relevants = df_relevants[~((df_relevants['Sachnummer'].duplicated(keep='last')) & (df_relevants['yy'] == -1))]
+    df_new = df_relevants.drop_duplicates(subset='Sachnummer', keep=False)
+    df_filtered = df_relevants[df_relevants.duplicated(subset='Sachnummer', keep=False)]
+    df_filtered = df_filtered[df_filtered['yy'].astype(int) == 1]
+    df_relevants = pd.concat([df_new, df_filtered]).reset_index(drop=True)
 
     # Drop the mirrored car parts (on the right sight) which have not the same Sachnummer 
     df_relevants = df_relevants.loc[~(df_relevants.duplicated(subset='Kurzname', keep=False) & (df_relevants['L/R-Kz.'] == 'R'))]
@@ -248,14 +244,16 @@ def preprocess_dataset(df, cut_percent_of_front: float):
     # Reset the index of the merged data frame
     df_relevants = df_relevants.reset_index(drop=True)
 
+    df_relevants = df_relevants.drop_duplicates()
+
     logger.success(f"The dataset is successfully preprocessed. The new dataset contains {df_relevants.shape[0]} samples")
 
     return df_relevants, df_for_plot
 
 # %%
-def train_test_val(df, df_test, test_size:float, timestamp):
+def train_test_val(df, df_test, test_size:float, model_folder_path, binary_model):
     
-    X, X_test = vectorize_data(df, df_test, timestamp)
+    X, X_test = vectorize_data(df, df_test, model_folder_path)
 
     # Combine text features with other features
     features = general_params["features_for_model"]
@@ -263,7 +261,7 @@ def train_test_val(df, df_test, test_size:float, timestamp):
         X = np.concatenate((X, df[features].values), axis=1)
         X_test = np.concatenate((X_test, df_test[features].values), axis=1)
 
-    if train_settings["classify_einheitsnamen"] == False:
+    if binary_model:
         y = df['Relevant fuer Messung']
         y = y.map({'Ja': 1, 'Nein': 0})
         y_test = df_test['Relevant fuer Messung']
@@ -275,26 +273,26 @@ def train_test_val(df, df_test, test_size:float, timestamp):
         y_test = df_test['Einheitsname']
         y_test = le.transform(y_test)
 
-        with open(f'../models/Einheitsnamen/lgbm_{timestamp}/label_encoder.pkl', 'wb') as f: 
+        with open(model_folder_path + 'label_encoder.pkl', 'wb') as f: 
             pickle.dump(le, f)  
 
-    weight_factor = get_weight_factor(y, df)     
+    weight_factor = get_weight_factor(y, df, binary_model)     
 
     X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=test_size, random_state=42)
 
     return X_train, y_train, X_val, y_val, X_test, y_test, weight_factor
 
 # %%
-def train_test_val_kfold(df, df_test, timestamp):
+def train_test_val_kfold(df, df_test, model_folder_path, binary_model):
 
-    X, X_test = vectorize_data(df, df_test, timestamp)
+    X, X_test = vectorize_data(df, df_test, model_folder_path)
 
     # Combine text features with other features
     if train_settings["use_only_text"] == False:
         features = general_params["features_for_model"]
         X = np.concatenate((X, df[features].values), axis=1)
 
-    if train_settings["classify_einheitsnamen"] == False:
+    if binary_model:
         y = df['Relevant fuer Messung']
         y = y.map({'Ja': 1, 'Nein': 0})
         y_test = df_test['Relevant fuer Messung']
@@ -306,18 +304,17 @@ def train_test_val_kfold(df, df_test, timestamp):
         y_test = df_test['Einheitsname']
         y_test = le.transform(y_test)
 
-        with open(f'../models/Einheitsnamen/lgbm_{timestamp}/label_encoder.pkl', 'wb') as f: 
+        with open(model_folder_path + 'label_encoder.pkl', 'wb') as f: 
             pickle.dump(le, f)
 
-    weight_factor = get_weight_factor(y, df)     
+    weight_factor = get_weight_factor(y, df, binary_model)     
 
     return X, y, X_test, y_test, weight_factor
 
 # %%
-def get_weight_factor(y, df):
-    if train_settings["classify_einheitsnamen"]:
+def get_weight_factor(y, df, binary_model):
+    if binary_model == False:
         # Get list of unique values in column "Einheitsname"
-
         unique_einheitsnamen = np.unique(y)
         weight_factor = {}
         for name in unique_einheitsnamen:
@@ -366,9 +363,12 @@ def get_X(vocab, vectorizer, df_preprocessed):
 
 
 # %%
-def load_prepare_dataset(test_size):
-    if train_settings["already_preprocessed"] == False:
-        dataframes_list = load_csv_into_df(original_prisma_data=False)
+def load_prepare_dataset(test_size, folder_path, model_folder_path, binary_model: bool):
+    if os.path.exists(folder_path + "df_trainset.xlsx"):
+        df_preprocessed = pd.read_excel(folder_path + "df_trainset.xlsx") 
+        df_test = pd.read_excel(folder_path + "df_testset.xlsx")
+    else:
+        dataframes_list = load_csv_into_df(original_prisma_data=False, label_new_data=False)
         random.seed(33)
         # Take random dataset from list as test set and drop it from the list
         random_index = random.randint(0, len(dataframes_list) - 1)
@@ -384,37 +384,15 @@ def load_prepare_dataset(test_size):
             # Generate the new dataset
             df_preprocessed = data_augmentation(df_preprocessed)
 
-        df_preprocessed.to_excel("df_preprocessed.xlsx")
-        df_test.to_excel("df_test.xlsx")
-    else:
-        df_preprocessed = pd.read_excel("df_preprocessed.xlsx")
-        df_test = pd.read_excel("df_test.xlsx")
+        df_preprocessed.to_excel(folder_path + "df_trainset.xlsx")
+        df_test.to_excel(folder_path + "df_testset.xlsx")
 
-    dateTimeObj = datetime.now()
-    timestamp = dateTimeObj.strftime("%d%m%Y_%H%M")
     vocab = get_vocabulary(df_preprocessed['Benennung (bereinigt)'])
 
     # Split dataset
     if train_settings["cross_validation"]:
-        X, y, X_test, y_test, weight_factor = train_test_val_kfold(df_preprocessed, df_test, test_size=test_size, timestamp=timestamp)
-        return X, y, X_test, y_test, weight_factor, timestamp, vocab
+        X, y, X_test, y_test, weight_factor = train_test_val_kfold(df_preprocessed, df_test, test_size=test_size, model_folder_path=model_folder_path, binary_model=binary_model)
+        return X, y, X_test, y_test, weight_factor
     else:
-        X_train, y_train, X_val, y_val, X_test, y_test, weight_factor = train_test_val(df_preprocessed, df_test, test_size=test_size, timestamp=timestamp)
-        return X_train, y_train, X_val, y_val, X_test, y_test, weight_factor, timestamp, vocab
-
-# %% [markdown]
-# ### Main
-
-# %%
-def main():
-    # Define the path to the folder containing the data (xls files)
-    dataframes = load_csv_into_df(original_prisma_data=False)
-    df = combine_dataframes(dataframes)
-
-
-# %%
-if __name__ == "__main__":
-    
-    main()
-
-
+        X_train, y_train, X_val, y_val, X_test, y_test, weight_factor = train_test_val(df_preprocessed, df_test, test_size=test_size, model_folder_path=model_folder_path, binary_model=binary_model)
+        return X_train, y_train, X_val, y_val, X_test, y_test, weight_factor
