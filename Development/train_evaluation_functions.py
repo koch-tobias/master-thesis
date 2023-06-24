@@ -12,7 +12,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.metrics import recall_score
 from sklearn.metrics import ConfusionMatrixDisplay
 
-from config import general_params, lgbm_params, lgbm_params_multiclass
+from config import general_params, lgbm_params_binary, lgbm_params_multiclass
 from config import lgbm_hyperparameter as lgbm_hp
 
 # %%
@@ -69,7 +69,7 @@ def store_trained_model(model, sensitivity, model_folder_path):
 def evaluate_lgbm_model(model, X_test, y_test, lr_index, max_depth_index, feature_frac_index, child_index, num_models_trained, training_time, binary_model):
     probs = model.predict_proba(X_test)
     if binary_model:
-        y_pred = (probs[:,1] >= lgbm_params["prediction_threshold"])
+        y_pred = (probs[:,1] >= lgbm_params_binary["prediction_threshold"])
         y_pred =  np.where(y_pred, 1, 0)
     else:
         y_pred = probs.argmax(axis=1)
@@ -97,7 +97,7 @@ def store_metrics(model, X_test, y_test, evals, sensitivity, model_folder_path, 
 
     probs = model.predict_proba(X_test)
     if binary_model:
-        y_pred = (probs[:,1] >= lgbm_params["prediction_threshold"])
+        y_pred = (probs[:,1] >= lgbm_params_binary["prediction_threshold"])
         y_pred =  np.where(y_pred, 1, 0)
     else:
         y_pred = probs.argmax(axis=1)
@@ -111,7 +111,7 @@ def store_metrics(model, X_test, y_test, evals, sensitivity, model_folder_path, 
 
     if binary_model:
         plt.rcParams["figure.figsize"] = (10, 10)
-        lgb.plot_metric(evals, metric=lgbm_params["metrics"][1])
+        lgb.plot_metric(evals, metric=lgbm_params_binary["metrics"][1])
         plt.title("")
         plt.xlabel('Iterationen', fontsize=12)
         plt.ylabel('Loss', fontsize=12)
@@ -121,7 +121,7 @@ def store_metrics(model, X_test, y_test, evals, sensitivity, model_folder_path, 
         plt.savefig(model_folder_path + 'binary_logloss_plot.png')
 
         plt.rcParams["figure.figsize"] = (10, 10)
-        lgb.plot_metric(evals, metric=lgbm_params["metrics"][0])
+        lgb.plot_metric(evals, metric=lgbm_params_binary["metrics"][0])
         plt.title("")
         plt.xlabel('Iterationen', fontsize=12 )
         plt.ylabel('AUC', fontsize=12)

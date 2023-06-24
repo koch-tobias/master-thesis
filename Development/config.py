@@ -65,7 +65,7 @@ train_settings = {
     "early_stopping": 30
 }
 
-lgbm_params = {
+lgbm_params_binary = {
     "boosting_type": 'dart',
     "test_size": 0.2,
     "metrics": ['auc', 'binary_logloss'],

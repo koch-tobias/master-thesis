@@ -12,7 +12,7 @@ from sklearn.model_selection import KFold
 
 from Data_Preprocessing import load_prepare_dataset
 from train_evaluation_functions import store_predictions, store_trained_model, evaluate_lgbm_model, store_metrics
-from config import lgbm_params_multiclass, lgbm_params, train_settings
+from config import lgbm_params_multiclass, lgbm_params_binary, train_settings
 from config import lgbm_hyperparameter as lgbm_hp
 
 # %%
@@ -22,17 +22,17 @@ warnings.filterwarnings("ignore")
 def binary_classifier(weight_factor, lr_index, max_depth_index, feature_frac_index, child_index):
     
     class_weight = {0: 1, 1: weight_factor}
-    gbm = LGBMClassifier(boosting_type=lgbm_params["boosting_type"],
+    gbm = LGBMClassifier(boosting_type=lgbm_params_binary["boosting_type"],
                         objective='binary',
-                        metric=lgbm_params["metrics"],
+                        metric=lgbm_params_binary["metrics"],
                         num_leaves= pow(2, lgbm_hp["max_depth"][max_depth_index]),
                         max_depth=lgbm_hp["max_depth"][max_depth_index],
                         learning_rate=lgbm_hp['lr'][lr_index],
                         feature_fraction=lgbm_hp["feature_fraction"][feature_frac_index],
                         min_child_samples=lgbm_hp["min_child_samples"][child_index],
-                        n_estimators=lgbm_params["n_estimators"],
+                        n_estimators=lgbm_params_binary["n_estimators"],
                         class_weight=class_weight)
-    return gbm, lgbm_params["metrics"]
+    return gbm, lgbm_params_binary["metrics"]
     
 def multiclass_classifier(weight_factor, lr_index, max_depth_index, feature_frac_index, child_index):
     gbm = LGBMClassifier(boosting_type=lgbm_params_multiclass["boosting_type"],

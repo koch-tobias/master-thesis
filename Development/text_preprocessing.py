@@ -1,10 +1,8 @@
 import re
 import pandas as pd
 import pickle
-import os
 
 from sklearn.feature_extraction.text import CountVectorizer
-from config import train_settings
 
 # %%
 def prepare_text(designation: str) -> str:
