@@ -1,10 +1,7 @@
 general_params = {
     "seed": 42,
     "cut_percent_of_front": 0.20,
-    "save_preprocessed_data": False,
-    "save_artificial_dataset": False,
-    "save_prepared_dataset_for_labeling": False,
-    "ncars": ['G14', 'G15', 'G22', 'G23', 'G61', 'G65', 'NA5', 'NA7'],
+    "ncars": ['G11', 'G14', 'G15','G20', 'G22', 'G23', 'G29', 'G30', 'G61', 'G65', 'G70','NA5', 'NA7'],
     "relevant_features": ['Sachnummer','Benennung (dt)', 'X-Min','X-Max','Y-Min','Y-Max','Z-Min','Z-Max', 'Wert','Einheit','Gewichtsart','Kurzname','L-Kz.', 'L/R-Kz.', 'Modul (Nr)', 'ox','oy', 'oz', 'xx','xy','xz', 'yx','yy','yz','zx','zy','zz'],
     "features_for_model": ['center_x', 'center_y', 'center_z','length','width','height','theta_x','theta_y','theta_z'],
     "keep_modules": ['CE05', 'CD07'], # Keep this modules out of module group EP (CE05=interior mirror, CD07=roof antenna)
@@ -12,8 +9,13 @@ general_params = {
 }
 
 paths = {
+    "labeled_data": "data/labeled_data",
+    "new_data": "data/original_data_new",
+}
+
+paths_api = {
     "labeled_data": "../data/labeled_data",
-    "new_data": "data/original_data_new"
+    "new_data": "../data/original_data_new",
 }
 
 # using dictionary to convert data types of specific columns
@@ -50,15 +52,17 @@ model_paths = {
     "lgbm_multiclass": "models/Einheitsnamen/lgbm_07062023_2130"
 }
 
+model_paths_api = {
+    "lgbm_binary": "../models/lgbm_07062023_1559",
+    "lgbm_multiclass": "../models/Einheitsnamen/lgbm_07062023_2130"
+}
+
 train_settings = {
     "cross_validation": False,
     "k-folds": 7,
     "augmentation": True,
-    "store_trained_model": True,
-    "print_predictions": True,
     "use_only_text": False,
-    "classify_einheitsnamen": True,
-    "already_preprocessed": True
+    "early_stopping": 30
 }
 
 lgbm_params = {
@@ -66,16 +70,14 @@ lgbm_params = {
     "test_size": 0.2,
     "metrics": ['auc', 'binary_logloss'],
      "n_estimators": 800,
-    "early_stopping": 30,
     "prediction_threshold": 0.75
 }
 
 lgbm_params_multiclass = {
     "boosting_type": 'dart',
     "test_size": 0.2,
-    "metrics": ['multi_logloss'],
-     "n_estimators": 400,
-    "early_stopping": 30
+    "metrics": ['multi_logloss', 'auc_mu'],
+     "n_estimators": 400
     }
 
 lgbm_hyperparameter = {

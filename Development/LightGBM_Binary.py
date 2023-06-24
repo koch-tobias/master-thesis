@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import pickle
 from loguru import logger
 import warnings
+import os
 
 import lightgbm as lgb
 from lightgbm import LGBMClassifier
@@ -16,20 +17,22 @@ from sklearn.model_selection import KFold
 from sklearn.metrics import ConfusionMatrixDisplay
 
 from Data_Preprocessing import load_prepare_dataset
+from train_evaluation_functions import store_predictions, store_trained_model, evaluate_lgbm_model, store_metrics
 from config import lgbm_params, general_params, train_settings
 from config import lgbm_hyperparameter as lgbm_hp
 
 # %%
 warnings.filterwarnings("ignore")
 
+'''
 # %%
-def store_predictions(model, X_test, y_test, y_pred, probs, timestamp):
-    vectorizer_path = f"../models/lgbm_{timestamp}/vectorizer.pkl"
+def store_predictions(model, X_test, y_test, y_pred, probs):
+    vectorizer_path = model_folder_path + "vectorizer.pkl"
     # Load the vectorizer from the file
     with open(vectorizer_path, 'rb') as f:
         vectorizer = pickle.load(f)
 
-    vocabulary_path = f"../models/lgbm_{timestamp}/vocabulary.pkl"
+    vocabulary_path = model_folder_path + "vocabulary.pkl"
     # Get the vocabulary of the training data
     with open(vocabulary_path, 'rb') as f:
         vocabulary = pickle.load(f)
@@ -69,13 +72,7 @@ def store_predictions(model, X_test, y_test, y_pred, probs, timestamp):
             print('Wahrscheinlichkeit für Sample {}: {}'.format(i+1, probs[i][1]))
 
             print('------------------------')
-
-# %%
-def sensitivity_metric(y_true, y_pred):
-    y_pred_thresh = [1 if pred >= 0.5 else 0 for pred in y_pred]
-    eval_result = recall_score(y_true, y_pred_thresh)
-    return eval_result
-
+'''
 # %%
 def train_model(X_train, y_train, X_val, y_val, weight_factor, lr_index, max_depth_index, feature_frac_index, child_index):
     
@@ -103,37 +100,8 @@ def train_model(X_train, y_train, X_val, y_val, weight_factor, lr_index, max_dep
     
     return gbm, evals
 
-# %%
-def store_trained_model(model, test_acc, timestamp):
-    # save model
-    model_path = f"../models/lgbm_{timestamp}/model_{str(test_acc)[2:]}.pkl"
-    with open(model_path, "wb") as filestore:
-        pickle.dump(model, filestore)
-
-# %%
-def evaluate_model(model, X_test, y_test, timestamp, lr_index, max_depth_index, feature_frac_index, child_index, num_models_trained):
-    probs = model.predict_proba(X_test)
-    y_pred = (probs[:,1] >= lgbm_params["prediction_threshold"])
-    y_pred =  np.where(y_pred, 1, 0) 
-
-    # Print accuracy score
-    accuracy = accuracy_score(y_test, y_pred)
-    sensitivity = sensitivity_metric(y_test, y_pred)
-
-    df_new = pd.DataFrame(columns=["model_name","learningrate","max_depth","num_leaves","feature_freaction","min_child_samples","accuracy", "sensitivity"])
-
-    df_new.loc[num_models_trained, "model_name"] = "lightgbm_" + str(timestamp)
-    df_new.loc[num_models_trained, "learningrate"] = lgbm_hp["lr"][lr_index]
-    df_new.loc[num_models_trained, "max_depth"] = lgbm_hp["max_depth"][max_depth_index]
-    df_new.loc[num_models_trained, "num_leaves"] = pow(2, lgbm_hp["max_depth"][max_depth_index])
-    df_new.loc[num_models_trained, "feature_freaction"] = lgbm_hp["feature_fraction"][feature_frac_index]
-    df_new.loc[num_models_trained, "min_child_samples"] = lgbm_hp["min_child_samples"][child_index]
-    df_new.loc[num_models_trained, "accuracy"] = accuracy
-    df_new.loc[num_models_trained, "sensitivity"] = sensitivity
-
-    return y_pred, probs, accuracy, sensitivity, df_new
-
-def plot_metrics(model, X_test, y_test, evals, sensitivity, timestamp):
+'''
+def plot_metrics(model, X_test, y_test, evals, sensitivity):
     probs = model.predict_proba(X_test)
     y_pred = (probs[:,1] >= lgbm_params["prediction_threshold"])
     y_pred =  np.where(y_pred, 1, 0) 
@@ -145,23 +113,36 @@ def plot_metrics(model, X_test, y_test, evals, sensitivity, timestamp):
 
 
     lgb.plot_metric(evals, metric=lgbm_params["metrics"][1])
-    plt.savefig(f'../models/lgbm_{timestamp}/binary_logloss_plot.png')
+    plt.xlabel('Iterationen')
+    plt.ylabel('Loss')
+    plt.savefig(model_folder_path + 'binary_logloss_plot.png')
 
     lgb.plot_metric(evals, metric=lgbm_params["metrics"][0])
-    plt.savefig(f'../models/lgbm_{timestamp}/auc_plot.png')
+    plt.xlabel('Iterationen')
+    plt.ylabel('AUC')
+    plt.savefig(model_folder_path + 'auc_plot.png')
 
-    class_names = ["Nein", "Ja"]
+    class_names = ["Not relevant", "Relevant"]
     ConfusionMatrixDisplay.from_predictions(y_test, y_pred, display_labels=class_names, cmap='Blues', colorbar=False)
-    plt.savefig(f'../models/lgbm_{timestamp}/confusion_matrix.png')  
+    plt.savefig(model_folder_path + 'confusion_matrix.png')  
 
     return accuracy  
-
+'''
 # %%
-def train_lgbm_binary_model():
+def train_lgbm_binary_model(folder_path):
+
+    global model_folder_path 
+    model_folder_path = folder_path + "Binary_model/"
+    try:
+        os.makedirs(model_folder_path)
+    except FileExistsError:
+        # directory already exists
+        pass
+
     if train_settings["cross_validation"]==False:
         # Split dataset
-        X_train, y_train, X_val, y_val, X_test, y_test, weight_factor, timestamp, vocab = load_prepare_dataset(test_size=lgbm_params["test_size"])
-        
+        X_train, y_train, X_val, y_val, X_test, y_test, weight_factor = load_prepare_dataset(test_size=lgbm_params["test_size"], folder_path=folder_path, model_folder_path=model_folder_path, binary_model=True)
+
         df = pd.DataFrame(columns=["model_name","learningrate","max_depth","num_leaves","feature_freaction","min_child_samples","accuracy", "sensitivity"])
         max_sensitivity = 0
         best_lr_index = 0
@@ -175,7 +156,7 @@ def train_lgbm_binary_model():
                 for feature_frac_index in range(len(lgbm_hp["feature_fraction"])):
                     for child_index in range(len(lgbm_hp["min_child_samples"])):
                         gbm, evals = train_model(X_train, y_train, X_val, y_val, weight_factor, lr_index, max_depth_index, feature_frac_index, child_index)
-                        y_pred, probs, test_acc, sensitivity, df_new = evaluate_model(gbm, X_test, y_test, timestamp, lr_index, max_depth_index, feature_frac_index, child_index, num_models_trained)
+                        y_pred, probs, sensitivity, df_new = evaluate_lgbm_model(gbm, X_test, y_test, lr_index, max_depth_index, feature_frac_index, child_index, num_models_trained, binary_model=True)
                         df = pd.concat([df, df_new])
                         print(f"Modell {df.shape[0]}/{total_models} trained with a sensitivity = {sensitivity}")
                         num_models_trained = num_models_trained + 1
@@ -184,21 +165,25 @@ def train_lgbm_binary_model():
                             best_md_index = max_depth_index
                             best_ff_index = feature_frac_index
                             best_ci_index = child_index
+                            max_sensitivity = sensitivity
+                        break
+                    break
+                break
+            break
 
-        df.to_excel(f"../models/lgbm_hyperparametertuning_{timestamp}.xlsx")
-                       
-        if train_settings["print_predictions"]:
-            store_predictions(gbm, X_test, y_test, y_pred, probs, timestamp)
+        df.to_excel(model_folder_path + "lgbm_hyperparametertuning_results.xlsx")
 
-        if train_settings["store_trained_model"]:
-            gbm, evals = train_model(X_train, y_train, X_val, y_val, weight_factor, best_lr_index, best_md_index, best_ff_index, best_ci_index)
-            test_acc = plot_metrics(gbm, X_test, y_test, evals, sensitivity, timestamp)
-            store_trained_model(gbm, test_acc, timestamp)
+        gbm, evals = train_model(X_train, y_train, X_val, y_val, weight_factor, best_lr_index, best_md_index, best_ff_index, best_ci_index)
+        y_pred, probs, test_acc, sensitivity, df_new = evaluate_lgbm_model(gbm, X_test, y_test, lr_index, max_depth_index, feature_frac_index, child_index, num_models_trained, binary_model=True)
+        store_trained_model(gbm, sensitivity, model_folder_path)
+        store_predictions(gbm, X_test, y_test, y_pred, probs, folder_path, model_folder_path)
+        test_acc = store_metrics(gbm, X_test, y_test, evals, sensitivity, lgbm_params["metrics"], model_folder_path, binary_model=True)
+        
+        plot_importance(gbm, max_num_features=10)
 
-            plot_importance(gbm, max_num_features=10)
     else:
         # Split dataset
-        X_train, y_train, X_test, y_test, weight_factor, timestamp, vocab = load_prepare_dataset(test_size=lgbm_params["test_size"])
+        X_train, y_train, X_val, y_val, X_test, y_test, weight_factor = load_prepare_dataset(test_size=lgbm_params["test_size"], folder_path=folder_path, model_folder_path=model_folder_path, binary_model=True)
 
         kfold = KFold(n_splits=train_settings["k-folds"], shuffle=True, random_state=42)
         evals_list = []
@@ -210,10 +195,7 @@ def train_lgbm_binary_model():
             gbm, evals = train_model(X_train_fold, y_train_fold, X_val_fold, y_val_fold, weight_factor)
             evals_list.append(evals)
 
-            y_pred, test_acc = evaluate_model(gbm, X_test, y_test, evals, timestamp)
+            y_pred, probs, test_acc, sensitivity, df_new = evaluate_lgbm_model(gbm, X_test, y_test, lr_index, max_depth_index, feature_frac_index, child_index, num_models_trained, binary_model=True)
 
-        if train_settings["print_predictions"]:
-            store_predictions(gbm, X_test, y_test, y_pred, timestamp)
-
-        if train_settings["store_trained_model"]:
-            store_trained_model(gbm, test_acc, timestamp) 
+        store_predictions(gbm, X_test, y_test, y_pred, probs, folder_path, model_folder_path)
+        store_trained_model(gbm, sensitivity, model_folder_path)
