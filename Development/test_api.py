@@ -1,13 +1,16 @@
 # %%
 import requests
 
-url = "http://127.0.0.1:8000/api/get_relevant_parts/"
-file_path = "C:/Users/q617269/Desktop/Masterarbeit_Tobias/repos/master-thesis/data/original_data_archiv/prismaexport-20230515-90622.xls"
-
+url = "http://127.0.0.1:8000/api/get_relevant_parts/" 
+file_path = "C:/Users/q617269/Desktop/Masterarbeit_Tobias/repos/master-thesis/data/original_data_new\prismaexport-20230621-143916.xls"
 files = {"file": open(file_path, "rb")}
 headers = {"accept": "application/json"}
 
-response = requests.post(url, files=files, headers=headers)
+proxies = {
+  "http": None,
+  "https": None}
+
+response = requests.post(url, files=files, headers=headers, proxies=proxies)
 
 print(response.content)
 
