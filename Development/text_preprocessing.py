@@ -43,7 +43,7 @@ def clean_text(df):
     return df
 
 # %%
-def vectorize_data(data: pd.DataFrame, df_val, timestamp) -> tuple:
+def vectorize_data(data: pd.DataFrame, df_val, model_folder_path) -> tuple:
 
     vectorizer = CountVectorizer(analyzer='char', ngram_range=(3, 8))
 
@@ -53,20 +53,10 @@ def vectorize_data(data: pd.DataFrame, df_val, timestamp) -> tuple:
     # Store the vocabulary
     vocabulary = vectorizer.get_feature_names_out()
 
-    if train_settings["classify_einheitsnamen"]:
-        # Save the vectorizer and vocabulary to files
-        os.makedirs(f'../models/Einheitsnamen/lgbm_{timestamp}')
-        with open(f'../models/Einheitsnamen/lgbm_{timestamp}/vectorizer.pkl', 'wb') as f:
-            pickle.dump(vectorizer, f)
-        with open(f'../models/Einheitsnamen/lgbm_{timestamp}/vocabulary.pkl', 'wb') as f:
-            pickle.dump(vocabulary, f)
-    else:
-        # Save the vectorizer and vocabulary to files
-        os.makedirs(f'../models/lgbm_{timestamp}')
-        with open(f'../models/lgbm_{timestamp}/vectorizer.pkl', 'wb') as f:
-            pickle.dump(vectorizer, f)
-        with open(f'../models/lgbm_{timestamp}/vocabulary.pkl', 'wb') as f:
-            pickle.dump(vocabulary, f)
+    with open(model_folder_path + 'vectorizer.pkl', 'wb') as f:
+        pickle.dump(vectorizer, f)
+    with open(model_folder_path + 'vocabulary.pkl', 'wb') as f:
+        pickle.dump(vocabulary, f)
 
     return X_text, X_test
 
