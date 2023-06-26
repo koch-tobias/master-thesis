@@ -108,7 +108,7 @@ def train_lgbm_model(folder_path, binary_model):
                             best_model.append(gbm)
                             best_evals.append(evals) 
                             max_sensitivity = sensitivity
-    
+
         df.to_excel(model_folder_path + "lgbm_hyperparametertuning_results.xlsx")
 
         test_acc = store_metrics(best_model[-1], X_test, y_test, best_evals[-1], sensitivity, model_folder_path, binary_model=binary_model)
@@ -116,7 +116,7 @@ def train_lgbm_model(folder_path, binary_model):
 
         plot_importance(best_model[-1], max_num_features=10)
 
-        store_predictions(gbm, X_test, y_test, y_pred, probs, folder_path, model_folder_path)
+        store_predictions(gbm, X_test, y_test, y_pred, probs, folder_path, model_folder_path, binary_model)
     else:
         # Split dataset
         X_train, y_train, X_val, y_val, X_test, y_test, weight_factor = load_prepare_dataset(test_size=lgbm_params_multiclass["test_size"], folder_path=folder_path, model_folder_path=model_folder_path, binary_model=False)
