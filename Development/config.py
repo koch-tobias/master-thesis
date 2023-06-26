@@ -18,28 +18,6 @@ paths_api = {
     "new_data": "../data/original_data_new",
 }
 
-# using dictionary to convert data types of specific columns
-convert_dict = {'X-Min': float,
-                'X-Max': float,
-                'Y-Min': float,
-                'Y-Max': float,
-                'Z-Min': float,
-                'Z-Max': float,
-                'Wert': float,
-                'ox': float,
-                'oy': float,
-                'oz': float,
-                'xx': float,
-                'xy': float,
-                'xz': float,
-                'yx': float,
-                'yy': float,
-                'yz': float,
-                'zx': float,
-                'zy': float,
-                'zz': float                     
-                }
-
 gpt_settings = {
     "temperature": 0.6,
     "max_tokens": 200,
@@ -69,7 +47,7 @@ lgbm_params_binary = {
     "boosting_type": 'dart',
     "test_size": 0.2,
     "metrics": ['auc', 'binary_logloss'],
-     "n_estimators": 800,
+     "n_estimators": 300,
     "prediction_threshold": 0.75
 }
 
@@ -81,8 +59,8 @@ lgbm_params_multiclass = {
     }
 
 lgbm_hyperparameter = {
-    "lr": [0.01, 0.05, 0.1],    
+    "lr": [0.05, 0.07, 0.1],    
     "max_depth": [3, 5, 7],
     "feature_fraction": [0.5, 0.7, 0.9],
-    "min_child_samples": [10, 20, 30]
+    "min_child_samples": [20, 30, 40]
 }
