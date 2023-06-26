@@ -10,7 +10,6 @@ from loguru import logger
 
 from models.predict import predict_on_new_data
 
-
 class UnicornException(Exception):
     def __init__(self, name: str):
         self.name = name

@@ -4,7 +4,7 @@ import time
 
 url = "http://127.0.0.1:8000/api/get_relevant_parts/" 
 start = time.time()
-file_path = "C:/Users/q617269/Desktop/Masterarbeit_Tobias/repos/master-thesis/data/original_data_archiv/G20_prismaexport-20230621-143916.xls"
+file_path = "C:/Users/q617269/Desktop/Masterarbeit_Tobias/repos/master-thesis/data/raw/G20_prismaexport-20230621-143916.xls"
 files = {"file": open(file_path, "rb")}
 headers = {"accept": "application/json"}
 
