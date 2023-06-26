@@ -26,9 +26,9 @@ gpt_settings = {
 }
 
 model_paths = {
-    "lgbm_binary": "models\HyperparameterTuning_24062023_1737\Binary_model\model_9898_sensitivity", 
-    "lgbm_multiclass": "models\HyperparameterTuning_24062023_1737\Multiclass_model\model_9864_sensitivity",
-    "model_folder": "models\HyperparameterTuning_24062023_1737"
+    "lgbm_binary": "models/HyperparameterTuning_24062023_1737/Binary_model/model_9898_sensitivity", 
+    "lgbm_multiclass": "models/HyperparameterTuning_24062023_1737/Multiclass_model/model_9864_sensitivity",
+    "model_folder": "models/HyperparameterTuning_24062023_1737"
 }
 
 model_paths_api = {
