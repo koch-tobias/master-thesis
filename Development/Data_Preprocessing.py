@@ -181,6 +181,7 @@ def preprocess_dataset(df, cut_percent_of_front: float):
     df_new_features = add_new_features(df)
 
     # Using dictionary to convert specific columns
+    global convert_dict
     convert_dict = {'X-Min': float,
                     'X-Max': float,
                     'Y-Min': float,
