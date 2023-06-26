@@ -15,16 +15,13 @@ from text_preprocessing import vectorize_data, get_vocabulary, clean_text
 from boundingbox_calculations import transform_boundingbox, calculate_center_point, calculate_lwh, calculate_orientation
 from config import general_params, convert_dict, paths, train_settings
 
-# %% [markdown]
-# ### Functions
-
 # %%
 def load_csv_into_df(original_prisma_data: bool, label_new_data: bool) -> list:
     '''
-    This function searches for all .xls files in a given directory, loads each file into a Pandas dataframe and changes the header line.
-    If move_to_archive is set True, then all processed files will be moved to the archive.
+    This function searches for all .xls files in a given directory, loads each file into a pandas dataframe and changes the header line.
     return: List with all created dataframes
     '''
+    
     # Check if the folder exists
     if label_new_data:
         folder_name = paths["new_data"]
