@@ -1,8 +1,10 @@
 # %%
 import requests
+import time
 
 url = "http://127.0.0.1:8000/api/get_relevant_parts/" 
-file_path = "C:/Users/q617269/Desktop/Masterarbeit_Tobias/repos/master-thesis/data/original_data_new\prismaexport-20230621-143916.xls"
+start = time.time()
+file_path = "C:/Users/q617269/Desktop/Masterarbeit_Tobias/repos/master-thesis/data/original_data_archiv/G20_prismaexport-20230621-143916.xls"
 files = {"file": open(file_path, "rb")}
 headers = {"accept": "application/json"}
 
@@ -11,8 +13,10 @@ proxies = {
   "https": None}
 
 response = requests.post(url, files=files, headers=headers, proxies=proxies)
-
+stop = time.time()
+training_time = stop - start
 print(response.content)
+print(training_time)
 
 # %%
 '''

@@ -1,0 +1,24 @@
+credentials:
+  usernames:
+    tkoch:
+      name: Tobias Koch
+      password: $2b$12$FQJlqdF4OZVuAYCI5iC/ku5VyVAYFq72lz4Aj5P/5q.og7LSo.OvW
+    bmwuser:
+      name: User XY
+      password: $2b$12$yyk72tPkCdPHLd/qHo.YYeW7PWknZ2XwBT/9gzuiWgEkicdYQFfwG
+    sfranz:
+      name: Selina Franz
+      password: $2b$12$BohIWH5hPRglFlJ0Z6uVmuzRCWtz/l/v/kgyt.vA3H2XxxO9K7eNG
+cookie:
+  expiry_days: 30
+  key: some_signature_key # Must be string
+  name: some_cookie_name
+
+data_paths:
+    "labeled_data": "data/labeled_data"
+    "new_data": "data/original_data_new"
+
+model_paths:
+    "lgbm_binary": "models/HyperparameterTuning_24062023_1737/Binary_model"
+    "lgbm_multiclass": "models/HyperparameterTuning_24062023_1737/Multiclass_model"
+    "model_folder": "models/HyperparameterTuning_24062023_1737"
