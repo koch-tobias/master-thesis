@@ -13,7 +13,7 @@ from sklearn import preprocessing
 from Data_Augmentation import data_augmentation
 from text_preprocessing import vectorize_data, get_vocabulary, clean_text
 from boundingbox_calculations import transform_boundingbox, calculate_center_point, calculate_lwh, calculate_orientation
-from config import general_params, paths, train_settings
+from config import general_params, paths, train_settings, convert_dict
 
 # %%
 def load_csv_into_df(original_prisma_data: bool, label_new_data: bool) -> list:
@@ -181,28 +181,6 @@ def preprocess_dataset(df, cut_percent_of_front: float):
     df_new_features = add_new_features(df)
 
     # Using dictionary to convert specific columns
-    global convert_dict
-    convert_dict = {'X-Min': float,
-                    'X-Max': float,
-                    'Y-Min': float,
-                    'Y-Max': float,
-                    'Z-Min': float,
-                    'Z-Max': float,
-                    'Wert': float,
-                    'ox': float,
-                    'oy': float,
-                    'oz': float,
-                    'xx': float,
-                    'xy': float,
-                    'xz': float,
-                    'yx': float,
-                    'yy': float,
-                    'yz': float,
-                    'zx': float,
-                    'zy': float,
-                    'zz': float                     
-                    }
-    
     df_new_features = df_new_features.astype(convert_dict)
 
     df_new_features = df_new_features[(df_new_features['X-Min'] != 0) & (df_new_features['X-Max'] != 0)]

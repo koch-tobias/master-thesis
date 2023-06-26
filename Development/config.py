@@ -64,3 +64,24 @@ lgbm_hyperparameter = {
     "feature_fraction": [0.5, 0.7, 0.9],
     "min_child_samples": [20, 30, 40]
 }
+
+convert_dict = {'X-Min': float,
+                'X-Max': float,
+                'Y-Min': float,
+                'Y-Max': float,
+                'Z-Min': float,
+                'Z-Max': float,
+                'Wert': float,
+                'ox': float,
+                'oy': float,
+                'oz': float,
+                'xx': float,
+                'xy': float,
+                'xz': float,
+                'yx': float,
+                'yy': float,
+                'yz': float,
+                'zx': float,
+                'zy': float,
+                'zz': float                     
+                }
