@@ -9,8 +9,8 @@ general_params = {
 }
 
 paths = {
-    "labeled_data": "data/labeled_data",
-    "new_data": "data/original_data_new",
+    "labeled_data": "data/labeled",
+    "new_data": "data/raw_for_labeling",
 }
 
 gpt_settings = {

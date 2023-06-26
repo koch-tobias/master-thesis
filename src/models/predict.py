@@ -4,8 +4,8 @@ import pickle
 from loguru import logger
 from data.preprocessing import prepare_and_add_labels, preprocess_dataset, get_model, get_X
 from data.boundingbox_calculations import find_valid_space
-from configs.config_model import model_paths
-from configs.config_api import model_paths_api
+from config_model import model_paths
+from config_api import model_paths_api
 
 def predict_on_new_data(df, use_api: bool):
 
@@ -27,7 +27,6 @@ def predict_on_new_data(df, use_api: bool):
         lgbm_multiclass, vectorizer_multiclass, vocabulary_multiclass = get_model(model_paths["lgbm_multiclass"])       
 
     df_preprocessed, df_for_plot = preprocess_dataset(df, cut_percent_of_front=0.20)
-    logger.info(df_preprocessed)
 
     X_binary = get_X(vocabulary_binary, vectorizer_binary, df_preprocessed)
     probs_binary = lgbm_binary.predict_proba(X_binary)
@@ -48,7 +47,6 @@ def predict_on_new_data(df, use_api: bool):
     y_pred_multiclass_names = le.inverse_transform(y_pred_multiclass) 
 
     df_relevant_parts = df_preprocessed.reset_index(drop=True)
-    logger.info(df_relevant_parts)
     for index, row in df_relevant_parts.iterrows():
         if y_pred_binary[index] == 1: 
             df_relevant_parts.loc[index,'Relevant fuer Messung'] = 'Ja'
@@ -93,7 +91,6 @@ def predict_on_new_data(df, use_api: bool):
 
     df_relevant_parts = df_relevant_parts.reset_index(drop=True)
     df_relevant_parts["L/R-Kz."] = df_relevant_parts["L/R-Kz."].fillna(' ')
-    #df_preprocessed.rename(columns={'L/R-Kz.':'Linke/Rechte Ausfuehrung'}, inplace=True)
     df_relevant_parts.loc[df_relevant_parts['Einheitsname'] == "Dummy", 'Einheitsname'] = 'Kein Einheitsname gefunden'
     df_relevant_parts.loc[df_relevant_parts["L/R-Kz."] == "L", "L/R-Kz."] = 'Linke Ausfuehrung'
     df_relevant_parts.loc[df_relevant_parts["L/R-Kz."] == "R", "L/R-Kz."] = 'Rechte Ausfuehrung'

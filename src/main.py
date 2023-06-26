@@ -7,13 +7,13 @@ from data.preprocessing import load_csv_into_df, preprocess_dataset
 from models.train import train_lgbm_model
 from models.predict import predict_on_new_data
 from visualization.plot_functions import plot_vehicle
-from configs.config_model import general_params
+from config_model import general_params
 
 # %%
 def main():
-    train_lgbm_relevance_model = False
+    train_lgbm_relevance_model = True
     train_lgbm_name_model = False
-    label_new_data = True
+    label_new_data = False
     plot_bounding_boxes_one_vehicle = False
     plot_bounding_boxes_all_vehicle_by_name = False
     dataset_path_for_plot = "Path of dataset which should be plotted"
@@ -47,7 +47,7 @@ def main():
 
             features = general_params["relevant_features"] + ['Relevant fuer Messung','Einheitsname']
             df_with_label_columns = df_with_label_columns[features]
-            df_with_label_columns.to_excel(f"data/pre_labeled_data/{ncar}_labeled.xlsx")
+            df_with_label_columns.to_excel(f"data/pre_labeled/{ncar}_labeled.xlsx")
 
             logger.info(f"The following car parts are not found in the data: {einheitsname_not_found}")
             logger.success(f"The prediction is done and the result is stored here: data/pre_labeled_data/{ncar}_labeled.xlsx!")

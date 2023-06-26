@@ -11,8 +11,8 @@ from sklearn.metrics import accuracy_score
 from sklearn.metrics import recall_score
 from sklearn.metrics import ConfusionMatrixDisplay
 
-from configs.config_model import general_params, lgbm_params_binary, lgbm_params_multiclass
-from configs.config_model import lgbm_hyperparameter as lgbm_hp
+from config_model import general_params, lgbm_params_binary, lgbm_params_multiclass
+from config_model import lgbm_hyperparameter as lgbm_hp
 
 # %%
 def store_predictions(model, X_test, y_test, y_pred, probs, folder_path, model_folder_path, binary_model):

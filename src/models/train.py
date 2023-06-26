@@ -13,8 +13,8 @@ from sklearn.model_selection import KFold
 from models.LightGBM import binary_classifier, multiclass_classifier
 from data.preprocessing import load_prepare_dataset
 from models.evaluation import store_predictions, store_trained_model, evaluate_lgbm_model, store_metrics
-from configs.config_model import lgbm_params_multiclass, train_settings
-from configs.config_model import lgbm_hyperparameter as lgbm_hp
+from config_model import lgbm_params_multiclass, train_settings
+from config_model import lgbm_hyperparameter as lgbm_hp
 
 warnings.filterwarnings("ignore")
 

@@ -2,8 +2,8 @@
 
 # %%
 from lightgbm import LGBMClassifier
-from configs.config_model import lgbm_params_multiclass, lgbm_params_binary
-from configs.config_model import lgbm_hyperparameter as lgbm_hp
+from config_model import lgbm_params_multiclass, lgbm_params_binary
+from config_model import lgbm_hyperparameter as lgbm_hp
 
 # %%
 def binary_classifier(weight_factor, lr_index, max_depth_index, feature_frac_index, child_index):
