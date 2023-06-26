@@ -2,7 +2,6 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.pyplot import figure
 
 import pickle
 import os
@@ -16,7 +15,7 @@ from config import general_params, lgbm_params_binary, lgbm_params_multiclass
 from config import lgbm_hyperparameter as lgbm_hp
 
 # %%
-def store_predictions(model, X_test, y_test, y_pred, probs, folder_path, model_folder_path):
+def store_predictions(model, X_test, y_test, y_pred, probs, folder_path, model_folder_path, binary_model):
 
     vocabulary_path = model_folder_path + "vocabulary.pkl"
     # Get the vocabulary of the training data
@@ -24,7 +23,14 @@ def store_predictions(model, X_test, y_test, y_pred, probs, folder_path, model_f
         vocabulary = pickle.load(f)
 
     df_test = pd.read_excel(folder_path + "df_testset.xlsx")
-        
+    df_preprocessed = pd.read_excel(folder_path + "df_trainset.xlsx") 
+
+    if binary_model:
+        class_names = df_preprocessed['Relevant fuer Messung'].unique()
+    else:
+        class_names = df_preprocessed["Einheitsname"].unique()
+        class_names = sorted(class_names)
+
     # Extrahieren der wichtigsten Features
     boost = model.booster_
     importance = boost.feature_importance()
@@ -50,9 +56,15 @@ def store_predictions(model, X_test, y_test, y_pred, probs, folder_path, model_f
     for i in range(len(X_test)):
         if y_pred[i] != y_test[i]:
             df_wrong_predictions.loc[i,"Benennung (dt)"] = df_test.loc[i, "Benennung (dt)"]
-            df_wrong_predictions.loc[i,"Predicted"] = class_names[y_pred[i]-1]
+            df_wrong_predictions.loc[i,"Predicted"] = class_names[y_pred[i]]
             df_wrong_predictions.loc[i,"True"] = class_names[y_test[i]]
-            df_wrong_predictions.loc[i,"Probability"] = probs[i][1]
+            if binary_model:
+                if probs[i][1] >= 0.5:
+                    df_wrong_predictions.loc[i,"Probability"] = probs[i][1]
+                else:
+                    df_wrong_predictions.loc[i,"Probability"] = 1 - probs[i][1]
+            else:
+                df_wrong_predictions.loc[i,"Probability"] = probs[i][1]
     
     # Serialize data into file:
     df_wrong_predictions.to_excel(model_folder_path + "wrong_predictions.xlsx")
@@ -80,7 +92,7 @@ def evaluate_lgbm_model(model, X_test, y_test, lr_index, max_depth_index, featur
 
     df_new = pd.DataFrame(columns=["model_name","learningrate","max_depth","num_leaves","feature_freaction","min_child_samples","accuracy", "sensitivity"])
 
-    df_new.loc[num_models_trained, "model_name"] = f"model_{str(sensitivity)[2:]}"
+    df_new.loc[num_models_trained, "model_name"] = f"model_{str(sensitivity)[2:6]}"
     df_new.loc[num_models_trained, "learningrate"] = lgbm_hp["lr"][lr_index]
     df_new.loc[num_models_trained, "max_depth"] = lgbm_hp["max_depth"][max_depth_index]
     df_new.loc[num_models_trained, "num_leaves"] = pow(2, lgbm_hp["max_depth"][max_depth_index])
@@ -93,7 +105,6 @@ def evaluate_lgbm_model(model, X_test, y_test, lr_index, max_depth_index, featur
     return y_pred, probs, accuracy, sensitivity, df_new
 
 def store_metrics(model, X_test, y_test, evals, sensitivity, model_folder_path, binary_model):
-    global class_names
 
     probs = model.predict_proba(X_test)
     if binary_model:
@@ -106,8 +117,6 @@ def store_metrics(model, X_test, y_test, evals, sensitivity, model_folder_path, 
     accuracy = accuracy_score(y_test, y_pred)
     print("\n\n Test accuracy:", accuracy)
     print("Test Sensitivity:", sensitivity, "\n\n")
-
-
 
     if binary_model:
         plt.rcParams["figure.figsize"] = (10, 10)
@@ -132,9 +141,11 @@ def store_metrics(model, X_test, y_test, evals, sensitivity, model_folder_path, 
 
         class_names = ["Not relevant", "Relevant"]
         plt.rcParams["figure.figsize"] = (15, 15)
-        ConfusionMatrixDisplay.from_predictions(y_test, y_pred, display_labels=class_names, cmap='Blues', colorbar=False)
+        ConfusionMatrixDisplay.from_predictions(y_test, y_pred, display_labels=class_names, cmap='Blues', colorbar=False,  text_kw={'fontsize': 12})
         plt.xticks(fontsize=12)
         plt.yticks(fontsize=12)
+        plt.xlabel('Predicted Label', fontsize=12 )
+        plt.ylabel('True Label', fontsize=12)
         plt.savefig(model_folder_path + 'confusion_matrix.png')   
 
     else:    
@@ -163,7 +174,7 @@ def store_metrics(model, X_test, y_test, evals, sensitivity, model_folder_path, 
         # Passe die Größe des Diagramms an
         fig, ax = plt.subplots(figsize=(20, 25))
         # Zeige die Konfusionsmatrix an
-        cm_display.plot(ax=ax, xticks_rotation='vertical', cmap='Blues', colorbar=False)
+        cm_display.plot(ax=ax, xticks_rotation='vertical', cmap='Blues', colorbar=False,  text_kw={'fontsize': 12})
         # Speichere das Diagramm
         plt.savefig(model_folder_path + 'confusion_matrix.png')
 
