@@ -10,9 +10,9 @@ def predict_on_new_data(df, use_api: bool):
 
     df, ncar = prepare_and_add_labels(df)
     if use_api:
-        trainset = pd.read_excel(paths_api["trainingset"])
+        trainset = pd.read_excel(model_paths_api["model_folder"] + "/df_trainset.xlsx")
     else:
-        trainset = pd.read_excel(paths["trainingset"])
+        trainset = pd.read_excel(model_paths["model_folder"] + "/df_testset.xlsx")
     trainset_relevant_parts = trainset[trainset["Relevant fuer Messung"] == "Ja"]
     trainset_relevant_parts = trainset_relevant_parts[(trainset_relevant_parts['X-Min_transf'] != 0) & (trainset_relevant_parts['X-Max_transf'] != 0)]    
     unique_names = trainset_relevant_parts["Einheitsname"].unique().tolist()
