@@ -4,7 +4,7 @@ from loguru import logger
 from datetime import datetime
 
 from data.preprocessing import load_csv_into_df, preprocess_dataset
-from models.LightGBM import train_lgbm_model
+from models.train import train_lgbm_model
 from models.predict import predict_on_new_data
 from visualization.plot_functions import plot_vehicle
 from configs.config_model import general_params
