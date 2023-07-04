@@ -12,5 +12,6 @@ xlsxwriter
 streamlit-authenticator
 nbformat
 fastapi[all]
-streamlit==1.23.1
+streamlit
+shap
 ## Install PyTorch for your system (https://pytorch.org/)
