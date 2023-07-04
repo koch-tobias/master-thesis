@@ -1,6 +1,7 @@
 # %%
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 
 import os
 from loguru import logger
@@ -12,6 +13,7 @@ from sklearn import preprocessing
 
 from data.augmentation import data_augmentation
 from data.text_preperation import vectorize_data, get_vocabulary, clean_text
+from visualization.plot_functions import analyse_data
 from data.boundingbox_calculations import transform_boundingbox, calculate_center_point, calculate_lwh, calculate_orientation
 from config_model import general_params, paths, train_settings, convert_dict
 
@@ -94,7 +96,7 @@ def prepare_and_add_labels(dataframe: pd.DataFrame):
     logger.info("Start preprocessing the data...")
 
     # Store the ncar abbreviation for file paths
-    ncar = dataframe[general_params["car_part_designation"]][1][:3]
+    ncar = dataframe[general_params["car_part_designation"]][1].split(" ")[0]
 
     # Keep only car parts of module group EF
     index_EF_module = dataframe[dataframe[general_params["car_part_designation"]].str.startswith(f'EF {ncar}')].index[-1]
@@ -255,7 +257,7 @@ def train_test_val(df, df_test, test_size:float, model_folder_path, binary_model
     return X_train, y_train, X_val, y_val, X_test, y_test, weight_factor
 
 # %%
-def train_test_val_kfold(df, df_test, model_folder_path, binary_model):
+def train_test_val_kfold(df, df_test, test_size:float, model_folder_path, binary_model):
 
     X, X_test = vectorize_data(df, df_test, model_folder_path)
 
@@ -263,6 +265,7 @@ def train_test_val_kfold(df, df_test, model_folder_path, binary_model):
     if train_settings["use_only_text"] == False:
         features = general_params["features_for_model"]
         X = np.concatenate((X, df[features].values), axis=1)
+        X_test = np.concatenate((X_test, df_test[features].values), axis=1)
 
     if binary_model:
         y = df['Relevant fuer Messung']
@@ -281,7 +284,10 @@ def train_test_val_kfold(df, df_test, model_folder_path, binary_model):
 
     weight_factor = get_weight_factor(y, df, binary_model)     
 
-    return X, y, X_test, y_test, weight_factor
+    X = np.concatenate((X, X_test), axis=0)
+    y = np.concatenate((y, y_test), axis=0)
+
+    return X, y, weight_factor
 
 # %%
 def get_weight_factor(y, df, binary_model):
@@ -333,7 +339,6 @@ def get_X(vocab, vectorizer, df_preprocessed):
     
     return X
 
-
 # %%
 def load_prepare_dataset(test_size, folder_path, model_folder_path, binary_model: bool):
     if os.path.exists(folder_path + "df_trainset.xlsx"):
@@ -341,13 +346,28 @@ def load_prepare_dataset(test_size, folder_path, model_folder_path, binary_model
         df_test = pd.read_excel(folder_path + "df_testset.xlsx")
     else:
         dataframes_list = load_csv_into_df(original_prisma_data=False, label_new_data=False)
-        random.seed(33)
+
         # Take random dataset from list as test set and drop it from the list
-        random_index = random.randint(0, len(dataframes_list) - 1)
-        ncar = general_params["ncars"]
-        df_test = dataframes_list[random_index]
-        dataframes_list.pop(random_index)
-        logger.info(f"Car {ncar[random_index]} is used to test the model on unseen data!")
+        random.seed(33)
+        cars_for_test = []
+        df_test_list = []
+        for i in range(int(len(dataframes_list)*0.2)):
+            random_index = random.randint(0, len(dataframes_list) - (i+1))
+            ncar = general_params["ncars"]
+            cars_for_test.append(ncar[random_index])
+            df_test_temp = dataframes_list[random_index]
+            df_test_list.append(df_test_temp)
+            dataframes_list.pop(random_index)
+            ncar.pop(random_index)
+        
+        df_test = df_test_list[0]
+        for i in range(len(df_test_list)):
+            if i == 0:
+                pass
+            else:
+                df_test = pd.concat([df_test, df_test_list[i]])
+            
+        logger.info(f"Car(s) {cars_for_test} is (are) used to test the model on unseen data!")
         df_combined = combine_dataframes(dataframes_list)
         df_preprocessed, df_for_plot = preprocess_dataset(df_combined, cut_percent_of_front=general_params["cut_percent_of_front"])
         df_test, df_test_for_plot = preprocess_dataset(df_test, cut_percent_of_front=general_params["cut_percent_of_front"])
@@ -359,12 +379,8 @@ def load_prepare_dataset(test_size, folder_path, model_folder_path, binary_model
         df_preprocessed.to_excel(folder_path + "df_trainset.xlsx")
         df_test.to_excel(folder_path + "df_testset.xlsx")
 
-    vocab = get_vocabulary(df_preprocessed['Benennung (bereinigt)'])
+    X_train, y_train, X_val, y_val, X_test, y_test, weight_factor = train_test_val(df_preprocessed, df_test, test_size=test_size, model_folder_path=model_folder_path, binary_model=binary_model)
 
-    # Split dataset
-    if train_settings["cross_validation"]:
-        X, y, X_test, y_test, weight_factor = train_test_val_kfold(df_preprocessed, df_test, test_size=test_size, model_folder_path=model_folder_path, binary_model=binary_model)
-        return X, y, X_test, y_test, weight_factor
-    else:
-        X_train, y_train, X_val, y_val, X_test, y_test, weight_factor = train_test_val(df_preprocessed, df_test, test_size=test_size, model_folder_path=model_folder_path, binary_model=binary_model)
-        return X_train, y_train, X_val, y_val, X_test, y_test, weight_factor
+    analyse_data(df_preprocessed, y_train, y_val, y_test, model_folder_path, binary_model)
+
+    return X_train, y_train, X_val, y_val, X_test, y_test, weight_factor
