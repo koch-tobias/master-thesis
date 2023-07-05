@@ -82,14 +82,12 @@ def train_lgbm_model(folder_path, binary_model):
                     gbm, evals = model_fit(X_train, y_train, X_val, y_val, weight_factor, lr, max_depth, colsample, child, binary_model)
                     stop = time.time()
                     training_time = stop - start
-                    y_pred, probs, test_acc, sensitivity, df_new = evaluate_lgbm_model(gbm, X_test, y_test, evals, lr, max_depth, colsample, child, num_models_trained, training_time, binary_model=binary_model)
+                    y_pred, probs, test_accuracy, test_sensitivity, val_auc, val_loss, train_auc, train_loss, df_new = evaluate_lgbm_model(gbm, X_test, y_test, evals, lr, max_depth, colsample, child, num_models_trained, training_time, binary_model=binary_model)
                     df = pd.concat([df, df_new])
-                    val_acc = evals["valid_1"]["auc"][gbm.best_iteration_-1]
-                    val_loss = evals["valid_1"]["binary_logloss"][gbm.best_iteration_-1]
-                    print(f"Modell {df.shape[0]}/{total_models} trained with a evaluation accuracy = {val_acc} and with a evaluation loss = {val_loss}")
+                    logger.info(f"Modell {df.shape[0]}/{total_models} trained with a evaluation accuracy = {val_auc} and with a evaluation loss = {val_loss}")
                     models_list.append(gbm)
                     evals_list.append(evals) 
-                    sensitivity_list.append(sensitivity)
+                    sensitivity_list.append(test_sensitivity)
                     y_pred_list.append(y_pred)
                     probs_list.append(probs)
                     num_models_trained = num_models_trained + 1
@@ -115,7 +113,9 @@ def train_lgbm_model(folder_path, binary_model):
     total_cv_models = number_of_folds * top_x_models
     count_trained_models = 1
 
-    features, topx_important_features = get_features(models_list[0], model_folder_path)
+    logger.info("Store the features with importance score...")
+    features, topx_important_features = get_features(models_list[0], model_folder_path, folder_path)
+    logger.success("Storing the features was successfull!")
 
     logger.info(f"Start to validate the top {top_x_models} models by using {number_of_folds}-fold cross-validation... ")
     for i in range(top_x_models):
@@ -128,6 +128,7 @@ def train_lgbm_model(folder_path, binary_model):
         list_shap_values = []
         list_val_sets = []
 
+        logger.info(f"Start {number_of_folds}-fold cross-validation for model {i+1}:")
         for train_index, val_index in kfold.split(X, y):
             X_train_fold, X_val_fold = X[train_index], X[val_index]
             y_train_fold, y_val_fold = y[train_index], y[val_index]
@@ -139,24 +140,21 @@ def train_lgbm_model(folder_path, binary_model):
             gbm, evals = model_fit(X_train_fold, y_train_fold, X_val_fold, y_val_fold, weight_factor, df["learningrate"].iloc[i], df["max_depth"].iloc[i], df["colsample_bytree"].iloc[i], df["min_child_samples"].iloc[i], binary_model)
             stop = time.time()
             training_time = stop - start
-            y_pred, probs, test_acc, test_sensitivity, df_new = evaluate_lgbm_model(gbm, X_test, y_test, evals, df["learningrate"].iloc[i], df["max_depth"].iloc[i], df["colsample_bytree"].iloc[i], df["min_child_samples"].iloc[i], count_trained_models, training_time, binary_model=binary_model)
-            val_auc = evals["valid_1"]["auc"][gbm.best_iteration_-1]
-            val_loss = evals["valid_1"]["binary_logloss"][gbm.best_iteration_-1]
-            train_auc = evals["training"]["auc"][gbm.best_iteration_-1]
-            train_loss = evals["training"]["binary_logloss"][gbm.best_iteration_-1]
+            y_pred, probs, test_auc, test_sensitivity, val_auc, val_loss, train_auc, train_loss, df_new = evaluate_lgbm_model(gbm, X_test, y_test, evals, df["learningrate"].iloc[i], df["max_depth"].iloc[i], df["colsample_bytree"].iloc[i], df["min_child_samples"].iloc[i], count_trained_models, training_time, binary_model=binary_model)
             logger.info(f"Model {count_trained_models}/{total_cv_models} trained with a evaluation auc = {val_auc} and with a evaluation loss = {val_loss}")
             count_trained_models = count_trained_models + 1
             val_auc_results.append(val_auc)
             val_loss_results.append(val_loss)
             train_auc_results.append(train_auc)
             train_loss_results.append(train_loss)
-            test_sensitivity_results.append(test_acc)
+            test_sensitivity_results.append(test_auc)
             test_acc_results.append(test_sensitivity)
             
-            explainer = shap.TreeExplainer(gbm)
-            shap_values = explainer.shap_values(X_val_df)
-            list_shap_values.append(shap_values)
-            list_val_sets.append(val_index)
+            if binary_model:
+                explainer = shap.TreeExplainer(gbm)
+                shap_values = explainer.shap_values(X_val_df)
+                list_shap_values.append(shap_values)
+                list_val_sets.append(val_index)
 
         avg_val_auc = round(mean(val_auc_results), 6)
         avg_val_loss = round(mean(val_loss_results), 6)
@@ -176,22 +174,24 @@ def train_lgbm_model(folder_path, binary_model):
         df_cv.loc[i, "avg train loss"] = avg_train_loss     
         df_cv.loc[i, "avg test accuracy"] = avg_test_acc
         df_cv.loc[i, "avg test sensitivity"] = avg_test_sensitivity
+        df_cv.loc[i, "early stopping (iterations)"] = train_settings["early_stopping"]
         df_cv.loc[i, "index"] = df.index[i]
 
-        #combining results from all iterations
-        val_set = list_val_sets[0]
-        shap_values = np.array(list_shap_values[0])[:, :, topx_important_features]
+        if binary_model:
+            #combining results from all iterations
+            val_set = list_val_sets[0]
+            shap_values = np.array(list_shap_values[0])[:, :, topx_important_features]
+            
+            for i in range(0,len(list_val_sets)):
+                val_set = np.concatenate((val_set, list_val_sets[i]),axis=0)
+                shap_values = np.concatenate((shap_values,np.array(list_shap_values[i])[:, :, topx_important_features]),axis=1)
         
-        for i in range(0,len(list_val_sets)):
-            val_set = np.concatenate((val_set, list_val_sets[i]),axis=0)
-            shap_values = np.concatenate((shap_values,np.array(list_shap_values[i])[:, :, topx_important_features]),axis=1)
-    
-        #bringing back variable names    
-        X_val_df = pd.DataFrame(X[val_set], columns=features)
-        #creating explanation plot for the whole experiment
-        plt.clf()
-        shap.summary_plot(shap_values[1], X_val_df.iloc[:, topx_important_features], show=False)
-        plt.savefig(model_folder_path + "shap_top10_features.png")
+            #bringing back variable names    
+            X_val_df = pd.DataFrame(X[val_set], columns=features)
+            #creating explanation plot for the whole experiment
+            plt.clf()
+            shap.summary_plot(shap_values[1], X_val_df.iloc[:, topx_important_features], show=False)
+            plt.savefig(model_folder_path + "shap_top10_features.png")
         
     logger.success("Cross-Validation was successfull!")
 
