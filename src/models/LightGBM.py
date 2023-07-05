@@ -17,7 +17,6 @@ def binary_classifier(weight_factor, lr, max_depth, colsample, child):
                         colsample_bytree=colsample,
                         min_child_samples=child,
                         n_estimators=lgbm_params_binary["n_estimators"],
-                        zero_as_missing = True,
                         class_weight=class_weight)
     return gbm, lgbm_params_binary["metrics"]
     
@@ -32,7 +31,6 @@ def multiclass_classifier(weight_factor, lr, max_depth, colsample, child):
                         min_child_samples=child,
                         n_estimators=lgbm_params_multiclass["n_estimators"],
                         num_class=len(weight_factor),
-                        zero_as_missing = True,
                         class_weight=weight_factor
                         )
 
