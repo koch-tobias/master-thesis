@@ -84,19 +84,20 @@ def plot_vehicle(df: pd.DataFrame, add_valid_space:bool, preprocessed_data:bool,
 
 def analyse_data(df_preprocessed, y_train, y_val, y_test, model_folder_path, binary_model):
     # Analyze the dataset
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
     width = 0.25
     x_labels = ['Training', 'Validation', 'Test']
     if binary_model:
+        fig, ax = plt.subplots(figsize=(10, 10))
+        plt.rcParams.update({'font.size': 12})
         y_not_relevant = [np.count_nonzero(y_train == 0), np.count_nonzero(y_val == 0), np.count_nonzero(y_test == 0)]
         y_relevant = [np.count_nonzero(y_train == 1), np.count_nonzero(y_val == 1), np.count_nonzero(y_test == 1)]
         ax.set_ylabel('Number of Car Parts')
+        ax.set_xlabel('Datasets')
         ax.set_title('Training, Validation and Test Split')
         ax.bar(x_labels, y_not_relevant, width, color='teal')
         ax.bar(x_labels, y_relevant, width, color='lightseagreen')
         ax.legend(labels=['Not Relevant', 'Relevant'])
-        fig.savefig(model_folder_path + 'Binary_train_val_test_split.png', dpi=100)
+        fig.savefig(model_folder_path + 'Binary_train_val_test_split.png', dpi=150)
     else:
         class_names = df_preprocessed['Einheitsname'].unique()
         class_names = sorted(class_names)
@@ -104,6 +105,9 @@ def analyse_data(df_preprocessed, y_train, y_val, y_test, model_folder_path, bin
         datasets = [y_train, y_val, y_test]
         df_count_unique_names = pd.DataFrame(columns=class_names)
         for skip_dummy in range(2):
+            fig, ax = plt.subplots(figsize=(40, 10))
+            plt.rcParams.update({'font.size': 12})
+
             for i in range(len(datasets_name)):
                 df_count_unique_names.loc[i,"Dataset"] = datasets_name[i]
                 n = 0
@@ -116,15 +120,17 @@ def analyse_data(df_preprocessed, y_train, y_val, y_test, model_folder_path, bin
                         else:
                             df_count_unique_names.loc[i, name] = np.count_nonzero(datasets[i] == n)
                     n = n + 1
-            df_count_unique_names.plot(x='Dataset', kind='bar', stacked=True, align='center', title='Training, Validation and Test Split', figsize=(40,10), colormap='tab20b')
-            plt.xticks(rotation='horizontal')
-            plt.ylabel('Number of Car Parts')
-            plt.xlabel('Dataset')
+            df_count_unique_names.plot(x='Dataset', kind='bar', stacked=True, align='center', title='Training, Validation and Test Split', colormap='tab20b', ax=ax)
+            ax.legend(bbox_to_anchor=(1.0,0.5), loc='center left')
+            ax.set_xticklabels(df_count_unique_names['Dataset'], rotation = 'horizontal')
+            ax.set_ylabel('Number of Car Parts')
+            ax.set_xlabel('Dataset')
+            fig.tight_layout()
 
             if skip_dummy == 0:
-                plt.savefig(model_folder_path + 'Multiclass_train_val_test_split.png', dpi=150)
+                fig.savefig(model_folder_path + 'Multiclass_train_val_test_split.png', dpi=150)
             else: 
-                plt.savefig(model_folder_path + 'Multiclass_train_val_test_split_without_dummy.png', dpi=150)
+                fig.savefig(model_folder_path + 'Multiclass_train_val_test_split_without_dummy.png', dpi=150)
 
 
 def store_metrics(model, X_test, y_test, evals, model_folder_path, binary_model):
