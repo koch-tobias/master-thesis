@@ -42,9 +42,9 @@ lgbm_params_binary = {
 }
 
 lgbm_params_multiclass = {
-    "boosting_type": 'dart',
+    "boosting_type": 'gbdt',
     "metrics": ['auc_mu', 'multi_logloss'],
-     "n_estimators": 500
+     "n_estimators": 10000
     }
 
 lgbm_hyperparameter = {
