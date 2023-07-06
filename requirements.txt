@@ -14,4 +14,5 @@ nbformat
 fastapi[all]
 streamlit
 shap
+uvicorn
 ## Install PyTorch for your system (https://pytorch.org/)
