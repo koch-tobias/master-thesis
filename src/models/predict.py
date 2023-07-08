@@ -8,8 +8,11 @@ from config_model import model_paths
 from config_api import model_paths_api
 
 def predict_on_new_data(df, use_api: bool):
-
+    logger.info("Prepare dataset...")
     df, ncar = prepare_and_add_labels(df)
+    logger.info("Dataset successfully prepared!")
+
+    logger.info("Load trainset..")
     if use_api:
         trainset = pd.read_excel(model_paths_api["model_folder"] + "/df_trainset.xlsx")
     else:
@@ -18,24 +21,31 @@ def predict_on_new_data(df, use_api: bool):
     trainset_relevant_parts = trainset_relevant_parts[(trainset_relevant_parts['X-Min_transf'] != 0) & (trainset_relevant_parts['X-Max_transf'] != 0)]    
     unique_names = trainset_relevant_parts["Einheitsname"].unique().tolist()
     unique_names.sort()
+    logger.success("Trainset loaded!")
     
+    logger.info("Load pretrained models...")
     if use_api:
-        lgbm_binary, vectorizer_binary, vocabulary_binary = get_model(model_paths_api["lgbm_binary"])
-        lgbm_multiclass, vectorizer_multiclass, vocabulary_multiclass = get_model(model_paths_api["lgbm_multiclass"])
+        lgbm_binary, vectorizer_binary, vocabulary_binary, boundingbox_features_binary = get_model(model_paths_api["lgbm_binary"])
+        lgbm_multiclass, vectorizer_multiclass, vocabulary_multiclass, boundingbox_features_multiclass = get_model(model_paths_api["lgbm_multiclass"])
     else:
-        lgbm_binary, vectorizer_binary, vocabulary_binary = get_model(model_paths["lgbm_binary"])
-        lgbm_multiclass, vectorizer_multiclass, vocabulary_multiclass = get_model(model_paths["lgbm_multiclass"])       
+        lgbm_binary, vectorizer_binary, vocabulary_binary, boundingbox_features_binary = get_model(model_paths["lgbm_binary"])
+        lgbm_multiclass, vectorizer_multiclass, vocabulary_multiclass, boundingbox_features_multiclass = get_model(model_paths["lgbm_multiclass"])       
+    logger.success("Pretrained models loaded!")
 
+    logger.info("Preprocess data...")
     df_preprocessed, df_for_plot = preprocess_dataset(df, cut_percent_of_front=0.20)
+    logger.success("Data ready for prediction!")
 
-    X_binary = get_X(vocabulary_binary, vectorizer_binary, df_preprocessed)
+    logger.info("Identify relevant car parts and there unique name...")
+    X_binary = get_X(vocabulary_binary, vectorizer_binary, boundingbox_features_binary["features_for_model"], df_preprocessed)
     probs_binary = lgbm_binary.predict_proba(X_binary)
     y_pred_binary = np.where(probs_binary[:, 1] > 0.7, 1, 0)
 
-    X_multiclass = get_X(vocabulary_multiclass, vectorizer_multiclass, df_preprocessed)
+    X_multiclass = get_X(vocabulary_multiclass, vectorizer_multiclass, boundingbox_features_multiclass["features_for_model"], df_preprocessed)
     probs_multiclass = lgbm_multiclass.predict_proba(X_multiclass)
     y_pred_multiclass = probs_multiclass.argmax(axis=1)
 
+    logger.info("Load LabelEncoder...")
     # Load the LabelEncoder
     if use_api:
         with open(model_paths_api["lgbm_multiclass"] + '/label_encoder.pkl', 'rb') as f:
@@ -43,9 +53,11 @@ def predict_on_new_data(df, use_api: bool):
     else:
         with open(model_paths["lgbm_multiclass"] + '/label_encoder.pkl', 'rb') as f:
             le = pickle.load(f) 
+    logger.success("LabelEncoder loaded!")
 
     y_pred_multiclass_names = le.inverse_transform(y_pred_multiclass) 
 
+    logger.info("Add unique names to car parts...")
     df_relevant_parts = df_preprocessed.reset_index(drop=True)
     for index, row in df_relevant_parts.iterrows():
         if y_pred_binary[index] == 1: 
@@ -58,6 +70,9 @@ def predict_on_new_data(df, use_api: bool):
         df_relevant_parts.loc[index,'Wahrscheinlichkeit Einheitsname'] = probs_multiclass[index, y_pred_multiclass[index]]
 
     df_relevant_parts = df_relevant_parts[df_relevant_parts['Relevant fuer Messung'] == 'Ja']
+    logger.success("Relevant car parts identified!")
+    
+    logger.info("Valid identified car party comparing bounding-box informations to the trainset")
     einheitsname_not_found = []
     for index, row in df_relevant_parts.iterrows():
         for name in unique_names:
@@ -84,6 +99,7 @@ def predict_on_new_data(df, use_api: bool):
                                     if (row["Wahrscheinlichkeit Relevanz"] > 0.95) and ((row["Einheitsname"] == "Dummy")):
                                         df_relevant_parts.loc[index,'Einheitsname'] = name
                                     break
+    logger.success("Comparing successfull!")
 
     for name in unique_names:        
         if name not in df_relevant_parts['Einheitsname'].unique():
@@ -93,6 +109,5 @@ def predict_on_new_data(df, use_api: bool):
     df_relevant_parts["L/R-Kz."] = df_relevant_parts["L/R-Kz."].fillna(' ')
     df_relevant_parts.loc[df_relevant_parts['Einheitsname'] == "Dummy", 'Einheitsname'] = 'Kein Einheitsname gefunden'
     df_relevant_parts.loc[df_relevant_parts["L/R-Kz."] == "L", "L/R-Kz."] = 'Linke Ausfuehrung'
-    df_relevant_parts.loc[df_relevant_parts["L/R-Kz."] == "R", "L/R-Kz."] = 'Rechte Ausfuehrung'
 
     return df_preprocessed, df_relevant_parts, einheitsname_not_found, ncar
