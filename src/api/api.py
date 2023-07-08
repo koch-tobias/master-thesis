@@ -47,6 +47,7 @@ async def post_relevant_parts(file: UploadFile = File(...)):
             df = pd.read_excel(BytesIO(contents))
             df.columns = df.iloc[0]
             df = df.iloc[1:]
+
         except Exception:
             return JSONResponse(status_code=400, content={"error": "Fehler beim Lesen der Datei. Stellen Sie sicher, dass es sich um eine gültige Excel-Datei handelt."})
       
