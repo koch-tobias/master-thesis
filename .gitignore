@@ -135,4 +135,7 @@ Development/df_test.xlsx
 
 # Folder
 plots_images/
+
+# Secure
 pw_hash_generator.ipynb
+creds.py
