@@ -4,8 +4,8 @@ paths_api = {
 }
 
 model_paths_api = {
-    "lgbm_binary": "../models\HyperparameterTuning_24062023_1737\Binary_model", 
-    "lgbm_multiclass": "../models\HyperparameterTuning_24062023_1737\Multiclass_model",
-    "model_folder": "../models\HyperparameterTuning_24062023_1737"
+    "lgbm_binary": "models/HyperparameterTuning_07072023_0936/Binary_model", 
+    "lgbm_multiclass": "models/HyperparameterTuning_07072023_0936/Multiclass_model",
+    "model_folder": "models/HyperparameterTuning_07072023_0936"
 
 }
