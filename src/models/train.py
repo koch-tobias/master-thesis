@@ -91,10 +91,6 @@ def train_lgbm_model(folder_path, binary_model):
                     y_pred_list.append(y_pred)
                     probs_list.append(probs)
                     num_models_trained = num_models_trained + 1
-                    break
-                break
-            break
-        break
     logger.success("Grid search hyperparameter tuning was successfull!")
 
     df.to_excel(model_folder_path + "lgbm_hyperparametertuning_results.xlsx")
@@ -149,13 +145,13 @@ def train_lgbm_model(folder_path, binary_model):
             train_loss_results.append(train_loss)
             test_sensitivity_results.append(test_auc)
             test_acc_results.append(test_sensitivity)
-            
+            '''
             if binary_model:
                 explainer = shap.TreeExplainer(gbm)
                 shap_values = explainer.shap_values(X_val_df)
                 list_shap_values.append(shap_values)
                 list_val_sets.append(val_index)
-
+            '''
         avg_val_auc = round(mean(val_auc_results), 6)
         avg_val_loss = round(mean(val_loss_results), 6)
         avg_train_auc = round(mean(train_auc_results), 6)
@@ -177,6 +173,7 @@ def train_lgbm_model(folder_path, binary_model):
         df_cv.loc[i, "early stopping (iterations)"] = train_settings["early_stopping"]
         df_cv.loc[i, "index"] = df.index[i]
 
+        '''
         if binary_model:
             #combining results from all iterations
             val_set = list_val_sets[0]
@@ -192,7 +189,7 @@ def train_lgbm_model(folder_path, binary_model):
             plt.clf()
             shap.summary_plot(shap_values[1], X_val_df.iloc[:, topx_important_features], show=False)
             plt.savefig(model_folder_path + "shap_top10_features.png")
-        
+    '''
     logger.success("Cross-Validation was successfull!")
 
     df_cv.to_excel(model_folder_path + "lgbm_crossvalidation_results.xlsx")
