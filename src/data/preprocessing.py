@@ -38,7 +38,7 @@ def load_csv_into_df(original_prisma_data: bool, label_new_data: bool) -> list:
 
         # Create an empty list to store all dataframes
         dataframes = []
-        
+        ncars = []
         # Loop through all files in the folder and open them as dataframes
         for file in os.listdir(folder_name):
             if file.endswith(".xls") or file.endswith(".xlsx"):
@@ -54,6 +54,8 @@ def load_csv_into_df(original_prisma_data: bool, label_new_data: bool) -> list:
                     # Add the created dataframe to the list of dataframes
                     dataframes.append(df)
 
+                    ncar = file.split("_")[0]
+                    ncars.append(ncar)
                 except:
                     logger.info(f"Error reading file {file}. Skipping...")
                     continue
@@ -65,7 +67,7 @@ def load_csv_into_df(original_prisma_data: bool, label_new_data: bool) -> list:
     else:
         logger.success(f"{len(dataframes)} dataframe(s) were created.")
 
-        return dataframes
+        return dataframes, ncars
 
 # %%
 def combine_dataframes(dataframes: list) -> pd.DataFrame:
@@ -231,6 +233,10 @@ def train_test_val(df, df_test, test_size:float, model_folder_path, binary_model
 
     # Combine text features with other features
     features = general_params["features_for_model"]
+    bbox_features_dict = {"features_for_model": features}
+    with open(model_folder_path + 'boundingbox_features.pkl', 'wb') as fp:
+        pickle.dump(bbox_features_dict, fp)
+
     if train_settings["use_only_text"] == False:
         X = np.concatenate((X, df[features].values), axis=1)
         X_test = np.concatenate((X_test, df_test[features].values), axis=1)
@@ -305,10 +311,19 @@ def get_weight_factor(y, df, binary_model):
     return weight_factor
 
 def get_model(folder_path):
+    final_model_path = ""
+    pre_model_path = ""
     # Load model for relevance
     for file in os.listdir(folder_path):
-        if file.startswith("model"):
-            model_path =  os.path.join(folder_path, file)
+        if file.startswith("final"):
+            final_model_path =  os.path.join(folder_path, file)
+        elif file.startswith("model"):
+            pre_model_path =  os.path.join(folder_path, file)
+
+    if final_model_path != "":
+        model_path = final_model_path
+    else:
+        model_path = pre_model_path
 
     with open(model_path, "rb") as fid:
         lgbm = pickle.load(fid)
@@ -323,9 +338,13 @@ def get_model(folder_path):
     with open(vocab_path, 'rb') as f:
         vocabulary = pickle.load(f) 
 
-    return lgbm, vectorizer, vocabulary
+    bbox_features_path = folder_path + "/boundingbox_features.pkl"
+    with open(bbox_features_path, 'rb') as f:
+        bbox_features = pickle.load(f)  
 
-def get_X(vocab, vectorizer, df_preprocessed):
+    return lgbm, vectorizer, vocabulary, bbox_features
+
+def get_X(vocab, vectorizer, bbox_features, df_preprocessed):
     # Convert the vocabulary list to a dictionary
     vocabulary_dict = {word: index for index, word in enumerate(vocab)}
 
@@ -334,8 +353,8 @@ def get_X(vocab, vectorizer, df_preprocessed):
     X = vectorizer.transform(df_preprocessed['Benennung (bereinigt)']).toarray()
 
     # Combine text features with other features
-    if train_settings["use_only_text"] == False:
-        X = np.concatenate((X, df_preprocessed[general_params["features_for_model"]].values), axis=1)
+    if train_settings["use_only_text"] == False:      
+        X = np.concatenate((X, df_preprocessed[bbox_features].values), axis=1)
     
     return X
 
@@ -345,20 +364,19 @@ def load_prepare_dataset(test_size, folder_path, model_folder_path, binary_model
         df_preprocessed = pd.read_excel(folder_path + "df_trainset.xlsx") 
         df_test = pd.read_excel(folder_path + "df_testset.xlsx")
     else:
-        dataframes_list = load_csv_into_df(original_prisma_data=False, label_new_data=False)
+        dataframes_list, ncars = load_csv_into_df(original_prisma_data=False, label_new_data=False)
 
         # Take random dataset from list as test set and drop it from the list
         random.seed(33)
         cars_for_test = []
         df_test_list = []
-        for i in range(int(len(dataframes_list)*0.2)):
+        for i in range(int(len(dataframes_list)*0.1)):
             random_index = random.randint(0, len(dataframes_list) - (i+1))
-            ncar = general_params["ncars"]
-            cars_for_test.append(ncar[random_index])
+            cars_for_test.append(ncars[random_index])
             df_test_temp = dataframes_list[random_index]
             df_test_list.append(df_test_temp)
             dataframes_list.pop(random_index)
-            ncar.pop(random_index)
+            ncars.pop(random_index)
         
         df_test = df_test_list[0]
         for i in range(len(df_test_list)):
