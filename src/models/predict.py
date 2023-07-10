@@ -5,7 +5,6 @@ from loguru import logger
 from data.preprocessing import prepare_and_add_labels, preprocess_dataset, get_model, get_X
 from data.boundingbox_calculations import find_valid_space
 from config_model import paths
-from config_api import model_paths_api
 
 def predict_on_new_data(df, use_api: bool):
     logger.info("Prepare dataset...")
@@ -13,10 +12,7 @@ def predict_on_new_data(df, use_api: bool):
     logger.info("Dataset successfully prepared!")
 
     logger.info("Load trainset..")
-    if use_api:
-        trainset = pd.read_excel(model_paths_api["model_folder"] + "/df_trainset.xlsx")
-    else:
-        trainset = pd.read_excel(paths["model_folder"] + "/df_testset.xlsx")
+    trainset = pd.read_excel(paths["model_folder"] + "/df_testset.xlsx")
     trainset_relevant_parts = trainset[trainset["Relevant fuer Messung"] == "Ja"]
     trainset_relevant_parts = trainset_relevant_parts[(trainset_relevant_parts['X-Min_transf'] != 0) & (trainset_relevant_parts['X-Max_transf'] != 0)]    
     unique_names = trainset_relevant_parts["Einheitsname"].unique().tolist()
@@ -24,12 +20,8 @@ def predict_on_new_data(df, use_api: bool):
     logger.success("Trainset loaded!")
     
     logger.info("Load pretrained models...")
-    if use_api:
-        lgbm_binary, vectorizer_binary, vocabulary_binary, boundingbox_features_binary = get_model(model_paths_api["lgbm_binary"])
-        lgbm_multiclass, vectorizer_multiclass, vocabulary_multiclass, boundingbox_features_multiclass = get_model(model_paths_api["lgbm_multiclass"])
-    else:
-        lgbm_binary, vectorizer_binary, vocabulary_binary, boundingbox_features_binary = get_model(paths["model_folder"] + ' /Binary_model')
-        lgbm_multiclass, vectorizer_multiclass, vocabulary_multiclass, boundingbox_features_multiclass = get_model(paths["model_folder"] + ' /Multiclass_model')       
+    lgbm_binary, vectorizer_binary, vocabulary_binary, boundingbox_features_binary = get_model(paths["model_folder"] + ' /Binary_model')
+    lgbm_multiclass, vectorizer_multiclass, vocabulary_multiclass, boundingbox_features_multiclass = get_model(paths["model_folder"] + ' /Multiclass_model')       
     logger.success("Pretrained models loaded!")
 
     logger.info("Preprocess data...")
@@ -47,12 +39,8 @@ def predict_on_new_data(df, use_api: bool):
 
     logger.info("Load LabelEncoder...")
     # Load the LabelEncoder
-    if use_api:
-        with open(model_paths_api["lgbm_multiclass"] + '/label_encoder.pkl', 'rb') as f:
-            le = pickle.load(f) 
-    else:
-        with open(paths["model_folder"] + '/Multiclass_model/label_encoder.pkl', 'rb') as f:
-            le = pickle.load(f) 
+    with open(paths["model_folder"] + '/Multiclass_model/label_encoder.pkl', 'rb') as f:
+        le = pickle.load(f) 
     logger.success("LabelEncoder loaded!")
 
     y_pred_multiclass_names = le.inverse_transform(y_pred_multiclass) 

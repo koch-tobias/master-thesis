@@ -13,12 +13,3 @@ cookie:
   expiry_days: 30
   key: some_signature_key # Must be string
   name: some_cookie_name
-
-data_paths:
-    "labeled_data": "data/labeled_data"
-    "new_data": "data/original_data_new"
-
-model_paths:
-    "lgbm_binary": "models/HyperparameterTuning_07072023_0936/Binary_model"
-    "lgbm_multiclass": "models/HyperparameterTuning_07072023_0936/Multiclass_model"
-    "model_folder": "models/HyperparameterTuning_07072023_0936"
