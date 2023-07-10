@@ -10,7 +10,7 @@ general_params = {
 paths = {
     "labeled_data": "data/labeled",
     "new_data": "data/raw_for_labeling",
-    "model_folder": "models/HyperparameterTuning_24062023_1737"
+    "model_folder": "models/HyperparameterTuning_07072023_0936"
 }
 
 gpt_settings = {
