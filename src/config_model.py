@@ -1,7 +1,6 @@
 general_params = {
     "seed": 42,
     "cut_percent_of_front": 0.20,
-    #"ncars": ['G11', 'G14', 'G15', 'G16', 'G20', 'G21', 'G22', 'G23', 'G26', 'G29', 'G30', 'G31', 'G42', 'G61', 'G65', 'G70','NA5', 'NA7'],
     "relevant_features": ['Sachnummer','Benennung (dt)', 'X-Min','X-Max','Y-Min','Y-Max','Z-Min','Z-Max', 'Wert','Einheit','Gewichtsart','Kurzname','L-Kz.', 'L/R-Kz.', 'Modul (Nr)', 'ox','oy', 'oz', 'xx','xy','xz', 'yx','yy','yz','zx','zy','zz'],
     "features_for_model": ['volume', 'Wert', 'center_x', 'center_y', 'center_z','length','width','height','theta_x','theta_y','theta_z'],
     "keep_modules": ['CE05', 'CD07'], # Keep this modules out of module group EP (CE05=interior mirror, CD07=roof antenna)
@@ -11,6 +10,7 @@ general_params = {
 paths = {
     "labeled_data": "data/labeled",
     "new_data": "data/raw_for_labeling",
+    "model_folder": "models/HyperparameterTuning_24062023_1737"
 }
 
 gpt_settings = {
@@ -18,12 +18,6 @@ gpt_settings = {
     "max_tokens": 200,
     "top_p": 1,
     "n": 1
-}
-
-model_paths = {
-    "lgbm_binary": "models/HyperparameterTuning_24062023_1737/Binary_model", 
-    "lgbm_multiclass": "models/HyperparameterTuning_24062023_1737/Multiclass_model",
-    "model_folder": "models/HyperparameterTuning_24062023_1737"
 }
 
 train_settings = {
