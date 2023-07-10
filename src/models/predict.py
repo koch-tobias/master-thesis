@@ -20,8 +20,8 @@ def predict_on_new_data(df, use_api: bool):
     logger.success("Trainset loaded!")
     
     logger.info("Load pretrained models...")
-    lgbm_binary, vectorizer_binary, vocabulary_binary, boundingbox_features_binary = get_model(paths["model_folder"] + ' /Binary_model')
-    lgbm_multiclass, vectorizer_multiclass, vocabulary_multiclass, boundingbox_features_multiclass = get_model(paths["model_folder"] + ' /Multiclass_model')       
+    lgbm_binary, vectorizer_binary, vocabulary_binary, boundingbox_features_binary = get_model(paths["model_folder"] + '/Binary_model')
+    lgbm_multiclass, vectorizer_multiclass, vocabulary_multiclass, boundingbox_features_multiclass = get_model(paths["model_folder"] + '/Multiclass_model')       
     logger.success("Pretrained models loaded!")
 
     logger.info("Preprocess data...")
