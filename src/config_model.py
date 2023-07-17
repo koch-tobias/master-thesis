@@ -25,20 +25,19 @@ train_settings = {
     "augmentation": True,
     "use_only_text": False,
     "early_stopping": 100,
-    "test_size": 0.3
+    "test_size": 0.3,
+     "n_estimators": 10000
     }
 
 lgbm_params_binary = {
     "boosting_type": 'gbdt',
     "metrics": ['auc', 'binary_logloss'],
-     "n_estimators": 10000,
     "prediction_threshold": 0.75
 }
 
 lgbm_params_multiclass = {
     "boosting_type": 'gbdt',
-    "metrics": ['auc_mu', 'multi_logloss'],
-     "n_estimators": 10000
+    "metrics": ['auc_mu', 'multi_logloss']
     }
 
 lgbm_hyperparameter = {
@@ -47,6 +46,32 @@ lgbm_hyperparameter = {
     "colsample_bytree": [0.5, 0.7, 0.9],
     "min_child_samples": [20, 30, 40]
 }
+
+###############################
+xgb_params_binary = {
+    "boosting_type": 'gbtree',
+    "metrics": ['auc', 'error'],
+    "prediction_threshold": 0.75
+}
+
+xgb_params_multiclass = {
+    "boosting_type": 'gbtree',
+    "metrics": ['auc', 'multi:softprob'],
+    }
+
+xgb_hyperparameter = {
+    "lr": [0.05, 0.1, 0.3],    
+    "max_depth": [4, 6, 9],
+    "colsample_bytree": [0.5, 0.7, 0.9],
+    "gamma": [0, 0.2, 0.5],
+
+}
+'''
+    "reg_alpha":[0, 0.1, 1],
+    "subsample": [0.5, 0.7, 0.9]
+    "min_child_samples": [20, 30, 40],
+    "min_child_weight": [4, 6, 9],
+'''
 
 convert_dict = {'X-Min': float,
                 'X-Max': float,
