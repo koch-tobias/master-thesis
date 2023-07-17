@@ -4,7 +4,7 @@ from loguru import logger
 from datetime import datetime
 
 from data.preprocessing import load_csv_into_df, preprocess_dataset
-from models.train import train_lgbm_model
+from models.train import train_model
 from models.predict import predict_on_new_data
 from visualization.plot_functions import plot_vehicle
 from config_model import general_params
@@ -16,24 +16,33 @@ def main():
     label_new_data = False
     plot_bounding_boxes_one_vehicle = False
     plot_bounding_boxes_all_vehicle_by_name = False
+
+    method = "xgboost"
     dataset_path_for_plot = "Path of dataset which should be plotted"
 
     dateTimeObj = datetime.now()
     timestamp = dateTimeObj.strftime("%d%m%Y_%H%M")
 
-    folder_path = f"models/HyperparameterTuning_{timestamp}/"
+    folder_path = f"models/{method}_HyperparameterTuning_{timestamp}/"
     #folder_path = ""
+    '''
+    file_path = "C:/Users/q617269/Desktop/Masterarbeit_Tobias/repos/master-thesis/data/raw/G20_prismaexport-20230621-143916.xls"
+    df = pd.read_excel(file_path, header=None, skiprows=1)
+    df.columns = df.iloc[0]
+    df = df.iloc[1:]    
+    df_preprocessed, df_relevant_parts, einheitsname_not_found, ncar = predict_on_new_data(df, use_api=True)
+    '''
 
     if train_lgbm_relevance_model:
         logger.info("Start training the binary models...")
-        train_lgbm_model(folder_path, binary_model=True)
+        train_model(folder_path, binary_model=True, method=method)
 
     if train_lgbm_name_model:
         logger.info("Start training the multiclass models...")
-        train_lgbm_model(folder_path, binary_model=False)
+        train_model(folder_path, binary_model=False, method=method)
 
     if label_new_data:
-        dataframes = load_csv_into_df(original_prisma_data=True, label_new_data=True)
+        dataframes, ncars = load_csv_into_df(original_prisma_data=True, label_new_data=True)
         for df in dataframes:
             df_with_label_columns, df_relevant_parts, einheitsname_not_found, ncar = predict_on_new_data(df, use_api=False)
 
@@ -70,8 +79,6 @@ def main():
         df_preprocessed, df_for_plot = preprocess_dataset(df, cut_percent_of_front=0.20)
         plot_vehicle(df_for_plot, add_valid_space=True, preprocessed_data=False, mirrored=False)
     
-
-
 
 # %%
 if __name__ == "__main__":
