@@ -22,7 +22,7 @@ def store_predictions(X_test, y_test, y_pred, probs, folder_path, model_folder_p
         class_names = df_preprocessed["Einheitsname"].unique()
         class_names = sorted(class_names)
 
-    df_wrong_predictions = pd.DataFrame(columns=['Benennung (dt)','Predicted', 'True', 'Probability'])
+    df_wrong_predictions = pd.DataFrame(columns=['Benennung (dt)', 'Predicted', 'True', 'Probability'])
     # Ausgabe der Vorhersagen, der Wahrscheinlichkeiten und der wichtigsten Features
     for i in range(len(X_test)):
         if y_pred[i] != y_test[i]:
@@ -73,6 +73,7 @@ def get_features(model, model_folder_path, folder_path):
     features = df_features["Feature"].values.tolist()
 
     return features, topx_important_features
+
 # %%
 def store_trained_model(model, val_auc, model_folder_path):
     # save model
@@ -85,7 +86,7 @@ def store_trained_model(model, val_auc, model_folder_path):
         pickle.dump(model, filestore)
 
 # %%
-def evaluate_lgbm_model(model, X_test, y_test, evals, lr, max_depth, colsample, child, num_models_trained, training_time, binary_model):
+def evaluate_lgbm_model(model, X_test, y_test, evals, hp_dict, num_models_trained, training_time, df_columns, binary_model):
     best_iteration = model._best_iteration - 1
     probs = model.predict_proba(X_test, num_iteration=best_iteration)
     if binary_model:
@@ -97,7 +98,7 @@ def evaluate_lgbm_model(model, X_test, y_test, evals, lr, max_depth, colsample, 
     accuracy = accuracy_score(y_test, y_pred)
     sensitivity = recall_score(y_test, y_pred, average='weighted')
 
-    df_new = pd.DataFrame(columns=["model_name","learningrate","max_depth","num_leaves","colsample_bytree","min_child_samples", "train auc", "train loss", "validation auc", "validation loss", "test accuracy", "test sensitivity", "Training Time (s)"])
+    df_new = pd.DataFrame(columns=df_columns)
     if binary_model:
         val_auc = evals["valid_1"]["auc"][best_iteration]
         val_loss = evals["valid_1"]["binary_logloss"][best_iteration]
@@ -110,11 +111,11 @@ def evaluate_lgbm_model(model, X_test, y_test, evals, lr, max_depth, colsample, 
         train_loss = evals["training"]["multi_logloss"][best_iteration]
 
     df_new.loc[num_models_trained, "model_name"] = f"model_{str(val_auc)[2:6]}"
-    df_new.loc[num_models_trained, "learningrate"] = lr
-    df_new.loc[num_models_trained, "max_depth"] = max_depth
-    df_new.loc[num_models_trained, "num_leaves"] = pow(2, max_depth)
-    df_new.loc[num_models_trained, "colsample_bytree"] = colsample
-    df_new.loc[num_models_trained, "min_child_samples"] = child
+    df_new.loc[num_models_trained, "learningrate"] = hp_dict["lr"]
+    df_new.loc[num_models_trained, "max_depth"] = hp_dict["max_depth"]
+    df_new.loc[num_models_trained, "num_leaves"] = pow(2, hp_dict["max_depth"])
+    df_new.loc[num_models_trained, "colsample_bytree"] = hp_dict["colsample_bytree"]
+    df_new.loc[num_models_trained, "min_child_samples"] = hp_dict["min_child_samples"] 
     df_new.loc[num_models_trained, "train auc"] = train_auc
     df_new.loc[num_models_trained, "train loss"] = train_loss
     df_new.loc[num_models_trained, "validation auc"] = val_auc
