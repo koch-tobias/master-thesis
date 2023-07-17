@@ -64,3 +64,7 @@ async def post_relevant_parts(file: UploadFile = File(...)):
         
     else:
         return JSONResponse(status_code=400, content={"error": "Ungültige Dateierweiterung. Es werden nur Excel-Dateien (.xlsx oder .xls) akzeptiert."})
+    
+@app.get("/")
+async def root():
+    return {"message": "Hello World"}
