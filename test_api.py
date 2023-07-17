@@ -4,7 +4,7 @@ import time
 
 #url = "http://127.0.0.1:8000/api/get_relevant_parts/" 
 
-url = "http://localhost:7070/api/get_relevant_parts/" 
+url = "http://10.3.13.137:7070/api/get_relevant_parts/" 
 
 start = time.time()
 file_path = "C:/Users/q617269/Desktop/Masterarbeit_Tobias/repos/master-thesis/data/raw/G20_prismaexport-20230621-143916.xls"
