@@ -14,7 +14,7 @@ shap==0.41.0
 streamlit==1.23.1
 streamlit-authenticator==0.2.2
 uvicorn==0.22.0
-xgboost
+xgboost==1.7.6
 xlrd==2.0.1 #For loading excel files
 xlsxwriter==3.1.0
 ## Install PyTorch for your system (https://pytorch.org/) version==1.13.1
