@@ -20,14 +20,13 @@ def prepare_text(designation: str) -> str:
 
     # Remove predefined words
     predefined_words = ["ZB", "AF", "LI", "RE", "MD", "LL", "TAB", "TB"]
-    if len(predefined_words) > 0:
-        text = [word for word in text if word not in predefined_words]
+    text = [word for word in text if word not in predefined_words]
 
     # Remove words with only one letter
     text = [word for word in text if len(word) > 1]
 
     # remove empty tokens
-    text = [t for t in text if len(t) > 0]
+    text = [word for word in text if len(word) > 0]
 
     # join all
     prepared_designation = " ".join(text)
