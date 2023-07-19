@@ -7,17 +7,17 @@ from data.preprocessing import load_csv_into_df, preprocess_dataset
 from models.train import train_model
 from models.predict import predict_on_new_data
 from visualization.plot_functions import plot_vehicle
-from config_model import general_params
+from config_model import general_params, train_settings
 
 # %%
 def main():
-    train_lgbm_relevance_model = True
-    train_lgbm_name_model = False
+    train_binary_model = False
+    train_multiclass_model = False
     label_new_data = False
     plot_bounding_boxes_one_vehicle = False
     plot_bounding_boxes_all_vehicle_by_name = False
 
-    method = "xgboost"
+    method = train_settings["ml-method"]
     dataset_path_for_plot = "Path of dataset which should be plotted"
 
     dateTimeObj = datetime.now()
@@ -33,11 +33,11 @@ def main():
     df_preprocessed, df_relevant_parts, einheitsname_not_found, ncar = predict_on_new_data(df, use_api=True)
     '''
 
-    if train_lgbm_relevance_model:
+    if train_binary_model:
         logger.info("Start training the binary models...")
         train_model(folder_path, binary_model=True, method=method)
 
-    if train_lgbm_name_model:
+    if train_multiclass_model:
         logger.info("Start training the multiclass models...")
         train_model(folder_path, binary_model=False, method=method)
 
@@ -58,7 +58,7 @@ def main():
             df_with_label_columns = df_with_label_columns[features]
             df_with_label_columns.to_excel(f"data/pre_labeled/{ncar}_labeled.xlsx")
 
-            logger.info(f"The following car parts are not found in the data: {einheitsname_not_found}")
+            logger.info(f"The following car parts are not found in your dataset: {einheitsname_not_found} If essential, please add this car parts manually!")
             logger.success(f"The prediction is done and the result is stored here: data/pre_labeled_data/{ncar}_labeled.xlsx!")
 
             logger.info('__________________________________________________________________________________________')
@@ -76,7 +76,7 @@ def main():
 
     if plot_bounding_boxes_all_vehicle_by_name:
         df = pd.read_excel(dataset_path_for_plot,index_col=0) 
-        df_preprocessed, df_for_plot = preprocess_dataset(df, cut_percent_of_front=0.20)
+        df_preprocessed, df_for_plot = preprocess_dataset(df)
         plot_vehicle(df_for_plot, add_valid_space=True, preprocessed_data=False, mirrored=False)
     
 
