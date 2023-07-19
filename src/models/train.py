@@ -12,6 +12,7 @@ import math
 from statistics import mean
 
 import lightgbm as lgb
+import xgboost as xgb
 from sklearn.model_selection import StratifiedKFold
 
 from models.LightGBM import binary_classifier, multiclass_classifier
@@ -28,25 +29,42 @@ import shap
 warnings.filterwarnings("ignore")
 
 # %%
-def model_fit(X_train, y_train, X_val, y_val, weight_factor, hp_dict, binary_model, method):
+def model_fit(X_train, y_train, X_val, y_val, weight_factor, hp_in_iteration, binary_model, method):
     evals = {}
-    callbacks = [lgb.early_stopping(train_settings["early_stopping"], verbose=5), lgb.record_evaluation(evals)]
+    if method == "lgbm":
+        callbacks = [lgb.early_stopping(train_settings["early_stopping"], verbose=5), lgb.record_evaluation(evals)]
+    else:
+        callbacks = [xgb.callback.EarlyStopping(train_settings["early_stopping"], metric_name='auc')]
 
     if binary_model:
-        gbm, metrics = binary_classifier(weight_factor, hp_dict, method)
+        model, metrics = binary_classifier(weight_factor, hp_in_iteration, method)
     else:
-        gbm, metrics = multiclass_classifier(weight_factor, hp_dict, method)
+        model, metrics = multiclass_classifier(weight_factor, hp_in_iteration, method)
 
-    try:
-        gbm.fit(X_train, y_train,
-                eval_set=[(X_train, y_train), (X_val, y_val)], 
-                eval_metric=metrics,
-                callbacks=callbacks
-                )
-    except:
-        gbm.fit(X_train, y_train)
 
-    return gbm, evals
+    
+    if method == "lgbm":
+        try:
+            model.fit(X_train, y_train,
+                    eval_set=[(X_train, y_train), (X_val, y_val)], 
+                    eval_metric=metrics,
+                    callbacks=callbacks
+                    )
+        except:
+            model.fit(X_train, y_train)
+
+    elif method == "xgboost":
+        try:
+            model.fit(X_train, y_train,
+                    eval_set=[(X_train, y_train), (X_val, y_val)], 
+                    callbacks=callbacks
+                    )
+        except:
+            model.fit(X_train, y_train)       
+
+        evals = model.evals_result()
+
+    return model, evals
 
 # %%
 def get_model_folder_path(binary_model, folder_path):
@@ -64,13 +82,14 @@ def get_model_folder_path(binary_model, folder_path):
     return model_folder_path
 
 # %%
-def fit_eval_model(X_train, y_train, X_val, y_val, X_test, y_test, weight_factor, hp_dict, df, model_results_dict, num_models_trained, total_models, binary_model, method):
+def fit_eval_model(X_train, y_train, X_val, y_val, X_test, y_test, weight_factor, hp_in_iteration, df, model_results_dict, num_models_trained, total_models, binary_model, method):
     start = time.time()
-    gbm, evals = model_fit(X_train, y_train, X_val, y_val, weight_factor, hp_dict, binary_model, method)
+    logger.info("Start to fit the model!")
+    gbm, evals = model_fit(X_train, y_train, X_val, y_val, weight_factor, hp_in_iteration, binary_model, method)
     logger.info("fit successfull")
     stop = time.time()
     training_time = stop - start
-    y_pred, probs, test_accuracy, test_sensitivity, val_auc, val_loss, train_auc, train_loss, df_new = evaluate_lgbm_model(gbm, X_test, y_test, evals, hp_dict, num_models_trained, training_time, df.columns, binary_model=binary_model)    
+    y_pred, probs, test_accuracy, test_sensitivity, val_auc, val_loss, train_auc, train_loss, df_new = evaluate_lgbm_model(gbm, X_test, y_test, evals, hp_in_iteration, num_models_trained, training_time, df.columns, binary_model=binary_model, method=method)    
     df = pd.concat([df, df_new])
     logger.info(f"Modell {df.shape[0]}/{total_models} trained with a evaluation accuracy = {val_auc} and with a evaluation loss = {val_loss}")
     model_results_dict["models_list"].append(gbm)
@@ -86,43 +105,39 @@ def fit_eval_model(X_train, y_train, X_val, y_val, X_test, y_test, weight_factor
     num_models_trained = num_models_trained + 1
     return model_results_dict, df
 
+def create_result_df(hp_dict):
+    fix_columns = ["model_name", "train auc", "train loss", "validation auc", "validation loss", "test accuracy", "test sensitivity", "Training Time (s)"]
+
+    total_models = 1
+    for hp in hp_dict:
+        total_models = total_models * len(hp_dict[hp])
+    
+    columns = fix_columns + list(hp_dict.keys())
+    df = pd.DataFrame(columns=columns)
+
+    return df, total_models
+
 # %%
-def grid_search(X_train, y_train, X_val, y_val, X_test, y_test, weight_factor, binary_model, method):
+def grid_search(X_train, y_train, X_val, y_val, X_test, y_test, weight_factor, hp_dict, binary_model, method):
 
     logger.info("Start training with grid search hyperparameter tuning...")
 
-    num_models_trained = 0
-    total_models = 1
-    for hp in lgbm_hp:
-        total_models = total_models * len(lgbm_hp[hp])
-
     model_results_dict = {"models_list": [], "evals_list": [], "test_sensitivity_results": [], "test_auc_results": [], "val_auc_results": [], "val_loss_results": [], "train_auc_results": [], "train_loss_results": [], "y_pred_list": [], "probs_list": []}
-    fix_columns = ["model_name", "train auc", "train loss", "validation auc", "validation loss", "test accuracy", "test sensitivity", "Training Time (s)"]
-   
-    if method=="lgbm":
-        hp_columns = list(lgbm_hp.keys())
-        columns = fix_columns + hp_columns
-        df = pd.DataFrame(columns=columns)
+    num_models_trained = 0
 
-        for lr in lgbm_hp["lr"]:
-            for max_depth in lgbm_hp["max_depth"]:
-                for colsample in lgbm_hp["colsample_bytree"]:
-                    for child in lgbm_hp["min_child_samples"]:
-                        hp_dict = {"lr": lr, "max_depth": max_depth, "colsample_bytree": colsample, "min_child_samples": child}
-                        model_results_dict, df = fit_eval_model(X_train, y_train, X_val, y_val, X_test, y_test, weight_factor, hp_dict, df, model_results_dict, num_models_trained, total_models, binary_model, method)
-    
-    elif method=="xgboost":
-        hp_columns = list(xgb_hp.keys())
-        columns = fix_columns + hp_columns
-        df = pd.DataFrame(columns=columns)
+    df, total_models = create_result_df(hp_dict)
+    hp = list(hp_dict.keys())
 
-        for lr in xgb_hp["lr"]:
-            for max_depth in xgb_hp["max_depth"]:
-                for colsample in xgb_hp["colsample_bytree"]:
-                    for gamma in xgb_hp["gamma"]:
-                        hp_dict = {"lr": lr, "max_depth": max_depth, "colsample_bytree": colsample, "gamma": gamma}
-                        model_results_dict, df = fit_eval_model(X_train, y_train, X_val, y_val, X_test, y_test, weight_factor, hp_dict, df, model_results_dict, num_models_trained, total_models, binary_model, method)
-
+    for hp_0 in hp_dict[hp[0]]:
+        for hp_1 in hp_dict[hp[1]]:
+            for hp_2 in hp_dict[hp[2]]:
+                for hp_3 in hp_dict[hp[3]]:
+                    hp_in_iteration = {hp[0]: hp_0, hp[1]: hp_1, hp[2]: hp_2, hp[3]: hp_3}
+                    model_results_dict, df = fit_eval_model(X_train, y_train, X_val, y_val, X_test, y_test, weight_factor, hp_in_iteration, df, model_results_dict, num_models_trained, total_models, binary_model, method)
+                    break
+                break
+            break
+        break
     logger.success("Grid search hyperparameter tuning was successfull!")
 
     return df, model_results_dict
@@ -163,10 +178,7 @@ def k_fold_crossvalidation(X, y, X_test, y_test, weight_factor, df, model_result
             X_train_df = pd.DataFrame(X_train_fold, columns=features)
             X_val_df = pd.DataFrame(X_val_fold, columns=features)           
 
-            if method == "lgbm":
-                hp_dict = {"lr": df["learningrate"].iloc[i], "max_depth": df["max_depth"].iloc[i], "colsample_bytree": df["colsample_bytree"].iloc[i], "min_child_samples": df["min_child_samples"].iloc[i]}
-            elif method == "xgboost":
-                hp_dict = {"lr": df["learningrate"].iloc[i], "max_depth": df["max_depth"].iloc[i], "colsample_bytree": df["colsample_bytree"].iloc[i], "gamma": df["gamma"].iloc[i]}
+            hp_dict = {hp_columns[0]: df[hp_columns[0]].iloc[i], hp_columns[1]: df[hp_columns[1]].iloc[i], hp_columns[2]: df[hp_columns[2]].iloc[i], hp_columns[3]: df[hp_columns[3]].iloc[i]}
 
             cv_results_dict, df_temp = fit_eval_model(X_train_fold, y_train_fold, X_val_fold, y_val_fold, X_test, y_test, weight_factor, hp_dict, df, cv_results_dict, count_trained_models, total_cv_models, binary_model, method)
             val_auc = cv_results_dict["val_auc_results"][-1]
@@ -223,11 +235,16 @@ def k_fold_crossvalidation(X, y, X_test, y_test, weight_factor, df, model_result
 def train_model(folder_path, binary_model, method):
     global model_folder_path 
     model_folder_path = get_model_folder_path(binary_model, folder_path)
+
+    if method == "lgbm":
+        hp_dict = lgbm_hp
+    elif method == "xgboost":
+        hp_dict = xgb_hp
    
     # Training with the hold out method and grid search hyperparameter tuning
     X_train, y_train, X_val, y_val, X_test, y_test, weight_factor = load_prepare_dataset(test_size=train_settings["test_size"], folder_path=folder_path, model_folder_path=model_folder_path, binary_model=binary_model)
 
-    df, model_results_dict = grid_search(X_train, y_train, X_val, y_val, X_test, y_test, weight_factor, binary_model, method)
+    df, model_results_dict = grid_search(X_train, y_train, X_val, y_val, X_test, y_test, weight_factor, hp_dict, binary_model, method)
 
     df.to_excel(model_folder_path + "lgbm_hyperparametertuning_results.xlsx")
 
@@ -254,7 +271,12 @@ def train_model(folder_path, binary_model, method):
     logger.info("Train a new model on the entire data with the parameters of the best identified model...")
     X = np.concatenate((X_train, X_val, X_test), axis=0)
     y = np.concatenate((y_train, y_val, y_test), axis=0)
-    hp_dict = {"lr": df["learningrate"].iloc[index_best_model], "max_depth": df["max_depth"].iloc[index_best_model], "colsample_bytree": df["colsample_bytree"].iloc[index_best_model], "min_child_samples": df["min_child_samples"].iloc[index_best_model]}
-    gbm_final, evals_final = model_fit(X, y, 0, 0, weight_factor, hp_dict, binary_model, method)
+
+    hp_keys = list(hp_dict.keys())
+    best_hp = {}
+    for key in hp_keys:
+        best_hp[key] = df[key].iloc[index_best_model]
+        
+    gbm_final, evals_final = model_fit(X, y, 0, 0, weight_factor, best_hp, binary_model, method)
     store_trained_model(gbm_final, -1, model_folder_path)
     logger.success("Training the model on the entire data was successfull!")
