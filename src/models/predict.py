@@ -12,7 +12,7 @@ def predict_on_new_data(df, use_api: bool):
     logger.info("Dataset successfully prepared!")
 
     logger.info("Load trainset..")
-    trainset = pd.read_excel(paths["model_folder"] + "/df_testset.xlsx")
+    trainset = pd.read_excel(paths["model_folder"] + "/df_trainset.xlsx")
     trainset_relevant_parts = trainset[trainset["Relevant fuer Messung"] == "Ja"]
     trainset_relevant_parts = trainset_relevant_parts[(trainset_relevant_parts['X-Min_transf'] != 0) & (trainset_relevant_parts['X-Max_transf'] != 0)]    
     unique_names = trainset_relevant_parts["Einheitsname"].unique().tolist()
@@ -25,7 +25,7 @@ def predict_on_new_data(df, use_api: bool):
     logger.success("Pretrained models loaded!")
 
     logger.info("Preprocess data...")
-    df_preprocessed, df_for_plot = preprocess_dataset(df, cut_percent_of_front=0.20)
+    df_preprocessed, df_for_plot = preprocess_dataset(df)
     logger.success("Data ready for prediction!")
 
     logger.info("Identify relevant car parts and there unique name...")
