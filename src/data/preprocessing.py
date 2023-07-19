@@ -224,7 +224,6 @@ def preprocess_dataset(df):
     x_min_transf, x_max_transf = df_relevants["X-Min_transf"].min(), df_relevants["X-Max_transf"].max()
     car_length = x_max_transf - x_min_transf
     cut_point_x = x_min_transf + car_length*general_params["cut_percent_of_front"]
-    print(cut_point_x)
     df_relevants = df_relevants[df_relevants["X-Min_transf"] > cut_point_x]
     # Concatenate the two data frames vertically
     df_relevants = pd.concat([df_relevants, df_temp]).reset_index(drop=True)
@@ -252,7 +251,7 @@ def preprocess_dataset(df):
     return df_relevants, df_for_plot
 
 # %%
-def train_test_val(df, df_test, test_size:float, model_folder_path, binary_model):
+def train_test_val(df, df_test, model_folder_path, binary_model):
     
     X, X_test = vectorize_data(df, df_test, model_folder_path)
 
@@ -283,12 +282,12 @@ def train_test_val(df, df_test, test_size:float, model_folder_path, binary_model
 
     weight_factor = get_weight_factor(y, df, binary_model)     
 
-    X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=test_size, random_state=42)
+    X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=train_settings["val_size"], random_state=42)
 
     return X_train, y_train, X_val, y_val, X_test, y_test, weight_factor
 
 # %%
-def train_test_val_kfold(df, df_test, test_size:float, model_folder_path, binary_model):
+def train_test_val_kfold(df, df_test, model_folder_path, binary_model):
 
     X, X_test = vectorize_data(df, df_test, model_folder_path)
 
@@ -384,7 +383,7 @@ def get_X(vocab, vectorizer, bbox_features, df_preprocessed):
     return X
 
 # %%
-def load_prepare_dataset(test_size, folder_path, model_folder_path, binary_model: bool):
+def load_prepare_dataset(folder_path, model_folder_path, binary_model: bool):
     if os.path.exists(folder_path + "df_trainset.xlsx"):
         df_preprocessed = pd.read_excel(folder_path + "df_trainset.xlsx") 
         df_test = pd.read_excel(folder_path + "df_testset.xlsx")
@@ -422,7 +421,7 @@ def load_prepare_dataset(test_size, folder_path, model_folder_path, binary_model
         df_preprocessed.to_excel(folder_path + "df_trainset.xlsx")
         df_test.to_excel(folder_path + "df_testset.xlsx")
 
-    X_train, y_train, X_val, y_val, X_test, y_test, weight_factor = train_test_val(df_preprocessed, df_test, test_size=test_size, model_folder_path=model_folder_path, binary_model=binary_model)
+    X_train, y_train, X_val, y_val, X_test, y_test, weight_factor = train_test_val(df_preprocessed, df_test, model_folder_path=model_folder_path, binary_model=binary_model)
 
     analyse_data(df_preprocessed, y_train, y_val, y_test, model_folder_path, binary_model)
 

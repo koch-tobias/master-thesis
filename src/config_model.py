@@ -26,7 +26,8 @@ train_settings = {
     "use_only_text": False,
     "ml-method": "lgbm",
     "early_stopping": 10,
-    "test_size": 0.3,
+    "val_size": 0.3,
+    "test_size": 0.2,
      "n_estimators": 100
     }
 

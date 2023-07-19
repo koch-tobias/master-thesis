@@ -242,7 +242,7 @@ def train_model(folder_path, binary_model, method):
         hp_dict = xgb_hp
    
     # Training with the hold out method and grid search hyperparameter tuning
-    X_train, y_train, X_val, y_val, X_test, y_test, weight_factor = load_prepare_dataset(test_size=train_settings["test_size"], folder_path=folder_path, model_folder_path=model_folder_path, binary_model=binary_model)
+    X_train, y_train, X_val, y_val, X_test, y_test, weight_factor = load_prepare_dataset(folder_path=folder_path, model_folder_path=model_folder_path, binary_model=binary_model)
 
     df, model_results_dict = grid_search(X_train, y_train, X_val, y_val, X_test, y_test, weight_factor, hp_dict, binary_model, method)
 

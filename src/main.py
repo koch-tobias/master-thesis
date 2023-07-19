@@ -11,8 +11,8 @@ from config_model import general_params, train_settings
 
 # %%
 def main():
-    train_binary_model = False
-    train_multiclass_model = False
+    train_binary_model = True
+    train_multiclass_model = True
     label_new_data = False
     plot_bounding_boxes_one_vehicle = False
     plot_bounding_boxes_all_vehicle_by_name = False
