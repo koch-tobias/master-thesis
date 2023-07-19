@@ -1,6 +1,6 @@
 general_params = {
     "seed": 42,
-    "cut_percent_of_front": 0.20,
+    "cut_percent_of_front": 0.18,
     "relevant_features": ['Sachnummer','Benennung (dt)', 'X-Min','X-Max','Y-Min','Y-Max','Z-Min','Z-Max', 'Wert','Einheit','Gewichtsart','Kurzname','L-Kz.', 'L/R-Kz.', 'Modul (Nr)', 'ox','oy', 'oz', 'xx','xy','xz', 'yx','yy','yz','zx','zy','zz'],
     "features_for_model": ['volume', 'Wert', 'center_x', 'center_y', 'center_z','length','width','height','theta_x','theta_y','theta_z'],
     "keep_modules": ['CE05', 'CD07'], # Keep this modules out of module group EP (CE05=interior mirror, CD07=roof antenna)
@@ -24,11 +24,13 @@ train_settings = {
     "k-folds": 3,
     "augmentation": True,
     "use_only_text": False,
-    "early_stopping": 100,
+    "ml-method": "lgbm",
+    "early_stopping": 10,
     "test_size": 0.3,
-     "n_estimators": 10000
+     "n_estimators": 100
     }
 
+###############################
 lgbm_params_binary = {
     "boosting_type": 'gbdt',
     "metrics": ['auc', 'binary_logloss'],
@@ -72,7 +74,7 @@ xgb_hyperparameter = {
     "min_child_samples": [20, 30, 40],
     "min_child_weight": [4, 6, 9],
 '''
-
+###############################
 convert_dict = {'X-Min': float,
                 'X-Max': float,
                 'Y-Min': float,
