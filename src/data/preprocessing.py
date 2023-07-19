@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import os
+import shutil
 from loguru import logger
 import random
 import pickle
@@ -48,14 +49,19 @@ def load_csv_into_df(original_prisma_data: bool, label_new_data: bool) -> list:
                         df = pd.read_excel(os.path.join(folder_name, file), header=None, skiprows=1)
                         df.columns = df.iloc[0]
                         df = df.iloc[1:]
+                        ncar = df[general_params["car_part_designation"]][1].split(" ")[0]
                     else:
                         df = pd.read_excel(os.path.join(folder_name, file))
-
+                        ncar = file.split("_")[0]
                     # Add the created dataframe to the list of dataframes
                     dataframes.append(df)
-
-                    ncar = file.split("_")[0]
                     ncars.append(ncar)
+
+                    if original_prisma_data == True:
+                        old_path = os.path.join(folder_name, file)
+                        new_path = os.path.join("data/raw", ncar + '_' + file) 
+                        shutil.move(old_path, new_path)
+
                 except:
                     logger.info(f"Error reading file {file}. Skipping...")
                     continue
@@ -101,13 +107,14 @@ def prepare_and_add_labels(dataframe: pd.DataFrame):
     ncar = dataframe[general_params["car_part_designation"]][1].split(" ")[0]
 
     # Keep only car parts of module group EF
-    index_EF_module = dataframe[dataframe[general_params["car_part_designation"]].str.startswith(f'EF {ncar}')].index[-1]
+    index_EF_module = dataframe[dataframe[general_params["car_part_designation"]].str.contains('EF')].index[-1]
+    #index_EF_module = dataframe[dataframe[general_params["car_part_designation"]].str.startswith(f'EF {ncar}')].index[-1]
     dataframe_new = dataframe.loc[:index_EF_module-1]
 
     for modules in general_params["keep_modules"]:
         try:
-            level = dataframe[dataframe[general_params["car_part_designation"]].str.startswith(f'{ncar} {modules}')]["Ebene"].values[0]
-            startindex = dataframe[dataframe[general_params["car_part_designation"]].str.startswith(f'{ncar} {modules}')].index[-1]+1
+            level = dataframe[dataframe[general_params["car_part_designation"]].str.contains(modules)]["Ebene"].values[0]
+            startindex = dataframe[dataframe[general_params["car_part_designation"]].str.contains(modules)].index[-1]+1
             endindex = dataframe.loc[(dataframe["Ebene"] == level) & (dataframe.index > startindex)].index[0]-1
             temp = dataframe.loc[startindex:endindex]
             dataframe_new = pd.concat([dataframe_new, temp]).reset_index(drop=True)
@@ -125,7 +132,7 @@ def prepare_and_add_labels(dataframe: pd.DataFrame):
     
     dataframe_new = dataframe_new.astype(convert_dict)
 
-    # Add columns for the label "Relevant für Messung" and "Allgemeine Bezeichnung"
+    # Add columns for the label "Relevant für Messung" and "Einheitsname"
     dataframe_new.insert(len(dataframe_new.columns), 'Relevant fuer Messung', 'Nein')
     dataframe_new.insert(len(dataframe_new.columns), 'Einheitsname', 'Dummy')
 
@@ -177,12 +184,30 @@ def add_new_features(df):
     return df
 
 # %%
-def preprocess_dataset(df, cut_percent_of_front: float):
+def preprocess_dataset(df):
     logger.info(f"Start preprocessing the dataframe with {df.shape[0]} samples...")
 
     df.loc[df['X-Max'] == 10000, ['X-Min', 'X-Max', 'Y-Min', 'Y-Max', 'Z-Min', 'Z-Max', 'ox', 'oy', 'oz', 'xx', 'xy', 'xz', 'yx', 'yy', 'yz', 'zx', 'zy', 'zz', 'Wert']] = 0
 
     df_new_features = add_new_features(df)
+
+    ##########
+    # OUTLIER DETECTION
+    # Calculate the upper and lower limits
+    Q1 = df_new_features['X-Max_transf'].quantile(0.25)
+    Q3 = df_new_features['X-Max_transf'].quantile(0.75)
+    IQR = Q3 - Q1
+    lower = Q1 - 1.5*IQR
+    upper = Q3 + 1.5*IQR
+    
+    # Create arrays of Boolean values indicating the outlier rows
+    upper_array = np.where(df_new_features['X-Max_transf']>=upper)[0]
+    lower_array = np.where(df_new_features['X-Max_transf']<=lower)[0]
+    
+    # Removing the outliers
+    df_new_features.loc[upper_array, ['X-Min', 'X-Max', 'Y-Min', 'Y-Max', 'Z-Min', 'Z-Max', 'ox', 'oy', 'oz', 'xx', 'xy', 'xz', 'yx', 'yy', 'yz', 'zx', 'zy', 'zz', 'Wert']] = 0
+    df_new_features.loc[lower_array, ['X-Min', 'X-Max', 'Y-Min', 'Y-Max', 'Z-Min', 'Z-Max', 'ox', 'oy', 'oz', 'xx', 'xy', 'xz', 'yx', 'yy', 'yz', 'zx', 'zy', 'zz', 'Wert']] = 0
+    #################
 
     # Using dictionary to convert specific columns
     df_new_features = df_new_features.astype(convert_dict)
@@ -198,9 +223,9 @@ def preprocess_dataset(df, cut_percent_of_front: float):
     # Delete all samples where the parts are in the front area of the car
     x_min_transf, x_max_transf = df_relevants["X-Min_transf"].min(), df_relevants["X-Max_transf"].max()
     car_length = x_max_transf - x_min_transf
-    cut_point_x = x_min_transf + car_length*cut_percent_of_front
+    cut_point_x = x_min_transf + car_length*general_params["cut_percent_of_front"]
+    print(cut_point_x)
     df_relevants = df_relevants[df_relevants["X-Min_transf"] > cut_point_x]
-
     # Concatenate the two data frames vertically
     df_relevants = pd.concat([df_relevants, df_temp]).reset_index(drop=True)
 
@@ -209,7 +234,7 @@ def preprocess_dataset(df, cut_percent_of_front: float):
     # Drop the mirrored car parts (on the right sight) which have the same Sachnummer
     df_new = df_relevants.drop_duplicates(subset='Sachnummer', keep=False)
     df_filtered = df_relevants[df_relevants.duplicated(subset='Sachnummer', keep=False)]
-    df_filtered = df_filtered[df_filtered['yy'].astype(int) == 1]
+    df_filtered = df_filtered[df_filtered['yy'].astype(float) >= 0]
     df_relevants = pd.concat([df_new, df_filtered]).reset_index(drop=True)
 
     # Drop the mirrored car parts (on the right sight) which have not the same Sachnummer 
@@ -370,7 +395,7 @@ def load_prepare_dataset(test_size, folder_path, model_folder_path, binary_model
         random.seed(33)
         cars_for_test = []
         df_test_list = []
-        for i in range(int(len(dataframes_list)*0.1)):
+        for i in range(int(len(dataframes_list)*train_settings["test_size"])): 
             random_index = random.randint(0, len(dataframes_list) - (i+1))
             cars_for_test.append(ncars[random_index])
             df_test_temp = dataframes_list[random_index]
@@ -387,8 +412,8 @@ def load_prepare_dataset(test_size, folder_path, model_folder_path, binary_model
             
         logger.info(f"Car(s) {cars_for_test} is (are) used to test the model on unseen data!")
         df_combined = combine_dataframes(dataframes_list)
-        df_preprocessed, df_for_plot = preprocess_dataset(df_combined, cut_percent_of_front=general_params["cut_percent_of_front"])
-        df_test, df_test_for_plot = preprocess_dataset(df_test, cut_percent_of_front=general_params["cut_percent_of_front"])
+        df_preprocessed, df_for_plot = preprocess_dataset(df_combined)
+        df_test, df_test_for_plot = preprocess_dataset(df_test)
 
         if train_settings["augmentation"]:
             # Generate the new dataset
