@@ -279,5 +279,6 @@ def data_augmentation(df: pd.DataFrame) -> pd.DataFrame:
                 if len(df_temp["Benennung (bereinigt)"][0]) < 40 and df_temp.loc[0,"volume"] > 0:
                     df_temp = augmented_boundingbox(df_new, df_temp)
                     df = pd.concat([df, df_temp], ignore_index=True).reset_index(drop=True)
+    logger.success("Adding artificial designations is successfull...")
 
     return df
