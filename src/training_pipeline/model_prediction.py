@@ -4,18 +4,27 @@ import pickle
 from loguru import logger
 from data.preprocessing import prepare_and_add_labels, preprocess_dataset, get_model, get_X
 from data.boundingbox_calculations import find_valid_space
-from config_model import paths, lgbm_params_binary
+from config_model import paths, train_settings
 
 # %%
-def model_predict(model, X_test, binary_model):
-    probs = model.predict_proba(X_test, num_iteration=model._best_iteration)
+def model_predict(model, X_test, method, binary_model):
+    if method == "lgbm":
+        best_iteration = model._best_iteration - 1
+        probs = model.predict_proba(X_test, num_iteration=best_iteration)
+    elif method == "xgboost":
+        best_iteration = model.get_booster().best_ntree_limit - 1
+        probs = model.predict_proba(X_test, ntree_limit=best_iteration)
+    elif method == "catboost":
+        best_iteration = model.get_best_iteration() - 1
+        probs = model.predict_proba(X_test)
+
     if binary_model:
-        y_pred = (probs[:,1] >= lgbm_params_binary["prediction_threshold"])
+        y_pred = (probs[:,1] >= train_settings["prediction_threshold"])
         y_pred =  np.where(y_pred, 1, 0)
     else:
         y_pred = probs.argmax(axis=1)   
     
-    return y_pred, probs
+    return y_pred, probs, best_iteration
 
 def predict_on_new_data(df):
     logger.info("Prepare dataset...")
@@ -38,11 +47,12 @@ def predict_on_new_data(df):
     logger.info("Preprocess data...")
     df_preprocessed, df_for_plot = preprocess_dataset(df)
 
+    method = paths["model_folder"].split('_')[0]
     X_binary = get_X(vocabulary_binary, vectorizer_binary, boundingbox_features_binary["features_for_model"], df_preprocessed)
-    y_pred_binary, probs = model_predict(lgbm_binary, X_binary, binary_model=True)
+    y_pred_binary, probs_binary = model_predict(lgbm_binary, X_binary, method, binary_model=True)
 
     X_multiclass = get_X(vocabulary_multiclass, vectorizer_multiclass, boundingbox_features_multiclass["features_for_model"], df_preprocessed)
-    y_pred_multiclass, probs = model_predict(lgbm_multiclass, X_multiclass, binary_model=False)
+    y_pred_multiclass, probs_multiclass = model_predict(lgbm_multiclass, X_multiclass, method, binary_model=False)
     logger.success("Dataset is ready for classification!")
 
     logger.info("Load LabelEncoder...")

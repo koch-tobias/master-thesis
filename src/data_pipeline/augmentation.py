@@ -4,8 +4,8 @@ import pandas as pd
 import numpy as np
 import random
 from loguru import logger
-from data.boundingbox_calculations import find_valid_space, random_centerpoint_in_valid_space, calculate_corners
-from config_model import gpt_settings
+from boundingbox_calculations import find_valid_space, random_centerpoint_in_valid_space, calculate_corners
+from config import gpt_settings
 
 # %%
 def random_order(description: str) -> str:

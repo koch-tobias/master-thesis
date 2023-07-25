@@ -48,11 +48,10 @@ def binary_classifier(weight_factor, hp, method):
                                     min_data_in_leaf=hp["min_data_in_leaf"],
                                     loss_function=cb_params_binary["metrics"][1],
                                     eval_metric=cb_params_binary["metrics"][0],
-                                    #custom_metric=cb_params_binary["metrics"],
                                     early_stopping_rounds=train_settings["early_stopping"],
-                                    use_best_model=True
                                     #task_type="GPU",
-                                    #devices='0:6'
+                                    #devices='0:6',
+                                    use_best_model=True
                                 )
         metrics = cb_params_binary["metrics"]
         

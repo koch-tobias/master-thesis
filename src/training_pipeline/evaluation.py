@@ -4,9 +4,12 @@ import numpy as np
 
 import pickle
 import os
+import shutil 
 
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import recall_score
+
+from models.predict import model_predict
 
 from config_model import general_params, lgbm_params_binary, lgbm_params_multiclass, xgb_params_binary, xgb_params_multiclass, cb_params_binary, cb_params_multiclass, train_settings
 
@@ -100,23 +103,14 @@ def store_trained_model(model, val_auc, index_best_model, model_folder_path):
     with open(model_path, "wb") as filestore:
         pickle.dump(model, filestore)
 
+    src_path = "models/df_trainset.xlsx"
+    dst_path = model_folder_path + "df_trainset.xlsx"
+    shutil.copy(src_path, dst_path)
+
 # %%
 def evaluate_model(model, X_test, y_test, evals, hp_in_iteration, num_models_trained, training_time, df_columns, binary_model, method):
-    if method == "lgbm":
-        best_iteration = model._best_iteration - 1
-        probs = model.predict_proba(X_test, num_iteration=best_iteration)
-    elif method == "xgboost":
-        best_iteration = model.get_booster().best_ntree_limit - 1
-        probs = model.predict_proba(X_test, ntree_limit=best_iteration)
-    elif method == "catboost":
-        best_iteration = model.get_best_iteration() - 1
-        probs = model.predict_proba(X_test)
-
-    if binary_model:
-        y_pred = (probs[:,1] >= train_settings["prediction_threshold"])
-        y_pred =  np.where(y_pred, 1, 0)
-    else:
-        y_pred = probs.argmax(axis=1)
+    
+    y_pred, probs, best_iteration  = model_predict(model, X_test, method, binary_model)
 
     accuracy = accuracy_score(y_test, y_pred)
     sensitivity = recall_score(y_test, y_pred, average='weighted')

@@ -1,11 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-from data.boundingbox_calculations import transform_boundingbox, find_valid_space
-from config_model import general_params, lgbm_params_binary, lgbm_params_multiclass
-from sklearn.metrics import ConfusionMatrixDisplay
-import lightgbm as lgb
-import pickle
+from boundingbox_calculations import transform_boundingbox, find_valid_space
 from loguru import logger
 
 # %%
@@ -135,77 +131,3 @@ def analyse_data(df_preprocessed, y_train, y_val, y_test, model_folder_path, bin
             else: 
                 fig.savefig(model_folder_path + 'Multiclass_train_val_test_split_without_dummy.png', dpi=150)
     logger.success("Dataset analysed!")
-
-
-def store_metrics(model, evals, model_folder_path, binary_model):
-
-    early_stopping = model.best_iteration_-1
-    if binary_model:
-        plt.rcParams["figure.figsize"] = (10, 10)
-        lgb.plot_metric(evals, metric=lgbm_params_binary["metrics"][1])
-        plt.title("")
-        plt.xlabel('Iterationen', fontsize=12)
-        plt.ylabel('Loss', fontsize=12)
-        plt.xticks(fontsize=12)
-        plt.yticks(fontsize=12)
-        plt.legend(['Training', 'Validation'], fontsize=12)
-        plt.axvline(early_stopping, color='b', label = 'early stopping')
-        plt.ylim([-0.5, 4])
-        plt.savefig(model_folder_path + 'binary_logloss_plot.png')
-
-        plt.rcParams["figure.figsize"] = (10, 10)
-        lgb.plot_metric(evals, metric=lgbm_params_binary["metrics"][0])
-        plt.title("")
-        plt.xlabel('Iterationen', fontsize=12 )
-        plt.ylabel('AUC', fontsize=12)
-        plt.xticks(fontsize=12)
-        plt.yticks(fontsize=12)
-        plt.legend(['Training', 'Validation'], fontsize=12)
-        plt.axvline(early_stopping, color='b', label = 'early stopping')
-        plt.savefig(model_folder_path + 'auc_plot.png')
-
-    else:    
-        plt.rcParams["figure.figsize"] = (10, 10)
-        lgb.plot_metric(evals, metric=lgbm_params_multiclass["metrics"][1])
-        plt.title("")
-        plt.xlabel('Iterationen', fontsize=12)
-        plt.ylabel('Loss', fontsize=12)
-        plt.xticks(fontsize=12)
-        plt.yticks(fontsize=12)
-        plt.legend(['Training', 'Validation'], fontsize=12)
-        plt.axvline(early_stopping, color='b', label = 'early stopping')
-        plt.ylim([-0.5, 4])
-        plt.savefig(model_folder_path + 'multi_logloss_plot.png')
-
-# %% 
-def store_confusion_matrix(y_test, y_pred, model_folder_path, binary_model):
-
-    if binary_model:
-        class_names = ["Not relevant", "Relevant"]
-        plt.rcParams["figure.figsize"] = (15, 15)
-        ConfusionMatrixDisplay.from_predictions(y_test, y_pred, display_labels=class_names, cmap='Blues', colorbar=False,  text_kw={'fontsize': 12})
-        plt.xticks(fontsize=12)
-        plt.yticks(fontsize=12)
-        plt.xlabel('Predicted Label', fontsize=12 )
-        plt.ylabel('True Label', fontsize=12)
-        plt.savefig(model_folder_path + 'confusion_matrix.png')  
-
-    else:
-        with open(model_folder_path + 'label_encoder.pkl', 'rb') as f:
-            le = pickle.load(f)
-
-        class_names = []
-        classes_pred = le.inverse_transform(y_pred) 
-        classes_true = le.inverse_transform(y_test)
-
-        for name in le.classes_:
-            if (name in classes_pred) or (name in classes_true):
-                class_names.append(name)
-
-        cm_display = ConfusionMatrixDisplay.from_predictions(y_test, y_pred, display_labels=class_names)
-        # Passe die Größe des Diagramms an
-        fig, ax = plt.subplots(figsize=(40, 20))
-        # Zeige die Konfusionsmatrix an
-        cm_display.plot(ax=ax, xticks_rotation='vertical', cmap='Blues', colorbar=False,  text_kw={'fontsize': 12})
-        # Speichere das Diagramm
-        plt.savefig(model_folder_path + 'confusion_matrix.png')

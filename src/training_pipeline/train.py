@@ -21,7 +21,7 @@ from models.LightGBM import binary_classifier, multiclass_classifier
 from data.preprocessing import load_prepare_dataset
 from models.evaluation import store_predictions, store_trained_model, evaluate_model, add_feature_importance, get_features
 from models.predict import model_predict
-from visualization.plot_functions import store_metrics, store_confusion_matrix
+from visualization.plot_functions import store_metrics, plot_metric_catboost, store_confusion_matrix
 from config_model import xgb_params_multiclass
 from config_model import train_settings, general_params
 from config_model import lgbm_hyperparameter as lgbm_hp
@@ -82,7 +82,10 @@ def model_fit(X_train, y_train, X_val, y_val, weight_factor, hp_in_iteration, bi
                     silent=True
                     )
         except:
-            model.fit(X_train, y_train) 
+            model.fit(X_train, y_train,
+                    eval_set=[(X_train, y_train)], 
+                    silent=True
+                    )
 
 
         evals = model.get_evals_result()
@@ -157,6 +160,10 @@ def grid_search(X_train, y_train, X_val, y_val, X_test, y_test, weight_factor, h
                     hp_in_iteration = {hp[0]: hp_0, hp[1]: hp_1, hp[2]: hp_2, hp[3]: hp_3}
                     model_results_dict, df = fit_eval_model(X_train, y_train, X_val, y_val, X_test, y_test, weight_factor, hp_in_iteration, df, model_results_dict, num_models_trained, total_models, binary_model, method)
                     num_models_trained = num_models_trained + 1
+                    break
+                break
+            break
+        break
     logger.success("Grid search hyperparameter tuning was successfull!")
 
     return df, model_results_dict
@@ -293,17 +300,20 @@ def train_model(folder_path, binary_model, method):
 
     logger.info("Start storing the best model with metrics plots and wrong predictions according to the validation auc...")
     best_model = model_results_dict["models_list"][index_best_model]
-    store_metrics(best_model, model_results_dict["evals_list"][index_best_model], model_folder_path, binary_model=binary_model)
+    if method == 'catboost':
+        plot_metric_catboost(model_results_dict["evals_list"][index_best_model], model_folder_path, binary_model)
+    else:
+        store_metrics(best_model, model_results_dict["evals_list"][index_best_model], model_folder_path, binary_model=binary_model)
     store_trained_model(best_model, df_cv["avg validation auc"].iloc[0], index_best_model, model_folder_path)
-    y_pred, probs = model_predict(best_model, X_test, binary_model)
+    y_pred, probs, best_iteration = model_predict(best_model, X_test, method, binary_model)
     store_confusion_matrix(y_test, y_pred, model_folder_path, binary_model)
     store_predictions(y_test, y_pred, probs, df_preprocessed, df_test, model_folder_path, binary_model)
     logger.success("Storing was successfull!")
 
     # Train the best model identified by the holdout method and crossvalidation on the entire data
     logger.info("Train a new model on the entire data with the parameters of the best identified model...")
-    X = np.concatenate((X_train, X_val, X_test), axis=0)
-    y = np.concatenate((y_train, y_val, y_test), axis=0)
+    X_train = np.concatenate((X_train, X_val, X_test), axis=0)
+    y_train = np.concatenate((y_train, y_val, y_test), axis=0)
 
     hp_keys = list(hp_dict.keys())
     best_hp = {}
@@ -312,6 +322,7 @@ def train_model(folder_path, binary_model, method):
         
     gbm_final, evals_final = model_fit(X, y, 0, 0, weight_factor, best_hp, binary_model, method)
     store_trained_model(gbm_final, -1, index_best_model, model_folder_path)
-    df_feature_importance_final_model = add_feature_importance(gbm_final, model_folder_path)
-    df_feature_importance_final_model.to_excel("final_model_feature_importance.xlsx")
+    if method == 'lgbm':
+        df_feature_importance_final_model = add_feature_importance(gbm_final, model_folder_path)
+        df_feature_importance_final_model.to_excel(model_folder_path + "final_model_feature_importance.xlsx")
     logger.success("Training the model on the entire data was successfull!")
