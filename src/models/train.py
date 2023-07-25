@@ -15,33 +15,44 @@ import lightgbm as lgb
 import xgboost as xgb
 from sklearn.model_selection import StratifiedKFold
 
+from numba import jit, cuda
+
 from models.LightGBM import binary_classifier, multiclass_classifier
 from data.preprocessing import load_prepare_dataset
-from models.evaluation import store_predictions, store_trained_model, evaluate_lgbm_model, get_features
-from visualization.plot_functions import store_metrics
+from models.evaluation import store_predictions, store_trained_model, evaluate_model, add_feature_importance, get_features
+from models.predict import model_predict
+from visualization.plot_functions import store_metrics, store_confusion_matrix
+from config_model import xgb_params_multiclass
 from config_model import train_settings, general_params
 from config_model import lgbm_hyperparameter as lgbm_hp
 from config_model import xgb_hyperparameter as xgb_hp
+from config_model import cb_hyperparameter as cb_hp
 
 warnings.filterwarnings("ignore", message=".*The 'nopython' keyword.*")
 import shap
 
 warnings.filterwarnings("ignore")
 
+try:
+    print('System has %d CUDA devices' % len(cuda.list_devices()))
+    cuda.select_device(0)
+    device = cuda.get_current_device()
+    print(device)
+except:
+    print('System has no CUDA devices')
+
 # %%
 def model_fit(X_train, y_train, X_val, y_val, weight_factor, hp_in_iteration, binary_model, method):
     evals = {}
     if method == "lgbm":
         callbacks = [lgb.early_stopping(train_settings["early_stopping"], verbose=5), lgb.record_evaluation(evals)]
-    else:
+    elif method == "xgboost":
         callbacks = [xgb.callback.EarlyStopping(train_settings["early_stopping"], metric_name='auc')]
 
     if binary_model:
         model, metrics = binary_classifier(weight_factor, hp_in_iteration, method)
     else:
         model, metrics = multiclass_classifier(weight_factor, hp_in_iteration, method)
-
-
     
     if method == "lgbm":
         try:
@@ -62,7 +73,19 @@ def model_fit(X_train, y_train, X_val, y_val, weight_factor, hp_in_iteration, bi
         except:
             model.fit(X_train, y_train)       
 
-        evals = model.evals_result()
+        evals = model.evals_result()    
+          
+    elif method == "catboost":
+        try:
+            model.fit(X_train, y_train,
+                    eval_set=[(X_train, y_train), (X_val, y_val)], 
+                    silent=True
+                    )
+        except:
+            model.fit(X_train, y_train) 
+
+
+        evals = model.get_evals_result()
 
     return model, evals
 
@@ -84,14 +107,12 @@ def get_model_folder_path(binary_model, folder_path):
 # %%
 def fit_eval_model(X_train, y_train, X_val, y_val, X_test, y_test, weight_factor, hp_in_iteration, df, model_results_dict, num_models_trained, total_models, binary_model, method):
     start = time.time()
-    logger.info("Start to fit the model!")
     gbm, evals = model_fit(X_train, y_train, X_val, y_val, weight_factor, hp_in_iteration, binary_model, method)
-    logger.info("fit successfull")
     stop = time.time()
     training_time = stop - start
-    y_pred, probs, test_accuracy, test_sensitivity, val_auc, val_loss, train_auc, train_loss, df_new = evaluate_lgbm_model(gbm, X_test, y_test, evals, hp_in_iteration, num_models_trained, training_time, df.columns, binary_model=binary_model, method=method)    
+    y_pred, probs, test_accuracy, test_sensitivity, val_auc, val_loss, train_auc, train_loss, df_new = evaluate_model(gbm, X_test, y_test, evals, hp_in_iteration, num_models_trained, training_time, df.columns, binary_model=binary_model, method=method)    
     df = pd.concat([df, df_new])
-    logger.info(f"Modell {df.shape[0]}/{total_models} trained with a evaluation accuracy = {val_auc} and with a evaluation loss = {val_loss}")
+    logger.info(f"Modell {num_models_trained}/{total_models} trained with a evaluation accuracy = {val_auc} and with a evaluation loss = {val_loss}")
     model_results_dict["models_list"].append(gbm)
     model_results_dict["evals_list"].append(evals)
     model_results_dict["test_sensitivity_results"].append(test_sensitivity)
@@ -105,8 +126,9 @@ def fit_eval_model(X_train, y_train, X_val, y_val, X_test, y_test, weight_factor
     num_models_trained = num_models_trained + 1
     return model_results_dict, df
 
+@jit(target_backend='cuda')  
 def create_result_df(hp_dict):
-    fix_columns = ["model_name", "train auc", "train loss", "validation auc", "validation loss", "test accuracy", "test sensitivity", "Training Time (s)"]
+    fix_columns = ["model_name", "train auc", "train loss", "validation auc", "validation loss", "test auc", "test sensitivity", "Training Time (s)"]
 
     total_models = 1
     for hp in hp_dict:
@@ -123,7 +145,7 @@ def grid_search(X_train, y_train, X_val, y_val, X_test, y_test, weight_factor, h
     logger.info("Start training with grid search hyperparameter tuning...")
 
     model_results_dict = {"models_list": [], "evals_list": [], "test_sensitivity_results": [], "test_auc_results": [], "val_auc_results": [], "val_loss_results": [], "train_auc_results": [], "train_loss_results": [], "y_pred_list": [], "probs_list": []}
-    num_models_trained = 0
+    num_models_trained = 1
 
     df, total_models = create_result_df(hp_dict)
     hp = list(hp_dict.keys())
@@ -134,14 +156,20 @@ def grid_search(X_train, y_train, X_val, y_val, X_test, y_test, weight_factor, h
                 for hp_3 in hp_dict[hp[3]]:
                     hp_in_iteration = {hp[0]: hp_0, hp[1]: hp_1, hp[2]: hp_2, hp[3]: hp_3}
                     model_results_dict, df = fit_eval_model(X_train, y_train, X_val, y_val, X_test, y_test, weight_factor, hp_in_iteration, df, model_results_dict, num_models_trained, total_models, binary_model, method)
-                    break
-                break
-            break
-        break
+                    num_models_trained = num_models_trained + 1
     logger.success("Grid search hyperparameter tuning was successfull!")
 
     return df, model_results_dict
 
+
+@jit(target_backend='cuda')  
+def get_fold_data(X, y, train_index, val_index):
+
+    X_train_fold, X_val_fold = X[train_index], X[val_index]
+    y_train_fold, y_val_fold = y[train_index], y[val_index]
+
+    return X_train_fold, X_val_fold, y_train_fold, y_val_fold
+                  
 def k_fold_crossvalidation(X, y, X_test, y_test, weight_factor, df, model_results_dict, folder_path, method, binary_model):
     kfold = StratifiedKFold(n_splits=train_settings["k-folds"], shuffle=True, random_state=general_params["seed"])
 
@@ -151,39 +179,39 @@ def k_fold_crossvalidation(X, y, X_test, y_test, weight_factor, df, model_result
         hp_columns = list(lgbm_hp.keys())
     elif method == "xgboost":
         hp_columns = list(xgb_hp.keys())
+    elif method == "catboost":
+        hp_columns = list(cb_hp.keys())
 
     columns = fix_columns + hp_columns
     df_cv = pd.DataFrame(columns=columns)
 
-    top_x_models = math.ceil(df.shape[0] * 0.10)
+    top_x_models = math.ceil(df.shape[0] * train_settings["top_x_models_for_cv"])
     number_of_folds = train_settings["k-folds"]
     total_cv_models = number_of_folds * top_x_models
     count_trained_models = 1
 
-    logger.info("Store the features with importance score...")
-    features, topx_important_features = get_features(model_results_dict["models_list"][0], model_folder_path, folder_path)
-    logger.success("Storing the features was successfull!")
+    #logger.info("Store the features with importance score...")
+    #df_features = add_feature_importance(model, model_folder_path)
+    #feature_list, topx_important_features = get_features(model_results_dict["models_list"][0], model_folder_path, folder_path)
+    #logger.success("Storing the features was successfull!")
 
     logger.info(f"Start to validate the top {top_x_models} models by using {number_of_folds}-fold cross-validation... ")
     for i in range(top_x_models):
         cv_results_dict = {"models_list": [], "evals_list": [], "test_sensitivity_results": [], "test_auc_results": [], "val_auc_results": [], "val_loss_results": [], "train_auc_results": [], "train_loss_results": [], "y_pred_list": [], "probs_list": []}
-        list_shap_values = []
-        list_val_sets = []
+        #list_shap_values = []
+        #list_val_sets = []
 
         logger.info(f"Start {number_of_folds}-fold cross-validation for model {i+1}:")
         for train_index, val_index in kfold.split(X, y):
-            X_train_fold, X_val_fold = X[train_index], X[val_index]
-            y_train_fold, y_val_fold = y[train_index], y[val_index]
+            
+            X_train_fold, X_val_fold, y_train_fold, y_val_fold = get_fold_data(X, y, train_index, val_index)
 
-            X_train_df = pd.DataFrame(X_train_fold, columns=features)
-            X_val_df = pd.DataFrame(X_val_fold, columns=features)           
+            #X_train_df = pd.DataFrame(X_train_fold, columns=features)
+            #X_val_df = pd.DataFrame(X_val_fold, columns=features)           
 
             hp_dict = {hp_columns[0]: df[hp_columns[0]].iloc[i], hp_columns[1]: df[hp_columns[1]].iloc[i], hp_columns[2]: df[hp_columns[2]].iloc[i], hp_columns[3]: df[hp_columns[3]].iloc[i]}
 
             cv_results_dict, df_temp = fit_eval_model(X_train_fold, y_train_fold, X_val_fold, y_val_fold, X_test, y_test, weight_factor, hp_dict, df, cv_results_dict, count_trained_models, total_cv_models, binary_model, method)
-            val_auc = cv_results_dict["val_auc_results"][-1]
-            val_loss = cv_results_dict["val_loss_results"][-1]
-            logger.info(f"Model {count_trained_models}/{total_cv_models} trained with a evaluation auc = {val_auc} and with a evaluation loss = {val_loss}")
             count_trained_models = count_trained_models + 1
 
             '''
@@ -240,9 +268,11 @@ def train_model(folder_path, binary_model, method):
         hp_dict = lgbm_hp
     elif method == "xgboost":
         hp_dict = xgb_hp
+    elif method == "catboost":
+        hp_dict = cb_hp
    
     # Training with the hold out method and grid search hyperparameter tuning
-    X_train, y_train, X_val, y_val, X_test, y_test, weight_factor = load_prepare_dataset(folder_path=folder_path, model_folder_path=model_folder_path, binary_model=binary_model)
+    X_train, y_train, X_val, y_val, X_test, y_test, df_preprocessed, df_test, weight_factor = load_prepare_dataset(model_folder_path=model_folder_path, binary_model=binary_model)
 
     df, model_results_dict = grid_search(X_train, y_train, X_val, y_val, X_test, y_test, weight_factor, hp_dict, binary_model, method)
 
@@ -259,12 +289,15 @@ def train_model(folder_path, binary_model, method):
     df_cv.to_excel(model_folder_path + "lgbm_crossvalidation_results.xlsx")
     df_cv = df_cv.sort_values(by=["avg validation auc"], ascending=False)
 
-    index_best_model = int(df_cv["index"].iloc[0])
+    index_best_model = int(df_cv["index"].iloc[0]-1)
 
     logger.info("Start storing the best model with metrics plots and wrong predictions according to the validation auc...")
-    store_metrics(model_results_dict["models_list"][index_best_model], X_test, y_test, model_results_dict["evals_list"][index_best_model], model_folder_path, binary_model=binary_model)
-    store_trained_model(model_results_dict["models_list"][index_best_model], df_cv["avg validation auc"].iloc[0], model_folder_path)
-    store_predictions(X_test, y_test, model_results_dict["y_pred_list"][index_best_model], model_results_dict["probs_list"][index_best_model], folder_path, model_folder_path, binary_model)
+    best_model = model_results_dict["models_list"][index_best_model]
+    store_metrics(best_model, model_results_dict["evals_list"][index_best_model], model_folder_path, binary_model=binary_model)
+    store_trained_model(best_model, df_cv["avg validation auc"].iloc[0], index_best_model, model_folder_path)
+    y_pred, probs = model_predict(best_model, X_test, binary_model)
+    store_confusion_matrix(y_test, y_pred, model_folder_path, binary_model)
+    store_predictions(y_test, y_pred, probs, df_preprocessed, df_test, model_folder_path, binary_model)
     logger.success("Storing was successfull!")
 
     # Train the best model identified by the holdout method and crossvalidation on the entire data
@@ -278,5 +311,7 @@ def train_model(folder_path, binary_model, method):
         best_hp[key] = df[key].iloc[index_best_model]
         
     gbm_final, evals_final = model_fit(X, y, 0, 0, weight_factor, best_hp, binary_model, method)
-    store_trained_model(gbm_final, -1, model_folder_path)
+    store_trained_model(gbm_final, -1, index_best_model, model_folder_path)
+    df_feature_importance_final_model = add_feature_importance(gbm_final, model_folder_path)
+    df_feature_importance_final_model.to_excel("final_model_feature_importance.xlsx")
     logger.success("Training the model on the entire data was successfull!")
