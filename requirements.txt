@@ -19,4 +19,5 @@ xlrd==2.0.1 #For loading excel files
 xlsxwriter==3.1.0
 numba
 cudatoolkit
+catboost
 ## Install PyTorch for your system (https://pytorch.org/) version==1.13.1
