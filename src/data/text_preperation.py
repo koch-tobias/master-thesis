@@ -40,12 +40,11 @@ def clean_text(df):
     return df
 
 # %%
-def vectorize_data(data: pd.DataFrame, df_val, model_folder_path) -> tuple:
+def vectorize_data(data: pd.DataFrame, model_folder_path) -> tuple:
 
     vectorizer = CountVectorizer(analyzer='char', ngram_range=(3, 8))
 
     X_text = vectorizer.fit_transform(data['Benennung (bereinigt)']).toarray()
-    X_test = vectorizer.transform(df_val['Benennung (bereinigt)']).toarray()
 
     # Store the vocabulary
     vocabulary = vectorizer.get_feature_names_out()
@@ -55,7 +54,7 @@ def vectorize_data(data: pd.DataFrame, df_val, model_folder_path) -> tuple:
     with open(model_folder_path + 'vocabulary.pkl', 'wb') as f:
         pickle.dump(vocabulary, f)
 
-    return X_text, X_test
+    return X_text
 
 # %%
 def get_vocabulary(column):
