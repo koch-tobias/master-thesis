@@ -53,6 +53,7 @@ def load_csv_into_df(original_prisma_data: bool, label_new_data: bool) -> list:
                     else:
                         df = pd.read_excel(os.path.join(folder_name, file))
                         ncar = file.split("_")[0]
+                        df["Derivat"] = ncar
                     # Add the created dataframe to the list of dataframes
                     dataframes.append(df)
                     ncars.append(ncar)
@@ -91,6 +92,7 @@ def combine_dataframes(dataframes: list) -> pd.DataFrame:
             logger.info(columns_set)
             raise ValueError("All dataframes must have the same columns.")
     
+    dataframes = dataframes[:5]
     # Merge all dataframes into a single dataframe
     merged_df = pd.concat(dataframes, ignore_index=True)
 
@@ -204,9 +206,9 @@ def preprocess_dataset(df):
     upper_array = np.where(df_new_features['X-Max_transf']>=upper)[0]
     lower_array = np.where(df_new_features['X-Max_transf']<=lower)[0]
     
-    # Removing the outliers
-    df_new_features.loc[upper_array, ['X-Min', 'X-Max', 'Y-Min', 'Y-Max', 'Z-Min', 'Z-Max', 'ox', 'oy', 'oz', 'xx', 'xy', 'xz', 'yx', 'yy', 'yz', 'zx', 'zy', 'zz', 'Wert']] = 0
-    df_new_features.loc[lower_array, ['X-Min', 'X-Max', 'Y-Min', 'Y-Max', 'Z-Min', 'Z-Max', 'ox', 'oy', 'oz', 'xx', 'xy', 'xz', 'yx', 'yy', 'yz', 'zx', 'zy', 'zz', 'Wert']] = 0
+    # Set the bounding box features to zero if detected as outlier
+    df_new_features.loc[upper_array, general_params["bounding_box_features_original"]] = 0
+    df_new_features.loc[lower_array, general_params["bounding_box_features_original"]] = 0
     #################
 
     # Using dictionary to convert specific columns
@@ -251,9 +253,9 @@ def preprocess_dataset(df):
     return df_relevants, df_for_plot
 
 # %%
-def train_test_val(df, df_test, model_folder_path, binary_model):
-    
-    X, X_test = vectorize_data(df, df_test, model_folder_path)
+def train_test_val(df, model_folder_path, binary_model):
+    logger.info("Generate train, validation and test split...")
+    X = vectorize_data(df, model_folder_path)
 
     # Combine text features with other features
     features = general_params["features_for_model"]
@@ -263,61 +265,30 @@ def train_test_val(df, df_test, model_folder_path, binary_model):
 
     if train_settings["use_only_text"] == False:
         X = np.concatenate((X, df[features].values), axis=1)
-        X_test = np.concatenate((X_test, df_test[features].values), axis=1)
 
     if binary_model:
         y = df['Relevant fuer Messung']
         y = y.map({'Ja': 1, 'Nein': 0})
-        y_test = df_test['Relevant fuer Messung']
-        y_test = y_test.map({'Ja': 1, 'Nein': 0})
     else:
         y = df['Einheitsname']
         le = preprocessing.LabelEncoder()
         y = le.fit_transform(y)
-        y_test = df_test['Einheitsname']
-        y_test = le.transform(y_test)
 
         with open(model_folder_path + 'label_encoder.pkl', 'wb') as f: 
             pickle.dump(le, f)  
 
     weight_factor = get_weight_factor(y, df, binary_model)     
 
-    X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=train_settings["val_size"], random_state=42)
+    indices = np.arange(X.shape[0])
 
-    return X_train, y_train, X_val, y_val, X_test, y_test, weight_factor
+    X_train, X_val, y_train, y_val, indices_train, indices_val = train_test_split(X, y, indices, test_size=train_settings["val_size"], stratify=y, random_state=42)
+    X_val, X_test, y_val, y_test, indices_val, indices_test = train_test_split(X_val, y_val, indices_val, test_size=train_settings["test_size"], stratify=y_val, random_state=42)
 
-# %%
-def train_test_val_kfold(df, df_test, model_folder_path, binary_model):
+    df_test = df.iloc[indices_test]
 
-    X, X_test = vectorize_data(df, df_test, model_folder_path)
+    logger.success("Train, validation and test sets are generated!")
 
-    # Combine text features with other features
-    if train_settings["use_only_text"] == False:
-        features = general_params["features_for_model"]
-        X = np.concatenate((X, df[features].values), axis=1)
-        X_test = np.concatenate((X_test, df_test[features].values), axis=1)
-
-    if binary_model:
-        y = df['Relevant fuer Messung']
-        y = y.map({'Ja': 1, 'Nein': 0})
-        y_test = df_test['Relevant fuer Messung']
-        y_test = y_test.map({'Ja': 1, 'Nein': 0})
-    else:
-        y = df['Einheitsname']
-        le = preprocessing.LabelEncoder()
-        y = le.fit_transform(y)
-        y_test = df_test['Einheitsname']
-        y_test = le.transform(y_test)
-
-        with open(model_folder_path + 'label_encoder.pkl', 'wb') as f: 
-            pickle.dump(le, f)
-
-    weight_factor = get_weight_factor(y, df, binary_model)     
-
-    X = np.concatenate((X, X_test), axis=0)
-    y = np.concatenate((y, y_test), axis=0)
-
-    return X, y, weight_factor
+    return X_train, y_train, X_val, y_val, X_test, y_test, df_test, weight_factor
 
 # %%
 def get_weight_factor(y, df, binary_model):
@@ -383,46 +354,26 @@ def get_X(vocab, vectorizer, bbox_features, df_preprocessed):
     return X
 
 # %%
-def load_prepare_dataset(folder_path, model_folder_path, binary_model: bool):
-    if os.path.exists(folder_path + "df_trainset.xlsx"):
-        df_preprocessed = pd.read_excel(folder_path + "df_trainset.xlsx") 
-        df_test = pd.read_excel(folder_path + "df_testset.xlsx")
+def load_prepare_dataset(model_folder_path, binary_model: bool):
+
+    path_trainset = "models/df_trainset.xlsx"
+
+    if os.path.exists(path_trainset):
+        df_preprocessed = pd.read_excel(path_trainset) 
     else:
         dataframes_list, ncars = load_csv_into_df(original_prisma_data=False, label_new_data=False)
 
-        # Take random dataset from list as test set and drop it from the list
-        random.seed(33)
-        cars_for_test = []
-        df_test_list = []
-        for i in range(int(len(dataframes_list)*train_settings["test_size"])): 
-            random_index = random.randint(0, len(dataframes_list) - (i+1))
-            cars_for_test.append(ncars[random_index])
-            df_test_temp = dataframes_list[random_index]
-            df_test_list.append(df_test_temp)
-            dataframes_list.pop(random_index)
-            ncars.pop(random_index)
-        
-        df_test = df_test_list[0]
-        for i in range(len(df_test_list)):
-            if i == 0:
-                pass
-            else:
-                df_test = pd.concat([df_test, df_test_list[i]])
-            
-        logger.info(f"Car(s) {cars_for_test} is (are) used to test the model on unseen data!")
         df_combined = combine_dataframes(dataframes_list)
         df_preprocessed, df_for_plot = preprocess_dataset(df_combined)
-        df_test, df_test_for_plot = preprocess_dataset(df_test)
 
         if train_settings["augmentation"]:
             # Generate the new dataset
             df_preprocessed = data_augmentation(df_preprocessed)
 
-        df_preprocessed.to_excel(folder_path + "df_trainset.xlsx")
-        df_test.to_excel(folder_path + "df_testset.xlsx")
+        df_preprocessed.to_excel("models/df_trainset.xlsx")
 
-    X_train, y_train, X_val, y_val, X_test, y_test, weight_factor = train_test_val(df_preprocessed, df_test, model_folder_path=model_folder_path, binary_model=binary_model)
+    X_train, y_train, X_val, y_val, X_test, y_test, df_test, weight_factor = train_test_val(df_preprocessed, model_folder_path=model_folder_path, binary_model=binary_model)
 
     analyse_data(df_preprocessed, y_train, y_val, y_test, model_folder_path, binary_model)
 
-    return X_train, y_train, X_val, y_val, X_test, y_test, weight_factor
+    return X_train, y_train, X_val, y_val, X_test, y_test, df_preprocessed, df_test, weight_factor
