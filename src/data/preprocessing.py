@@ -92,7 +92,6 @@ def combine_dataframes(dataframes: list) -> pd.DataFrame:
             logger.info(columns_set)
             raise ValueError("All dataframes must have the same columns.")
     
-    dataframes = dataframes[:5]
     # Merge all dataframes into a single dataframe
     merged_df = pd.concat(dataframes, ignore_index=True)
 
