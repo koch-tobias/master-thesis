@@ -4,18 +4,18 @@ from fastapi.responses import JSONResponse
 import pandas as pd
 
 from pyxlsb import open_workbook as open_xlsb
-from typing import Annotated, Union
 from io import BytesIO
-from loguru import logger
 
 from models.predict import predict_on_new_data
 
+app = FastAPI() # Initialize api
+
+# Class to through exceptions
 class UnicornException(Exception):
     def __init__(self, name: str):
         self.name = name
 
-app = FastAPI()
-
+# Function to create costumized exceptions
 @app.exception_handler(UnicornException)
 async def unicorn_exception_handler(request: Request, exc: UnicornException):
     return JSONResponse(
@@ -23,22 +23,17 @@ async def unicorn_exception_handler(request: Request, exc: UnicornException):
         content={"message": f"{exc.name}"},
     )
 
+# Function to convert a dataframe to a dictionary
 def dataframe_to_dict(df):
     result_dict = {}
     for index, row in df.iterrows():
         sachnummer = row['Sachnummer']
         einheitsname = row['Einheitsname']
-        '''
-        benennung = row['Benennung (dt)']
-        ausfuehrung = row["Linke/Rechte Ausfuehrung"]
-        result_dict[sachnummer] = [benennung, einheitsname]
-        if (ausfuehrung == 'Linke Ausfuehrung') or (ausfuehrung == 'Rechte Ausfuehrung'):
-            result_dict[sachnummer].append(ausfuehrung)
-        '''
         result_dict[sachnummer] = einheitsname
 
     return result_dict    
 
+# Post function that the user can use to sent data to the api and get back the list of all relevant car parts in json format
 @app.post("/api/get_relevant_parts/")
 async def post_relevant_parts(file: UploadFile = File(...)):
     if file.filename.endswith(".xlsx") or file.filename.endswith(".xls"):
@@ -49,22 +44,23 @@ async def post_relevant_parts(file: UploadFile = File(...)):
             df = df.iloc[1:]
 
         except Exception:
-            return JSONResponse(status_code=400, content={"error": "Fehler beim Lesen der Datei. Stellen Sie sicher, dass es sich um eine gültige Excel-Datei handelt."})
+            return JSONResponse(status_code=400, content={"error": "Error reading file. Make sure it is a valid Excel file."})
       
         try:
-            df_preprocessed, df_relevant_parts, einheitsname_not_found, ncar = predict_on_new_data(df, use_api=True)
+            df_preprocessed, df_relevant_parts, einheitsname_not_found, ncar = predict_on_new_data(df)
         except Exception:
-            return JSONResponse(status_code=400, content={"error": "Fehler bei der Vorhersage."})
+            return JSONResponse(status_code=400, content={"error": "Error in identifying the relevant components."})
         
         try:
             df_json = dataframe_to_dict(df_relevant_parts)
             return JSONResponse(status_code=200, content=df_json)
         except Exception:
-            return JSONResponse(status_code=400, content={"error": "Fehler beim umwandeln der Datei."})
+            return JSONResponse(status_code=400, content={"error": "Error converting the file to json format."})
         
     else:
-        return JSONResponse(status_code=400, content={"error": "Ungültige Dateierweiterung. Es werden nur Excel-Dateien (.xlsx oder .xls) akzeptiert."})
-    
+        return JSONResponse(status_code=400, content={"error": "Invalid file extension. Only Excel files (.xlsx or .xls) are accepted."})
+
+# Get function to test if the api is running and if the connection is successfull 
 @app.get("/")
 async def root():
-    return {"message": "Hello World"}
+    return {"message": "Hello User, your connection to the API is successfull!"}
