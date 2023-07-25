@@ -4,15 +4,26 @@ import pickle
 from loguru import logger
 from data.preprocessing import prepare_and_add_labels, preprocess_dataset, get_model, get_X
 from data.boundingbox_calculations import find_valid_space
-from config_model import paths
+from config_model import paths, lgbm_params_binary
 
-def predict_on_new_data(df, use_api: bool):
+# %%
+def model_predict(model, X_test, binary_model):
+    probs = model.predict_proba(X_test, num_iteration=model._best_iteration)
+    if binary_model:
+        y_pred = (probs[:,1] >= lgbm_params_binary["prediction_threshold"])
+        y_pred =  np.where(y_pred, 1, 0)
+    else:
+        y_pred = probs.argmax(axis=1)   
+    
+    return y_pred, probs
+
+def predict_on_new_data(df):
     logger.info("Prepare dataset...")
     df, ncar = prepare_and_add_labels(df)
     logger.info("Dataset successfully prepared!")
 
     logger.info("Load trainset..")
-    trainset = pd.read_excel(paths["model_folder"] + "/df_trainset.xlsx")
+    trainset = pd.read_excel("models/df_trainset.xlsx")
     trainset_relevant_parts = trainset[trainset["Relevant fuer Messung"] == "Ja"]
     trainset_relevant_parts = trainset_relevant_parts[(trainset_relevant_parts['X-Min_transf'] != 0) & (trainset_relevant_parts['X-Max_transf'] != 0)]    
     unique_names = trainset_relevant_parts["Einheitsname"].unique().tolist()
@@ -26,16 +37,13 @@ def predict_on_new_data(df, use_api: bool):
 
     logger.info("Preprocess data...")
     df_preprocessed, df_for_plot = preprocess_dataset(df)
-    logger.success("Data ready for prediction!")
 
-    logger.info("Identify relevant car parts and there unique name...")
     X_binary = get_X(vocabulary_binary, vectorizer_binary, boundingbox_features_binary["features_for_model"], df_preprocessed)
-    probs_binary = lgbm_binary.predict_proba(X_binary)
-    y_pred_binary = np.where(probs_binary[:, 1] > 0.7, 1, 0)
+    y_pred_binary, probs = model_predict(lgbm_binary, X_binary, binary_model=True)
 
     X_multiclass = get_X(vocabulary_multiclass, vectorizer_multiclass, boundingbox_features_multiclass["features_for_model"], df_preprocessed)
-    probs_multiclass = lgbm_multiclass.predict_proba(X_multiclass)
-    y_pred_multiclass = probs_multiclass.argmax(axis=1)
+    y_pred_multiclass, probs = model_predict(lgbm_multiclass, X_multiclass, binary_model=False)
+    logger.success("Dataset is ready for classification!")
 
     logger.info("Load LabelEncoder...")
     # Load the LabelEncoder
@@ -45,7 +53,7 @@ def predict_on_new_data(df, use_api: bool):
 
     y_pred_multiclass_names = le.inverse_transform(y_pred_multiclass) 
 
-    logger.info("Add unique names to car parts...")
+    logger.info("Identify relevant car parts and add the unique names...")
     df_relevant_parts = df_preprocessed.reset_index(drop=True)
     for index, row in df_relevant_parts.iterrows():
         if y_pred_binary[index] == 1: 
