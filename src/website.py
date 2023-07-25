@@ -74,7 +74,7 @@ if authentication_status:
         df = pd.read_excel(st.session_state['uploaded_file'], header=None, skiprows=1)
         df.columns = df.iloc[0]
         df = df.iloc[1:] 
-        df_preprocessed, df_relevant_parts, einheitsname_not_found, ncar = predict_on_new_data(df, use_api=False)
+        df_preprocessed, df_relevant_parts, einheitsname_not_found, ncar = predict_on_new_data(df)
         df_relevant_parts.rename(columns={'L/R-Kz.':'Linke/Rechte Ausfuehrung'}, inplace=True)
 
 

@@ -12,7 +12,7 @@ from config_model import general_params, train_settings
 # %%
 def main():
     train_binary_model = True
-    train_multiclass_model = True
+    train_multiclass_model = False
     label_new_data = False
     plot_bounding_boxes_one_vehicle = False
     plot_bounding_boxes_all_vehicle_by_name = False
@@ -44,7 +44,7 @@ def main():
     if label_new_data:
         dataframes, ncars = load_csv_into_df(original_prisma_data=True, label_new_data=True)
         for df in dataframes:
-            df_with_label_columns, df_relevant_parts, einheitsname_not_found, ncar = predict_on_new_data(df, use_api=False)
+            df_with_label_columns, df_relevant_parts, einheitsname_not_found, ncar = predict_on_new_data(df)
 
             for index, row in df_relevant_parts.iterrows():
                 sachnummer = row['Sachnummer']
