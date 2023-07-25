@@ -139,3 +139,6 @@ plots_images/
 # Secure
 pw_hash_generator.ipynb
 creds.py
+vm_messtool.pub
+vm_bauteilvermessung.pem
+vm_messtool.ppk
