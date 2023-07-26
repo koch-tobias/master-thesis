@@ -9,47 +9,9 @@ import shutil
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import recall_score
 
-from models.predict import model_predict
+from deployment_pipeline.prediction import model_predict
 
-from config_model import general_params, lgbm_params_binary, lgbm_params_multiclass, xgb_params_binary, xgb_params_multiclass, cb_params_binary, cb_params_multiclass, train_settings
-
-# %%
-def store_predictions(y_test, y_pred, probs, df_preprocessed, df_test, model_folder_path, binary_model):
-
-    if binary_model:
-        class_names = df_preprocessed['Relevant fuer Messung'].unique()
-    else:
-        class_names = df_preprocessed["Einheitsname"].unique()
-        class_names = sorted(class_names)
-
-    df_wrong_predictions = pd.DataFrame(columns=['Sachnummer', 'Benennung (dt)', 'Derivat', 'Predicted', 'True', 'Probability'])
-
-    try:
-        y_test = y_test.to_numpy()
-    except:
-        pass
-
-    # Ausgabe der Vorhersagen, der Wahrscheinlichkeiten und der wichtigsten Features
-    for i in range(len(y_test)):
-        try:
-            if y_pred[i] != y_test[i]:
-                df_wrong_predictions.loc[i,"Sachnummer"] = df_test.loc[i, "Sachnummer"]
-                df_wrong_predictions.loc[i,"Benennung (dt)"] = df_test.loc[i, "Benennung (dt)"]
-                df_wrong_predictions.loc[i,"Derivat"] = df_test.loc[i, "Derivat"]
-                df_wrong_predictions.loc[i,"Predicted"] = class_names[y_pred[i]]
-                df_wrong_predictions.loc[i,"True"] = class_names[y_test[i]]
-                if binary_model:
-                    if probs[i][1] >= 0.5:
-                        df_wrong_predictions.loc[i,"Probability"] = probs[i][1]
-                    else:
-                        df_wrong_predictions.loc[i,"Probability"] = 1 - probs[i][1]
-                else:
-                    df_wrong_predictions.loc[i,"Probability"] = probs[i][1]
-        except:
-            pass
-        
-    # Serialize data into file:
-    df_wrong_predictions.to_excel(model_folder_path + "wrong_predictions.xlsx")
+from config import general_params, lgbm_params_binary, lgbm_params_multiclass, xgb_params_binary, xgb_params_multiclass, cb_params_binary, cb_params_multiclass, train_settings
 
 #%%
 def add_feature_importance(model, model_folder_path):
@@ -92,21 +54,6 @@ def get_features(model_folder_path):
         print(f"Error: File {path_store_features} does not exist!")
     
     
-# %%
-def store_trained_model(model, val_auc, index_best_model, model_folder_path):
-    # save model
-    if val_auc != -1:
-        model_path = model_folder_path + f"model{index_best_model}_{str(val_auc)[2:6]}_validation_auc.pkl"
-    else:
-        model_path = model_folder_path + f"final_model.pkl"
-
-    with open(model_path, "wb") as filestore:
-        pickle.dump(model, filestore)
-
-    src_path = "models/df_trainset.xlsx"
-    dst_path = model_folder_path + "df_trainset.xlsx"
-    shutil.copy(src_path, dst_path)
-
 # %%
 def evaluate_model(model, X_test, y_test, evals, hp_in_iteration, num_models_trained, training_time, df_columns, binary_model, method):
     

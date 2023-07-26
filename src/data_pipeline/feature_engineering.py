@@ -1,5 +1,11 @@
 import numpy as np
+import pandas as pd
+
+from sklearn.feature_extraction.text import CountVectorizer
+
 import math
+import re
+import pickle
 
 # %%
 def transform_boundingbox(x_min, x_max, y_min, y_max, z_min, z_max, ox, oy, oz, xx, xy, xz, yx, yy, yz, zx, zy, zz):
@@ -200,6 +206,101 @@ def calculate_corners(center_point, length, width, height, theta_x, theta_y, the
 
     return x_min, x_max, y_min, y_max, z_min, z_max
 
+# %%
+def prepare_text(designation: str) -> str:
+    # transform to lower case
+    text = str(designation).upper()
 
+    # Removing punctations
+    text = re.sub(r"[^\w\s]", "", text)
 
+    # Removing numbers
+    text = ''.join([i for i in text if not i.isdigit()])
 
+    # tokenize text
+    text = text.split(" ")
+
+    # Remove predefined words
+    predefined_words = ["ZB", "AF", "LI", "RE", "MD", "LL", "TAB", "TB"]
+    text = [word for word in text if word not in predefined_words]
+
+    # Remove words with only one letter
+    text = [word for word in text if len(word) > 1]
+
+    # remove empty tokens
+    text = [word for word in text if len(word) > 0]
+
+    # join all
+    prepared_designation = " ".join(text)
+
+    return prepared_designation
+
+# %%
+def clean_text(df):
+    df["Benennung (bereinigt)"] = df.apply(lambda x: prepare_text(x["Benennung (dt)"]), axis=1)
+
+    return df
+
+# %%
+def vectorize_data(data: pd.DataFrame, model_folder_path) -> tuple:
+
+    vectorizer = CountVectorizer(analyzer='char', ngram_range=(3, 8))
+
+    X_text = vectorizer.fit_transform(data['Benennung (bereinigt)']).toarray()
+
+    # Store the vocabulary
+    vocabulary = vectorizer.get_feature_names_out()
+
+    with open(model_folder_path + 'vectorizer.pkl', 'wb') as f:
+        pickle.dump(vectorizer, f)
+    with open(model_folder_path + 'vocabulary.pkl', 'wb') as f:
+        pickle.dump(vocabulary, f)
+
+    return X_text
+
+# %%
+def get_vocabulary(column):
+    text = ' '.join(column.astype(str))
+    words = text.upper().split()
+    word_counts = pd.Series(words).value_counts()
+    vocabulary = word_counts.index.tolist()
+
+    return vocabulary
+
+# %%
+def store_predictions(y_test, y_pred, probs, df_preprocessed, df_test, model_folder_path, binary_model):
+
+    if binary_model:
+        class_names = df_preprocessed['Relevant fuer Messung'].unique()
+    else:
+        class_names = df_preprocessed["Einheitsname"].unique()
+        class_names = sorted(class_names)
+
+    df_wrong_predictions = pd.DataFrame(columns=['Sachnummer', 'Benennung (dt)', 'Derivat', 'Predicted', 'True', 'Probability'])
+
+    try:
+        y_test = y_test.to_numpy()
+    except:
+        pass
+
+    # Ausgabe der Vorhersagen, der Wahrscheinlichkeiten und der wichtigsten Features
+    for i in range(len(y_test)):
+        try:
+            if y_pred[i] != y_test[i]:
+                df_wrong_predictions.loc[i,"Sachnummer"] = df_test.loc[i, "Sachnummer"]
+                df_wrong_predictions.loc[i,"Benennung (dt)"] = df_test.loc[i, "Benennung (dt)"]
+                df_wrong_predictions.loc[i,"Derivat"] = df_test.loc[i, "Derivat"]
+                df_wrong_predictions.loc[i,"Predicted"] = class_names[y_pred[i]]
+                df_wrong_predictions.loc[i,"True"] = class_names[y_test[i]]
+                if binary_model:
+                    if probs[i][1] >= 0.5:
+                        df_wrong_predictions.loc[i,"Probability"] = probs[i][1]
+                    else:
+                        df_wrong_predictions.loc[i,"Probability"] = 1 - probs[i][1]
+                else:
+                    df_wrong_predictions.loc[i,"Probability"] = probs[i][1]
+        except:
+            pass
+        
+    # Serialize data into file:
+    df_wrong_predictions.to_excel(model_folder_path + "wrong_predictions.xlsx")

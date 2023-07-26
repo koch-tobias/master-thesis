@@ -17,16 +17,15 @@ from sklearn.model_selection import StratifiedKFold
 
 from numba import jit, cuda
 
-from models.LightGBM import binary_classifier, multiclass_classifier
-from data.preprocessing import load_prepare_dataset
-from models.evaluation import store_predictions, store_trained_model, evaluate_model, add_feature_importance, get_features
-from models.predict import model_predict
-from visualization.plot_functions import store_metrics, plot_metric_catboost, store_confusion_matrix
-from config_model import xgb_params_multiclass
-from config_model import train_settings, general_params
-from config_model import lgbm_hyperparameter as lgbm_hp
-from config_model import xgb_hyperparameter as xgb_hp
-from config_model import cb_hyperparameter as cb_hp
+from model_architectures import binary_classifier, multiclass_classifier
+from evaluation import evaluate_model, add_feature_importance, get_features
+from deployment_pipeline.prediction import model_predict, store_predictions
+from plot_functions import store_metrics, plot_metric_catboost, store_confusion_matrix
+from utils import store_trained_model
+from config import xgb_params_multiclass, train_settings, general_params
+from config import lgbm_hyperparameter as lgbm_hp
+from config import xgb_hyperparameter as xgb_hp
+from config import cb_hyperparameter as cb_hp
 
 warnings.filterwarnings("ignore", message=".*The 'nopython' keyword.*")
 import shap
@@ -86,7 +85,6 @@ def model_fit(X_train, y_train, X_val, y_val, weight_factor, hp_in_iteration, bi
                     eval_set=[(X_train, y_train)], 
                     silent=True
                     )
-
 
         evals = model.get_evals_result()
 

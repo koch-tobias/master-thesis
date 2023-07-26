@@ -1,8 +1,8 @@
 from loguru import logger
 from datetime import datetime
 
-from models.train import train_model
-from config_model import train_settings
+from train import train_model
+from config import train_settings
 
 # %%
 def main():

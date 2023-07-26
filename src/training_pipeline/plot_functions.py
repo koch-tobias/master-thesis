@@ -1,8 +1,8 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-from data.boundingbox_calculations import transform_boundingbox, find_valid_space
-from config_model import general_params, lgbm_params_binary, lgbm_params_multiclass, cb_params_binary, cb_params_multiclass
+from data_pipeline.feature_engineering import transform_boundingbox, find_valid_space
+from config import general_params, lgbm_params_binary, lgbm_params_multiclass, cb_params_binary, cb_params_multiclass
 from sklearn.metrics import ConfusionMatrixDisplay
 import lightgbm as lgb
 import pickle

@@ -2,9 +2,10 @@ import pandas as pd
 import numpy as np
 import pickle
 from loguru import logger
-from data.preprocessing import prepare_and_add_labels, preprocess_dataset, get_model, get_X
-from data.boundingbox_calculations import find_valid_space
-from config_model import paths, train_settings
+from data_pipeline.preprocessing import prepare_and_add_labels, preprocess_dataset
+from utils import get_model, get_X
+from data_pipeline.feature_engineering import find_valid_space
+from config import paths, train_settings
 
 # %%
 def model_predict(model, X_test, method, binary_model):

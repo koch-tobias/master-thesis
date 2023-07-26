@@ -5,12 +5,14 @@ general_params = {
     "features_for_model": ['volume', 'Wert', 'center_x', 'center_y', 'center_z','length','width','height','theta_x','theta_y','theta_z'], # List of features which are used for training the models
     "bounding_box_features_original": ['X-Min', 'X-Max', 'Y-Min', 'Y-Max', 'Z-Min', 'Z-Max', 'ox', 'oy', 'oz', 'xx', 'xy', 'xz', 'yx', 'yy', 'yz', 'zx', 'zy', 'zz', 'Wert'], #List of all original boundingbox features which should be set to 0 if wrong or not given
     "keep_modules": ['CE05', 'CD07'], # Keep this modules out of module group EP (CE05=interior mirror, CD07=roof antenna)
-    "car_part_designation": "Benennung (dt)"
+    "car_part_designation": "Benennung (dt)",
+    "augmentation": False
 }
 
 paths = {
-    "labeled_data": "data/labeled",                                 # Paths to the labeld datasets
-    "new_data": "data/raw_for_labeling"                             # Paths to the original datasets before labeling
+    "labeled_data": "data/labeled",                                 # Paths to the labeled datasets
+    "new_data": "data/raw_for_labeling",                            # Paths to the original datasets before labeling
+    "processed_dataset": "data/processed"                # Paths to the preprocessed dataset
 }
 
 gpt_settings = {
@@ -20,3 +22,23 @@ gpt_settings = {
     "n": 1                         # Number of answers gpt should return
 }
 
+convert_dict = {'X-Min': float,
+                'X-Max': float,
+                'Y-Min': float,
+                'Y-Max': float,
+                'Z-Min': float,
+                'Z-Max': float,
+                'Wert': float,
+                'ox': float,
+                'oy': float,
+                'oz': float,
+                'xx': float,
+                'xy': float,
+                'xz': float,
+                'yx': float,
+                'yy': float,
+                'yz': float,
+                'zx': float,
+                'zy': float,
+                'zz': float                     
+                }

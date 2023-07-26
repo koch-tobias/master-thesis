@@ -1,8 +1,11 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-from boundingbox_calculations import transform_boundingbox, find_valid_space
+from feature_engineering import transform_boundingbox, find_valid_space
+from config import paths
 from loguru import logger
+import os
+from datetime import datetime
 
 # %%
 def plot_bounding_box(ax, transformed_boundingbox, designation, label_relevant):
@@ -79,10 +82,27 @@ def plot_vehicle(df: pd.DataFrame, add_valid_space:bool, preprocessed_data:bool,
         # Show the plot
         plt.show()    
 
-def analyse_data(df_preprocessed, y_train, y_val, y_test, model_folder_path, binary_model):
+def plot_bounding_boxes_one_vehicle(data_path):
+    df = pd.read_excel(data_path, index_col=0) 
+    df = df[(df['X-Max'] != 0) & (df['X-Min'] != 0)]
+    df = df[df["Relevant fuer Messung"] == "Ja"]
+    unique_names = df["Einheitsname"].unique().tolist()
+    unique_names.sort()
+    for name in unique_names:
+        print(name)
+        df_new = df[(df["Einheitsname"] == name)]
+        plot_vehicle(df_new, add_valid_space=True, preprocessed_data=False, mirrored=False)  
+
+def plot_bounding_boxes_all_vehicle_by_name(data_path):
+    df_preprocessed = pd.read_excel(data_path,index_col=0) 
+    # Hier muss noch wasgeändert werden
+    #df_preprocessed, df_for_plot = preprocess_dataset(df)
+    #plot_vehicle(df_for_plot, add_valid_space=True, preprocessed_data=False, mirrored=False)
+
+def analyse_data_split(df_preprocessed, y_train, y_val, y_test, model_folder_path, binary_model):
     
     logger.info("Start analysing the preprocessed dataset...")
-    # Analyze the dataset
+
     width = 0.25
     x_labels = ['Training', 'Validation', 'Test']
     if binary_model:
@@ -131,3 +151,15 @@ def analyse_data(df_preprocessed, y_train, y_val, y_test, model_folder_path, bin
             else: 
                 fig.savefig(model_folder_path + 'Multiclass_train_val_test_split_without_dummy.png', dpi=150)
     logger.success("Dataset analysed!")
+
+def store_class_distribution(df, class_column, storage_path):
+    # Verteilung der Klassen ermitteln
+    class_counts = df[class_column].value_counts()
+
+    # Balkendiagramm erstellen
+    plt.figure(figsize=(10, 10))
+    class_counts.plot(kind='bar')
+    plt.xlabel(class_column)
+    plt.ylabel('Number of Car Parts')
+    plt.title('Class Distribution')
+    plt.savefig(storage_path + f'/Distribution_{class_column}_{len(class_counts)}.png', dpi=150)

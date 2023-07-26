@@ -1,7 +1,7 @@
 from loguru import logger
 
 from data_pipeline.preprocessing import load_csv_into_df
-from prediction import predict_on_new_data
+from deployment_pipeline.prediction import predict_on_new_data
 from config import general_params
 
 # %%

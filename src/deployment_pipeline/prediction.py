@@ -2,8 +2,9 @@ import pandas as pd
 import numpy as np
 import pickle
 from loguru import logger
-from data_pipeline.preprocessing import prepare_and_add_labels, preprocess_dataset, get_model, get_X
-from data_pipeline.boundingbox_calculations import find_valid_space
+from data_pipeline.preprocessing import prepare_and_add_labels, preprocess_dataset
+from data_pipeline.feature_engineering import find_valid_space
+from utils import get_model, get_X
 from config import paths, settings
 
 # %%
@@ -25,6 +26,45 @@ def model_predict(model, X_test, method, binary_model):
         y_pred = probs.argmax(axis=1)   
     
     return y_pred, probs, best_iteration
+
+# %%
+def store_predictions(y_test, y_pred, probs, df_preprocessed, df_test, model_folder_path, binary_model):
+
+    if binary_model:
+        class_names = df_preprocessed['Relevant fuer Messung'].unique()
+    else:
+        class_names = df_preprocessed["Einheitsname"].unique()
+        class_names = sorted(class_names)
+
+    df_wrong_predictions = pd.DataFrame(columns=['Sachnummer', 'Benennung (dt)', 'Derivat', 'Predicted', 'True', 'Probability'])
+
+    try:
+        y_test = y_test.to_numpy()
+    except:
+        pass
+
+    # Ausgabe der Vorhersagen, der Wahrscheinlichkeiten und der wichtigsten Features
+    for i in range(len(y_test)):
+        try:
+            if y_pred[i] != y_test[i]:
+                df_wrong_predictions.loc[i,"Sachnummer"] = df_test.loc[i, "Sachnummer"]
+                df_wrong_predictions.loc[i,"Benennung (dt)"] = df_test.loc[i, "Benennung (dt)"]
+                df_wrong_predictions.loc[i,"Derivat"] = df_test.loc[i, "Derivat"]
+                df_wrong_predictions.loc[i,"Predicted"] = class_names[y_pred[i]]
+                df_wrong_predictions.loc[i,"True"] = class_names[y_test[i]]
+                if binary_model:
+                    if probs[i][1] >= 0.5:
+                        df_wrong_predictions.loc[i,"Probability"] = probs[i][1]
+                    else:
+                        df_wrong_predictions.loc[i,"Probability"] = 1 - probs[i][1]
+                else:
+                    df_wrong_predictions.loc[i,"Probability"] = probs[i][1]
+        except:
+            pass
+        
+    # Serialize data into file:
+    df_wrong_predictions.to_excel(model_folder_path + "wrong_predictions.xlsx")
+
 
 def predict_on_new_data(df):
     logger.info("Prepare dataset...")
