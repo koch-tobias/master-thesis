@@ -18,6 +18,7 @@ xgboost==1.7.6
 xlrd==2.0.1 #For loading excel files
 xlsxwriter==3.1.0
 numba
-cudatoolkit
+#cudatoolkit
 catboost
+gensim==4.3.1
 ## Install PyTorch for your system (https://pytorch.org/) version==1.13.1
