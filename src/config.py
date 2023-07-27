@@ -1,3 +1,8 @@
+paths = {
+    "folder_processed_dataset": "data/processed/26072023_1151/",            # Paths to the preprocessed dataset
+    "final_model": "lgbm_HyperparameterTuning_07072023_0936"                # Paths to the directory of the final trained models
+}
+
 general_params = {
     "seed": 33,
     "cut_percent_of_front": 0.18,       # Choose number between 0 and 1. How much percent of the front of the car should be deleted - No relevant car parts in the front of a car
@@ -7,11 +12,6 @@ general_params = {
     "keep_modules": ['CE05', 'CD07'], # Keep this modules out of module group EP (CE05=interior mirror, CD07=roof antenna)
     "car_part_designation": "Benennung (dt)",
     "augmentation": False
-}
-
-paths = {
-    "folder_processed_dataset": "data/processed/26072023_1151/",            # Paths to the preprocessed dataset
-    "final_model": "lgbm_HyperparameterTuning_07072023_0936"                # Paths to the directory of the final trained models
 }
 
 prediction_settings = {
@@ -25,34 +25,11 @@ gpt_settings = {
     "n": 1                         # Number of answers gpt should return
 }
 
-convert_dict = {'X-Min': float,
-                'X-Max': float,
-                'Y-Min': float,
-                'Y-Max': float,
-                'Z-Min': float,
-                'Z-Max': float,
-                'Wert': float,
-                'ox': float,
-                'oy': float,
-                'oz': float,
-                'xx': float,
-                'xy': float,
-                'xz': float,
-                'yx': float,
-                'yy': float,
-                'yz': float,
-                'zx': float,
-                'zy': float,
-                'zz': float                     
-                }
-
-
 train_settings = {
-    "seed": 33,
     "k-folds": 4,                   # Number of folds for k-fold crossvalidation
     "augmentation": True,           # True for using Data Augmentation 
     "use_only_text": False,         # True for training on only Designations or False for training on designations and bounding box information
-    "ml-method": "xgboost",            # Choose between 'lgbm', 'xgboost' and 'catboost'
+    "ml-method": "lgbm",            # Choose between 'lgbm', 'xgboost' and 'catboost'
     "early_stopping": 30,           # Number of rounds for early stopping
     "val_size": 0.4,                # Split dataset into 1-x % training and x % validation
     "test_size": 0.5,               # Split validation set into 1-x % validation and x % test
@@ -116,3 +93,24 @@ cb_hyperparameter = {
     "min_data_in_leaf": [20, 30, 40]        # Minimal number of datapoints a node must contain (to reduce overfitting)
 }
 ################################
+
+convert_dict = {'X-Min': float,
+                'X-Max': float,
+                'Y-Min': float,
+                'Y-Max': float,
+                'Z-Min': float,
+                'Z-Max': float,
+                'Wert': float,
+                'ox': float,
+                'oy': float,
+                'oz': float,
+                'xx': float,
+                'xy': float,
+                'xz': float,
+                'yx': float,
+                'yy': float,
+                'yz': float,
+                'zx': float,
+                'zy': float,
+                'zz': float                     
+                }
