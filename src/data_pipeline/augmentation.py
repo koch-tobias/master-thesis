@@ -5,7 +5,7 @@ import numpy as np
 import random
 from loguru import logger
 from feature_engineering import find_valid_space, random_centerpoint_in_valid_space, calculate_corners
-from config import gpt_settings
+from src.config import gpt_settings
 
 # %%
 def random_order(description: str) -> str:

@@ -4,7 +4,7 @@
 from lightgbm import LGBMClassifier
 import xgboost as xgb
 from catboost import CatBoostClassifier
-from config import lgbm_params_multiclass, lgbm_params_binary, xgb_params_binary, xgb_params_multiclass, cb_params_binary, cb_params_multiclass, train_settings
+from src.config import lgbm_params_multiclass, lgbm_params_binary, xgb_params_binary, xgb_params_multiclass, cb_params_binary, cb_params_multiclass, train_settings
 
 # %%
 def binary_classifier(weight_factor, hp, method):

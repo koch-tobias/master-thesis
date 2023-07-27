@@ -303,4 +303,4 @@ def store_predictions(y_test, y_pred, probs, df_preprocessed, df_test, model_fol
             pass
         
     # Serialize data into file:
-    df_wrong_predictions.to_excel(model_folder_path + "wrong_predictions.xlsx")
+    df_wrong_predictions.to_csv(model_folder_path + "wrong_predictions.csv")

@@ -6,8 +6,8 @@ import os
 import shutil
 from loguru import logger
 
-from feature_engineering import transform_boundingbox, calculate_center_point, calculate_lwh, calculate_orientation, clean_text
-from config import general_params, paths, convert_dict
+from src.data_pipeline.feature_engineering import transform_boundingbox, calculate_center_point, calculate_lwh, calculate_orientation, clean_text
+from src.config import general_params, convert_dict
 
 # %%
 def load_csv_into_df(original_prisma_data: bool, label_new_data: bool) -> list:
@@ -18,22 +18,21 @@ def load_csv_into_df(original_prisma_data: bool, label_new_data: bool) -> list:
 
     # Check if the folder exists
     if label_new_data:
-        folder_name = paths["new_data"]
+        folder_name = "data/raw_for_labeling"
     else:
-        folder_name = paths["labeled_data"]
+        folder_name = "data/labeled"
         
     if not os.path.exists(folder_name):
         logger.error(f"The path {folder_name} does not exist.")
         exit()
     else:
-        logger.info("Loading the data...")
+        logger.info("Loading the labeled datasets...")
 
         # Create an empty list to store all dataframes
         dataframes = []
         ncars = []
         # Loop through all files in the folder and open them as dataframes
         for file in os.listdir(folder_name):
-            if file.endswith(".xls") or file.endswith(".xlsx"):
                 try:
                     # Load the excel into a pandas dataframe, delete the header and declare the second row as new header
                     if original_prisma_data == True:
@@ -42,9 +41,10 @@ def load_csv_into_df(original_prisma_data: bool, label_new_data: bool) -> list:
                         df = df.iloc[1:]
                         ncar = df[general_params["car_part_designation"]][1].split(" ")[0]
                     else:
-                        df = pd.read_excel(os.path.join(folder_name, file))
+                        df = pd.read_csv(os.path.join(folder_name, file))
                         ncar = file.split("_")[0]
                         df["Derivat"] = ncar
+
                     # Add the created dataframe to the list of dataframes
                     dataframes.append(df)
                     ncars.append(ncar)
@@ -74,6 +74,8 @@ def combine_dataframes(dataframes: list) -> pd.DataFrame:
     return: Merged dataframe
     '''
     # Set the header information
+
+    logger.info("Combine all datasets to one...")
     columns_set = set(dataframes[0].columns)
 
     # Check if all dataframes have the same columns 

@@ -2,10 +2,10 @@ import pandas as pd
 import numpy as np
 import pickle
 from loguru import logger
-from data_pipeline.preprocessing import prepare_and_add_labels, preprocess_dataset
-from data_pipeline.feature_engineering import find_valid_space
-from utils import get_model, get_X
-from config import paths, settings
+from src.data_pipeline.preprocessing import prepare_and_add_labels, preprocess_dataset
+from src.data_pipeline.feature_engineering import find_valid_space
+from src.utils import get_model, get_X
+from src.config import paths, prediction_settings
 
 # %%
 def model_predict(model, X_test, method, binary_model):
@@ -20,7 +20,7 @@ def model_predict(model, X_test, method, binary_model):
         probs = model.predict_proba(X_test)
 
     if binary_model:
-        y_pred = (probs[:,1] >= settings["prediction_threshold"])
+        y_pred = (probs[:,1] >= prediction_settings["prediction_threshold"])
         y_pred =  np.where(y_pred, 1, 0)
     else:
         y_pred = probs.argmax(axis=1)   
@@ -63,7 +63,7 @@ def store_predictions(y_test, y_pred, probs, df_preprocessed, df_test, model_fol
             pass
         
     # Serialize data into file:
-    df_wrong_predictions.to_excel(model_folder_path + "wrong_predictions.xlsx")
+    df_wrong_predictions.to_csv(model_folder_path + "wrong_predictions.csv")
 
 
 def predict_on_new_data(df):
@@ -72,7 +72,7 @@ def predict_on_new_data(df):
     logger.info("Dataset successfully prepared!")
 
     logger.info("Load trainset..")
-    trainset = pd.read_excel("models/df_trainset.xlsx")
+    trainset = pd.read_csv(paths["processed_dataset"])
     trainset_relevant_parts = trainset[trainset["Relevant fuer Messung"] == "Ja"]
     trainset_relevant_parts = trainset_relevant_parts[(trainset_relevant_parts['X-Min_transf'] != 0) & (trainset_relevant_parts['X-Max_transf'] != 0)]    
     unique_names = trainset_relevant_parts["Einheitsname"].unique().tolist()
@@ -80,14 +80,15 @@ def predict_on_new_data(df):
     logger.success("Trainset loaded!")
     
     logger.info("Load pretrained models...")
-    lgbm_binary, vectorizer_binary, vocabulary_binary, boundingbox_features_binary = get_model(paths["model_folder"] + '/Binary_model')
-    lgbm_multiclass, vectorizer_multiclass, vocabulary_multiclass, boundingbox_features_multiclass = get_model(paths["model_folder"] + '/Multiclass_model')       
+    model_folder_path = "final_models/" + paths["final_model"]
+    lgbm_binary, vectorizer_binary, vocabulary_binary, boundingbox_features_binary = get_model(model_folder_path + '/Binary_model')
+    lgbm_multiclass, vectorizer_multiclass, vocabulary_multiclass, boundingbox_features_multiclass = get_model(model_folder_path + '/Multiclass_model')       
     logger.success("Pretrained models loaded!")
 
     logger.info("Preprocess data...")
     df_preprocessed, df_for_plot = preprocess_dataset(df)
 
-    method = paths["model_folder"].split('_')[0]
+    method = paths["final_model"].split('_')[0]
     X_binary = get_X(vocabulary_binary, vectorizer_binary, boundingbox_features_binary["features_for_model"], df_preprocessed)
     y_pred_binary, probs_binary = model_predict(lgbm_binary, X_binary, method, binary_model=True)
 
@@ -97,7 +98,7 @@ def predict_on_new_data(df):
 
     logger.info("Load LabelEncoder...")
     # Load the LabelEncoder
-    with open(paths["model_folder"] + '/Multiclass_model/label_encoder.pkl', 'rb') as f:
+    with open(model_folder_path + '/Multiclass_model/label_encoder.pkl', 'rb') as f:
         le = pickle.load(f) 
     logger.success("LabelEncoder loaded!")
 

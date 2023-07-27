@@ -1,8 +1,8 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-from data_pipeline.feature_engineering import transform_boundingbox, find_valid_space
-from config import general_params, lgbm_params_binary, lgbm_params_multiclass, cb_params_binary, cb_params_multiclass
+from src.data_pipeline.feature_engineering import transform_boundingbox, find_valid_space
+from src.config import general_params, lgbm_params_binary, lgbm_params_multiclass, cb_params_binary, cb_params_multiclass, xgb_params_binary, xgb_params_multiclass
 from sklearn.metrics import ConfusionMatrixDisplay
 import lightgbm as lgb
 import pickle
@@ -136,11 +136,18 @@ def analyse_data(df_preprocessed, y_train, y_val, y_test, model_folder_path, bin
                 fig.savefig(model_folder_path + 'Multiclass_train_val_test_split_without_dummy.png', dpi=150)
     logger.success("Dataset analysed!")
 
-def plot_metric_catboost(evals, model_folder_path, binary_model):
-    val_auc = evals["validation_1"][cb_params_binary["metrics"][0]]
-    val_loss = evals["validation_1"][cb_params_binary["metrics"][1]]
-    train_auc = evals["validation_0"][cb_params_binary["metrics"][0]]
-    train_loss = evals["validation_0"][cb_params_binary["metrics"][1]]
+def plot_metric_custom(evals, model_folder_path, method, binary_model):
+    if method == 'catboost':
+         metric_0 = cb_params_binary["metrics"][0]
+         metric_1 = cb_params_binary["metrics"][1]
+    else:
+         metric_0 = xgb_params_binary["metrics"][0]
+         metric_1 = xgb_params_binary["metrics"][1]   
+
+    val_auc = evals["validation_1"][metric_0]
+    val_loss = evals["validation_1"][metric_1]
+    train_auc = evals["validation_0"][metric_0]
+    train_loss = evals["validation_0"][metric_1]
 
     plt.rcParams["figure.figsize"] = (10, 10)
     plt.plot(train_auc, label='Train AUC')
@@ -149,7 +156,7 @@ def plot_metric_catboost(evals, model_folder_path, binary_model):
     plt.ylabel('AUC')
     plt.title('Training and Validation AUC')
     plt.legend()
-    plt.ylim([-0.5, 4])
+    plt.ylim([0, 1])
     plt.savefig(model_folder_path + 'auc_plot.png')
     plt.close()
 
@@ -157,16 +164,24 @@ def plot_metric_catboost(evals, model_folder_path, binary_model):
     plt.plot(train_loss, label='Train Loss')
     plt.plot(val_loss, label='Validation Loss')
     plt.xlabel('Number of Iterations')
-    plt.ylabel('Entropy Loss')
+    plt.ylabel('Loss')
     plt.title('Training and Validation Loss')
     plt.legend()
     plt.ylim([-0.5, 4])
     plt.savefig(model_folder_path + 'loss_plot.png')
     plt.close()
 
-def store_metrics(model, evals, model_folder_path, binary_model):
 
-    early_stopping = model.best_iteration_-1
+
+def store_metrics(model, evals, model_folder_path, method, binary_model):
+
+    if method == "lgbm":
+        early_stopping = model._best_iteration - 1
+    elif method == "xgboost":
+        early_stopping = model.get_booster().best_ntree_limit - 1
+    elif method == "catboost":
+        early_stopping = model.get_best_iteration() - 1
+
     if binary_model:
         plt.rcParams["figure.figsize"] = (10, 10)
         lgb.plot_metric(evals, metric=lgbm_params_binary["metrics"][1])

@@ -1,11 +1,8 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-from feature_engineering import transform_boundingbox, find_valid_space
-from config import paths
+from src.data_pipeline.feature_engineering import transform_boundingbox, find_valid_space
 from loguru import logger
-import os
-from datetime import datetime
 
 # %%
 def plot_bounding_box(ax, transformed_boundingbox, designation, label_relevant):
@@ -77,7 +74,7 @@ def plot_vehicle(df: pd.DataFrame, add_valid_space:bool, preprocessed_data:bool,
                 ax.invert_xaxis()
 
         plt.subplots_adjust(left=0, right=1, bottom=0, top=1)
-        plt.savefig("../plots_images/bounding_boxes/bounding_box_G65_step00.png", format='png', bbox_inches='tight', pad_inches=0)
+        plt.savefig("../images/bounding_boxes/bounding_box_G65_step00.png", format='png', bbox_inches='tight', pad_inches=0)
 
         # Show the plot
         plt.show()    
@@ -162,4 +159,4 @@ def store_class_distribution(df, class_column, storage_path):
     plt.xlabel(class_column)
     plt.ylabel('Number of Car Parts')
     plt.title('Class Distribution')
-    plt.savefig(storage_path + f'/Distribution_{class_column}_{len(class_counts)}.png', dpi=150)
+    plt.savefig(storage_path + f'Distribution_{class_column}_{len(class_counts)}.png', dpi=150)

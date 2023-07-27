@@ -1,17 +1,14 @@
 # %%
 import pandas as pd
-import numpy as np
 
 import pickle
-import os
-import shutil 
 
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import recall_score
 
-from deployment_pipeline.prediction import model_predict
+from src.deployment_pipeline.prediction import model_predict
 
-from config import general_params, lgbm_params_binary, lgbm_params_multiclass, xgb_params_binary, xgb_params_multiclass, cb_params_binary, cb_params_multiclass, train_settings
+from src.config import general_params, lgbm_params_binary, lgbm_params_multiclass, xgb_params_binary, xgb_params_multiclass, cb_params_binary, cb_params_multiclass, train_settings
 
 #%%
 def add_feature_importance(model, model_folder_path):

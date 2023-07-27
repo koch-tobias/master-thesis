@@ -1,0 +1,2 @@
+,model_name,train auc,train loss,validation auc,validation loss,test auc,test sensitivity,Training Time (s),lr,max_depth,colsample_bytree,gamma,early stopping (iterations)
+1,model_9980,1.0,0.00177304964539007,0.9980075712293286,0.00664893617021277,0.9827127659574468,0.9827127659574468,562.2558760643005,0.05,4,0.5,0,30.0

@@ -1,0 +1,2 @@
+,model_name,avg train auc,avg train loss,avg validation auc,avg validation loss,avg test accuracy,avg test sensitivity,lr,max_depth,colsample_bytree,gamma,early stopping (iterations),index
+0,model_9980,0.999935,0.0041,0.992709,0.016955,0.980053,0.980053,0.05,4,0.5,0,30.0,1.0

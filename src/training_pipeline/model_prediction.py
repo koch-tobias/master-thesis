@@ -2,10 +2,10 @@ import pandas as pd
 import numpy as np
 import pickle
 from loguru import logger
-from data_pipeline.preprocessing import prepare_and_add_labels, preprocess_dataset
-from utils import get_model, get_X
-from data_pipeline.feature_engineering import find_valid_space
-from config import paths, train_settings
+from src.data_pipeline.preprocessing import prepare_and_add_labels, preprocess_dataset
+from src.data_pipeline.feature_engineering import find_valid_space
+from src.utils import get_model, get_X
+from src.config import paths, train_settings
 
 # %%
 def model_predict(model, X_test, method, binary_model):
@@ -41,14 +41,15 @@ def predict_on_new_data(df):
     logger.success("Trainset loaded!")
     
     logger.info("Load pretrained models...")
-    lgbm_binary, vectorizer_binary, vocabulary_binary, boundingbox_features_binary = get_model(paths["model_folder"] + '/Binary_model')
-    lgbm_multiclass, vectorizer_multiclass, vocabulary_multiclass, boundingbox_features_multiclass = get_model(paths["model_folder"] + '/Multiclass_model')       
+    model_folder_path = "final_models/" + paths["final_model"]
+    lgbm_binary, vectorizer_binary, vocabulary_binary, boundingbox_features_binary = get_model(model_folder_path + '/Binary_model')
+    lgbm_multiclass, vectorizer_multiclass, vocabulary_multiclass, boundingbox_features_multiclass = get_model(model_folder_path + '/Multiclass_model')       
     logger.success("Pretrained models loaded!")
 
     logger.info("Preprocess data...")
     df_preprocessed, df_for_plot = preprocess_dataset(df)
 
-    method = paths["model_folder"].split('_')[0]
+    method = paths["final_model"].split('_')[0]
     X_binary = get_X(vocabulary_binary, vectorizer_binary, boundingbox_features_binary["features_for_model"], df_preprocessed)
     y_pred_binary, probs_binary = model_predict(lgbm_binary, X_binary, method, binary_model=True)
 
@@ -58,7 +59,7 @@ def predict_on_new_data(df):
 
     logger.info("Load LabelEncoder...")
     # Load the LabelEncoder
-    with open(paths["model_folder"] + '/Multiclass_model/label_encoder.pkl', 'rb') as f:
+    with open(model_folder_path + '/Multiclass_model/label_encoder.pkl', 'rb') as f:
         le = pickle.load(f) 
     logger.success("LabelEncoder loaded!")
 

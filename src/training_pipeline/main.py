@@ -2,7 +2,7 @@ from loguru import logger
 from datetime import datetime
 
 from train import train_model
-from config import train_settings
+from src.config import train_settings
 
 # %%
 def main():
@@ -14,7 +14,7 @@ def main():
     dateTimeObj = datetime.now()
     timestamp = dateTimeObj.strftime("%d%m%Y_%H%M")
 
-    folder_path = f"models/{method}_HyperparameterTuning_{timestamp}/"
+    folder_path = f"src/training_pipeline/trained_models/{method}_HyperparameterTuning_{timestamp}/"
 
     if train_binary_model:
         logger.info("Start training the binary models...")
@@ -24,7 +24,6 @@ def main():
         logger.info("Start training the multiclass models...")
         train_model(folder_path, binary_model=False, method=method)
     
-
 # %%
 if __name__ == "__main__":
     

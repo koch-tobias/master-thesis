@@ -2,7 +2,6 @@
 # %%
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 
 import warnings
 from loguru import logger
@@ -19,13 +18,13 @@ from numba import jit, cuda
 
 from model_architectures import binary_classifier, multiclass_classifier
 from evaluation import evaluate_model, add_feature_importance, get_features
-from deployment_pipeline.prediction import model_predict, store_predictions
-from plot_functions import store_metrics, plot_metric_catboost, store_confusion_matrix
-from utils import store_trained_model
-from config import xgb_params_multiclass, train_settings, general_params
-from config import lgbm_hyperparameter as lgbm_hp
-from config import xgb_hyperparameter as xgb_hp
-from config import cb_hyperparameter as cb_hp
+from src.deployment_pipeline.prediction import model_predict, store_predictions
+from plot_functions import store_metrics, plot_metric_custom, store_confusion_matrix
+from src.utils import store_trained_model, load_dataset
+from src.config import xgb_params_multiclass, train_settings, general_params
+from src.config import lgbm_hyperparameter as lgbm_hp
+from src.config import xgb_hyperparameter as xgb_hp
+from src.config import cb_hyperparameter as cb_hp
 
 warnings.filterwarnings("ignore", message=".*The 'nopython' keyword.*")
 import shap
@@ -277,11 +276,11 @@ def train_model(folder_path, binary_model, method):
         hp_dict = cb_hp
    
     # Training with the hold out method and grid search hyperparameter tuning
-    X_train, y_train, X_val, y_val, X_test, y_test, df_preprocessed, df_test, weight_factor = load_prepare_dataset(model_folder_path=model_folder_path, binary_model=binary_model)
+    X_train, y_train, X_val, y_val, X_test, y_test, df_preprocessed, df_test, weight_factor = load_dataset(binary_model=binary_model)
 
     df, model_results_dict = grid_search(X_train, y_train, X_val, y_val, X_test, y_test, weight_factor, hp_dict, binary_model, method)
 
-    df.to_excel(model_folder_path + "lgbm_hyperparametertuning_results.xlsx")
+    df.to_csv(model_folder_path + "lgbm_hyperparametertuning_results.csv")
 
     # K-Fold Cross-Validation with the 5 best model trained with the hold out method 
     df = df.sort_values(by=["validation auc"], ascending=False)
@@ -291,17 +290,18 @@ def train_model(folder_path, binary_model, method):
 
     df_cv = k_fold_crossvalidation(X, y, X_test, y_test, weight_factor, df, model_results_dict, folder_path, method, binary_model)
 
-    df_cv.to_excel(model_folder_path + "lgbm_crossvalidation_results.xlsx")
+    df_cv.to_csv(model_folder_path + "lgbm_crossvalidation_results.csv")
     df_cv = df_cv.sort_values(by=["avg validation auc"], ascending=False)
 
     index_best_model = int(df_cv["index"].iloc[0]-1)
 
     logger.info("Start storing the best model with metrics plots and wrong predictions according to the validation auc...")
     best_model = model_results_dict["models_list"][index_best_model]
-    if method == 'catboost':
-        plot_metric_catboost(model_results_dict["evals_list"][index_best_model], model_folder_path, binary_model)
+    if method == 'lgbm':
+        store_metrics(best_model, model_results_dict["evals_list"][index_best_model], method, model_folder_path, binary_model=binary_model)
     else:
-        store_metrics(best_model, model_results_dict["evals_list"][index_best_model], model_folder_path, binary_model=binary_model)
+        plot_metric_custom(model_results_dict["evals_list"][index_best_model], model_folder_path, method, binary_model)
+
     store_trained_model(best_model, df_cv["avg validation auc"].iloc[0], index_best_model, model_folder_path)
     y_pred, probs, best_iteration = model_predict(best_model, X_test, method, binary_model)
     store_confusion_matrix(y_test, y_pred, model_folder_path, binary_model)
@@ -322,5 +322,5 @@ def train_model(folder_path, binary_model, method):
     store_trained_model(gbm_final, -1, index_best_model, model_folder_path)
     if method == 'lgbm':
         df_feature_importance_final_model = add_feature_importance(gbm_final, model_folder_path)
-        df_feature_importance_final_model.to_excel(model_folder_path + "final_model_feature_importance.xlsx")
+        df_feature_importance_final_model.to_csv(model_folder_path + "final_model_feature_importance.csv")
     logger.success("Training the model on the entire data was successfull!")
