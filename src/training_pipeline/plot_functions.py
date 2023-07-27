@@ -173,14 +173,9 @@ def plot_metric_custom(evals, model_folder_path, method, binary_model):
 
 
 
-def store_metrics(model, evals, model_folder_path, method, binary_model):
+def store_metrics(model, evals, model_folder_path, binary_model):
 
-    if method == "lgbm":
-        early_stopping = model._best_iteration - 1
-    elif method == "xgboost":
-        early_stopping = model.get_booster().best_ntree_limit - 1
-    elif method == "catboost":
-        early_stopping = model.get_best_iteration() - 1
+    early_stopping = model._best_iteration - 1
 
     if binary_model:
         plt.rcParams["figure.figsize"] = (10, 10)
