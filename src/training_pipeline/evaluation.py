@@ -50,17 +50,7 @@ def get_features(model_folder_path):
     except:
         print(f"Error: File {path_store_features} does not exist!")
     
-    
-# %%
-def evaluate_model(model, X_test, y_test, evals, hp_in_iteration, num_models_trained, training_time, df_columns, binary_model, method):
-    
-    y_pred, probs, best_iteration  = model_predict(model, X_test, method, binary_model)
-
-    accuracy = accuracy_score(y_test, y_pred)
-    sensitivity = recall_score(y_test, y_pred, average='weighted')
-
-    df_new = pd.DataFrame(columns=df_columns)
-
+def get_best_metric_results(evals, best_iteration, method, binary_model):
     if method == "lgbm":
         valid_name = "valid_1"
         training_name = "training"
@@ -95,6 +85,19 @@ def evaluate_model(model, X_test, y_test, evals, hp_in_iteration, num_models_tra
     val_loss = evals[valid_name][loss][best_iteration]
     train_auc = evals[training_name][auc][best_iteration]
     train_loss = evals[training_name][loss][best_iteration]
+    return train_auc, train_loss, val_auc, val_loss
+
+# %%
+def evaluate_model(model, X_test, y_test, evals, hp_in_iteration, num_models_trained, training_time, df_columns, binary_model, method):
+    
+    y_pred, probs, best_iteration  = model_predict(model, X_test, method, binary_model)
+
+    accuracy = accuracy_score(y_test, y_pred)
+    sensitivity = recall_score(y_test, y_pred, average='weighted')
+
+    df_new = pd.DataFrame(columns=df_columns)
+
+    train_auc, train_loss, val_auc, val_loss = get_best_metric_results(evals, best_iteration, method, binary_model)
 
     df_new.loc[num_models_trained, "model_name"] = f"model_{str(val_auc)[2:6]}"
     for hp in hp_in_iteration:
