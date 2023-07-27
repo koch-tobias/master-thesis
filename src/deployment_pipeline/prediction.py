@@ -4,11 +4,20 @@ import pickle
 from loguru import logger
 from src.data_pipeline.preprocessing import prepare_and_add_labels, preprocess_dataset
 from src.data_pipeline.feature_engineering import find_valid_space
-from src.utils import get_model, get_X
+from src.training_pipeline.utils import get_model, get_X
 from src.config import paths, prediction_settings
 
-# %%
-def model_predict(model, X_test, method, binary_model):
+def get_best_iteration(model, method):
+    if method == "lgbm":
+        best_iteration = model._best_iteration - 1
+    elif method == "xgboost":
+        best_iteration = model.get_booster().best_ntree_limit - 1
+    elif method == "catboost":
+        best_iteration = model.get_best_iteration() - 1
+
+    return best_iteration
+
+def get_probabilities(model, X_test, method):
     if method == "lgbm":
         best_iteration = model._best_iteration - 1
         probs = model.predict_proba(X_test, num_iteration=best_iteration)
@@ -18,6 +27,12 @@ def model_predict(model, X_test, method, binary_model):
     elif method == "catboost":
         best_iteration = model.get_best_iteration() - 1
         probs = model.predict_proba(X_test)
+
+    return probs
+# %%
+def model_predict(model, X_test, method, binary_model):
+    best_iteration = get_best_iteration(model, method)
+    probs = get_probabilities(model, X_test, method)
 
     if binary_model:
         y_pred = (probs[:,1] >= prediction_settings["prediction_threshold"])
