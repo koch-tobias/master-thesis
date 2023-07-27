@@ -17,11 +17,11 @@ from sklearn.model_selection import StratifiedKFold
 from numba import jit, cuda
 
 from model_architectures import binary_classifier, multiclass_classifier
-from evaluation import evaluate_model, add_feature_importance, get_features
-from src.deployment_pipeline.prediction import model_predict, store_predictions
+from evaluation import evaluate_model, add_feature_importance, get_best_metric_results, get_features
 from plot_functions import store_metrics, plot_metric_custom, store_confusion_matrix
-from src.utils import store_trained_model, load_dataset
-from src.config import xgb_params_multiclass, train_settings, general_params
+from utils import store_trained_model, load_dataset
+from src.deployment_pipeline.prediction import model_predict, store_predictions
+from src.config import xgb_params_multiclass, train_settings, general_params, paths
 from src.config import lgbm_hyperparameter as lgbm_hp
 from src.config import xgb_hyperparameter as xgb_hp
 from src.config import cb_hyperparameter as cb_hp
@@ -298,7 +298,7 @@ def train_model(folder_path, binary_model, method):
     logger.info("Start storing the best model with metrics plots and wrong predictions according to the validation auc...")
     best_model = model_results_dict["models_list"][index_best_model]
     if method == 'lgbm':
-        store_metrics(best_model, model_results_dict["evals_list"][index_best_model], method, model_folder_path, binary_model=binary_model)
+        store_metrics(best_model, model_results_dict["evals_list"][index_best_model], model_folder_path, binary_model=binary_model)
     else:
         plot_metric_custom(model_results_dict["evals_list"][index_best_model], model_folder_path, method, binary_model)
 
@@ -310,17 +310,20 @@ def train_model(folder_path, binary_model, method):
 
     # Train the best model identified by the holdout method and crossvalidation on the entire data
     logger.info("Train a new model on the entire data with the parameters of the best identified model...")
-    X_train = np.concatenate((X_train, X_val, X_test), axis=0)
-    y_train = np.concatenate((y_train, y_val, y_test), axis=0)
-
+    #X_train = np.concatenate((X_train, X_val, X_test), axis=0)
+    #y_train = np.concatenate((y_train, y_val, y_test), axis=0)
+    X_train = np.concatenate((X_train, X_test), axis=0)
+    y_train = np.concatenate((y_train, y_test), axis=0)
     hp_keys = list(hp_dict.keys())
     best_hp = {}
     for key in hp_keys:
         best_hp[key] = df[key].iloc[index_best_model]
         
-    gbm_final, evals_final = model_fit(X, y, 0, 0, weight_factor, best_hp, binary_model, method)
-    store_trained_model(gbm_final, -1, index_best_model, model_folder_path)
+    #gbm_final, evals_final = model_fit(X, y, 0, 0, weight_factor, best_hp, binary_model, method)
+    gbm_final, evals_final = model_fit(X_train, y_train, X_val, y_val, weight_factor, best_hp, binary_model, method)
+    _, _, val_auc, _ = get_best_metric_results(evals_final, best_iteration, method, binary_model)
+    store_trained_model(gbm_final, val_auc, index_best_model, model_folder_path)
     if method == 'lgbm':
-        df_feature_importance_final_model = add_feature_importance(gbm_final, model_folder_path)
-        df_feature_importance_final_model.to_csv(model_folder_path + "final_model_feature_importance.csv")
+        df_feature_importance_final_model = add_feature_importance(gbm_final, model_folder_path=paths["folder_processed_dataset"])
+        df_feature_importance_final_model.to_csv(paths["folder_processed_dataset"] + "/final_model_feature_importance.csv")
     logger.success("Training the model on the entire data was successfull!")
