@@ -2,12 +2,16 @@
 import pandas as pd
 import numpy as np
 
+from sklearn.model_selection import train_test_split
+from sklearn import preprocessing
+
 import os
+import pickle
 import shutil
 from loguru import logger
 
-from src.data_pipeline.feature_engineering import transform_boundingbox, calculate_center_point, calculate_lwh, calculate_orientation, clean_text
-from src.config import general_params, convert_dict
+from src.data_pipeline.feature_engineering import transform_boundingbox, calculate_center_point, calculate_lwh, calculate_orientation, clean_text, vectorize_data, text_to_vec
+from src.config import general_params, convert_dict, train_settings
 
 # %%
 def load_csv_into_df(original_prisma_data: bool, label_new_data: bool) -> list:
@@ -243,3 +247,63 @@ def preprocess_dataset(df):
     logger.success(f"The dataset is successfully preprocessed. The new dataset contains {df_relevants.shape[0]} samples")
 
     return df_relevants, df_for_plot
+
+# %%
+def get_weight_factor(y, df, binary_model):
+    if binary_model == False:
+        # Get list of unique values in column "Einheitsname"
+        unique_einheitsnamen = np.unique(y)
+        weight_factor = {}
+        for name in unique_einheitsnamen:
+            weight_factor[name] = round(np.count_nonzero(y != name) / np.count_nonzero(y == name))
+            if weight_factor[name] == 0:
+                weight_factor[name] = 1
+    else:    
+        weight_factor = round(df[df["Relevant fuer Messung"]=="Nein"].shape[0] / df[df["Relevant fuer Messung"]=="Ja"].shape[0])
+
+    return weight_factor
+
+# %%
+def train_test_val(df, model_folder_path, binary_model):
+    if binary_model:
+        logger.info("Split the dataset into train validation and test sets for the binary task and store the sets in dictionaries...")
+    else:
+        logger.info("Split the dataset into train validation and test sets for the multiclass task and store the sets in dictionaries......")
+    
+    # X = vectorize_data(df, model_folder_path) # Using ngram vectorizer
+    X = text_to_vec(df, model_folder_path)
+
+    # Combine text features with other features
+    features = general_params["features_for_model"]
+    bbox_features_dict = {"features_for_model": features}
+    with open(model_folder_path + 'boundingbox_features.pkl', 'wb') as fp:
+        pickle.dump(bbox_features_dict, fp)
+
+    if train_settings["use_only_text"] == False:
+        X = np.concatenate((X, df[features].values), axis=1)
+
+    if binary_model:
+        y = df['Relevant fuer Messung']
+        y = y.map({'Ja': 1, 'Nein': 0})
+    else:
+        y = df['Einheitsname']
+        le = preprocessing.LabelEncoder()
+        y = le.fit_transform(y)
+
+        with open(model_folder_path + 'label_encoder.pkl', 'wb') as f: 
+            pickle.dump(le, f)  
+
+    weight_factor = get_weight_factor(y, df, binary_model)     
+
+    indices = np.arange(X.shape[0])
+
+    X_train, X_val, y_train, y_val, indices_train, indices_val = train_test_split(X, y, indices, test_size=train_settings["val_size"], stratify=y, random_state=42)
+    X_val, X_test, y_val, y_test, indices_val, indices_test = train_test_split(X_val, y_val, indices_val, test_size=train_settings["test_size"], stratify=y_val, random_state=42)
+
+    df_train = df.iloc[indices_train]
+    df_val = df.iloc[indices_val]
+    df_test = df.iloc[indices_test]
+
+    logger.success("Train, validation and test sets are generated!")
+
+    return X_train, y_train, X_val, y_val, X_test, y_test, df_train, df_val, df_test, weight_factor
