@@ -2,6 +2,8 @@ import numpy as np
 import pandas as pd
 
 from sklearn.feature_extraction.text import CountVectorizer
+from gensim.models import Doc2Vec
+from gensim.models.doc2vec import TaggedDocument
 
 import math
 import re
@@ -241,6 +243,40 @@ def clean_text(df):
 
     return df
 
+def tokenize(text):
+    return text.split()
+
+def text_to_vec(data: pd.DataFrame, model_folder_path):
+
+    # Tokenisierung der Bezeichnungen
+    tokenized_texts = [tokenize(text) for text in data['Benennung (bereinigt)']]
+
+    # Erstellen von TaggedDocuments
+    tagged_data = [TaggedDocument(words=words, tags=[idx]) for idx, words in enumerate(tokenized_texts)]
+
+    # Training des Doc2Vec-Modells
+    vectorizer = Doc2Vec(tagged_data, vector_size=500, min_count=1, epochs=30)
+
+    # Vokabular extrahieren
+    #vocabulary = vectorizer.wv.index_to_key
+    vocabulary = vectorizer.build_vocab(tagged_data)
+
+    # Vektorisierung der Sätze
+    vectors = []
+    for sentence in data['Benennung (bereinigt)']:
+        sentence_vector = vectorizer.infer_vector(sentence.split())
+        vectors.append(sentence_vector)
+
+    X_text = np.array(vectors)
+
+    with open(model_folder_path + 'vectorizer.pkl', 'wb') as f:
+        pickle.dump(vectorizer, f)
+    with open(model_folder_path + 'vocabulary.pkl', 'wb') as f:
+        pickle.dump(vocabulary, f)
+
+    return X_text
+
+
 # %%
 def vectorize_data(data: pd.DataFrame, model_folder_path) -> tuple:
 
@@ -266,41 +302,3 @@ def get_vocabulary(column):
     vocabulary = word_counts.index.tolist()
 
     return vocabulary
-
-# %%
-def store_predictions(y_test, y_pred, probs, df_preprocessed, df_test, model_folder_path, binary_model):
-
-    if binary_model:
-        class_names = df_preprocessed['Relevant fuer Messung'].unique()
-    else:
-        class_names = df_preprocessed["Einheitsname"].unique()
-        class_names = sorted(class_names)
-
-    df_wrong_predictions = pd.DataFrame(columns=['Sachnummer', 'Benennung (dt)', 'Derivat', 'Predicted', 'True', 'Probability'])
-
-    try:
-        y_test = y_test.to_numpy()
-    except:
-        pass
-
-    # Ausgabe der Vorhersagen, der Wahrscheinlichkeiten und der wichtigsten Features
-    for i in range(len(y_test)):
-        try:
-            if y_pred[i] != y_test[i]:
-                df_wrong_predictions.loc[i,"Sachnummer"] = df_test.loc[i, "Sachnummer"]
-                df_wrong_predictions.loc[i,"Benennung (dt)"] = df_test.loc[i, "Benennung (dt)"]
-                df_wrong_predictions.loc[i,"Derivat"] = df_test.loc[i, "Derivat"]
-                df_wrong_predictions.loc[i,"Predicted"] = class_names[y_pred[i]]
-                df_wrong_predictions.loc[i,"True"] = class_names[y_test[i]]
-                if binary_model:
-                    if probs[i][1] >= 0.5:
-                        df_wrong_predictions.loc[i,"Probability"] = probs[i][1]
-                    else:
-                        df_wrong_predictions.loc[i,"Probability"] = 1 - probs[i][1]
-                else:
-                    df_wrong_predictions.loc[i,"Probability"] = probs[i][1]
-        except:
-            pass
-        
-    # Serialize data into file:
-    df_wrong_predictions.to_csv(model_folder_path + "wrong_predictions.csv")
