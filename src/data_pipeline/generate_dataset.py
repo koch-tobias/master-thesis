@@ -1,7 +1,6 @@
-from preprocessing import preprocess_dataset, load_csv_into_df, combine_dataframes
+from preprocessing import preprocess_dataset, load_csv_into_df, combine_dataframes, train_test_val
 from data_analysis import store_class_distribution
 from augmentation import data_augmentation
-from src.utils import train_test_val
 from src.config import general_params
 
 from src.data_pipeline.data_analysis import analyse_data_split
