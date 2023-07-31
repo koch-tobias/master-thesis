@@ -86,8 +86,8 @@ def combine_dataframes(dataframes: list) -> pd.DataFrame:
     This function takes a list of data frames as input and checks if the dataframes have the same header. If so, the dataframes will be merged.
     return: Merged dataframe
     '''
+    
     # Set the header information
-
     logger.info("Combine all datasets to one...")
     columns_set = set(dataframes[0].columns)
     # Check if all dataframes have the same columns 
