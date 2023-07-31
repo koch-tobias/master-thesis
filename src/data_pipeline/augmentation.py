@@ -2,10 +2,11 @@
 import openai
 import pandas as pd
 import numpy as np
+import math
 import random
 from loguru import logger
 from feature_engineering import find_valid_space, random_centerpoint_in_valid_space, calculate_corners
-from src.config import gpt_settings
+from src.config import gpt_settings, train_settings
 
 # %%
 def random_order(description: str) -> str:
@@ -268,17 +269,39 @@ def data_augmentation(df: pd.DataFrame) -> pd.DataFrame:
         df_new = df_relevant_parts[(df_relevant_parts["Einheitsname"] == name)].reset_index(drop=True)
         df_temp = df_new.iloc[[0]]
 
-        if df_new.shape[0] < 3:
-            if len(df_temp.loc[0,"Benennung (bereinigt)"].split()) > 1:
-                df_temp.loc[0,"Benennung (bereinigt)"] = random_order(df_new.loc[0,"Benennung (bereinigt)"])
+        count_designations = df_new.shape[0]
+        target_nr_of_unique_carparts = math.ceil(2 / train_settings["train_val_split"])
+        if count_designations < target_nr_of_unique_carparts:
+            logger.info(f"Adding {target_nr_of_unique_carparts-count_designations} synthetic generated car parts of {name}..")
+        while count_designations < target_nr_of_unique_carparts:
+            if count_designations < target_nr_of_unique_carparts:
+                df_temp.loc[0,"Benennung (bereinigt)"] = random_order(df_new.loc[0,"Benennung (bereinigt)"])  
+                count_designations = count_designations + 1
                 if df_temp.loc[0,"volume"] > 0:
-                    df_temp = augmented_boundingbox(df_new, df_temp)  
-                    df = pd.concat([df, df_temp]).reset_index(drop=True)   
+                    df_temp = augmented_boundingbox(df_new, df_temp) 
+                df = pd.concat([df, df_temp], ignore_index=True).reset_index(drop=True) 
 
+            if count_designations < target_nr_of_unique_carparts:
+                df_temp.loc[0,"Benennung (bereinigt)"] = swap_chars(df_new.loc[0,"Benennung (bereinigt)"])
+                count_designations = count_designations + 1
+                if df_temp.loc[0,"volume"] > 0:
+                    df_temp = augmented_boundingbox(df_new, df_temp) 
+                df = pd.concat([df, df_temp], ignore_index=True).reset_index(drop=True) 
+
+            if count_designations < target_nr_of_unique_carparts:
+                df_temp.loc[0,"Benennung (bereinigt)"] = delete_char(df_new.loc[0,"Benennung (bereinigt)"])
+                count_designations = count_designations + 1
+                if df_temp.loc[0,"volume"] > 0:
+                    df_temp = augmented_boundingbox(df_new, df_temp) 
+                df = pd.concat([df, df_temp], ignore_index=True).reset_index(drop=True) 
+
+            if count_designations < target_nr_of_unique_carparts:
                 df_temp.loc[0,"Benennung (bereinigt)"] = gpt35_designation(df_new.loc[0,"Benennung (bereinigt)"])
                 if len(df_temp["Benennung (bereinigt)"][0]) < 40 and df_temp.loc[0,"volume"] > 0:
                     df_temp = augmented_boundingbox(df_new, df_temp)
                     df = pd.concat([df, df_temp], ignore_index=True).reset_index(drop=True)
-    logger.success("Adding artificial designations is successfull...")
+                    count_designations = count_designations + 1
+            
+    logger.success("Successfully added artificial designations to the dataset!")
 
     return df

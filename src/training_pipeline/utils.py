@@ -68,9 +68,11 @@ def load_dataset(binary_model: bool):
         logger.error(f"No trainset found! Please check if the dataset exist at following path: {path_trainset}. If not, please use the file generate.py to create the processed dataset.")
 
     if binary_model:
+        data_folder = data_folder + "binary/"
         train_val_test_path = os.path.join(data_folder, "binary_train_test_val_split.pkl")
         train_val_test_df_paths = os.path.join(data_folder, "binary_train_test_val_dataframes.pkl")
     else:
+        data_folder = data_folder + "multiclass/"
         train_val_test_path = os.path.join(data_folder, "multiclass_train_test_val_split.pkl")
         train_val_test_df_paths = os.path.join(data_folder, "multiclass_train_test_val_dataframes.pkl")
 
@@ -88,10 +90,7 @@ def load_dataset(binary_model: bool):
     y_test = train_val_test_dict["y_test"]
     weight_factor = train_val_test_dict["weight_factor"]
 
-    df_test = train_val_test_df_dict["df_test"]
-
-    with open(train_val_test_path, 'rb') as handle:
-        train_val_test_dict = pickle.load(handle)
+    df_test = train_val_test_df_dict["df_test"].reset_index(drop=True)
 
     return X_train, y_train, X_val, y_val, X_test, y_test, df_preprocessed, df_test, weight_factor
 

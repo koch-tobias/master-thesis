@@ -113,7 +113,7 @@ def analyse_data_split(df_preprocessed, y_train, y_val, y_test, model_folder_pat
         ax.bar(x_labels, y_not_relevant, width, color='teal')
         ax.bar(x_labels, y_relevant, width, color='lightseagreen')
         ax.legend(labels=['Not Relevant', 'Relevant'])
-        fig.savefig(model_folder_path + 'Binary_train_val_test_split.png', dpi=150)
+        fig.savefig(model_folder_path + 'binary/Binary_train_val_test_split.png', dpi=150)
     else:
         class_names = df_preprocessed['Einheitsname'].unique()
         class_names = sorted(class_names)
@@ -144,9 +144,9 @@ def analyse_data_split(df_preprocessed, y_train, y_val, y_test, model_folder_pat
             fig.tight_layout()
 
             if skip_dummy == 0:
-                fig.savefig(model_folder_path + 'Multiclass_train_val_test_split.png', dpi=150)
+                fig.savefig(model_folder_path + 'multiclass/Multiclass_train_val_test_split.png', dpi=150)
             else: 
-                fig.savefig(model_folder_path + 'Multiclass_train_val_test_split_without_dummy.png', dpi=150)
+                fig.savefig(model_folder_path + 'multiclass/Multiclass_train_val_test_split_without_dummy.png', dpi=150)
     logger.success("Dataset analysed!")
 
 def store_class_distribution(df, class_column, storage_path):

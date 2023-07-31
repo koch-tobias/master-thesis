@@ -20,7 +20,7 @@ from model_architectures import binary_classifier, multiclass_classifier
 from evaluation import evaluate_model, add_feature_importance, get_best_metric_results, get_features
 from plot_functions import store_metrics, plot_metric_custom, store_confusion_matrix
 from utils import store_trained_model, load_dataset
-from src.deployment_pipeline.prediction import model_predict, store_predictions
+from src.deployment_pipeline.prediction import model_predict, store_predictions, get_best_iteration 
 from src.config import xgb_params_multiclass, train_settings, general_params, paths
 from src.config import lgbm_hyperparameter as lgbm_hp
 from src.config import xgb_hyperparameter as xgb_hp
@@ -157,10 +157,7 @@ def grid_search(X_train, y_train, X_val, y_val, X_test, y_test, weight_factor, h
                     hp_in_iteration = {hp[0]: hp_0, hp[1]: hp_1, hp[2]: hp_2, hp[3]: hp_3}
                     model_results_dict, df = fit_eval_model(X_train, y_train, X_val, y_val, X_test, y_test, weight_factor, hp_in_iteration, df, model_results_dict, num_models_trained, total_models, binary_model, method)
                     num_models_trained = num_models_trained + 1
-                    break
-                break
-            break
-        break
+
     logger.success("Grid search hyperparameter tuning was successfull!")
 
     return df, model_results_dict
@@ -321,6 +318,7 @@ def train_model(folder_path, binary_model, method):
         
     #gbm_final, evals_final = model_fit(X, y, 0, 0, weight_factor, best_hp, binary_model, method)
     gbm_final, evals_final = model_fit(X_train, y_train, X_val, y_val, weight_factor, best_hp, binary_model, method)
+    best_iteration = get_best_iteration(gbm_final, method)
     _, _, val_auc, _ = get_best_metric_results(evals_final, best_iteration, method, binary_model)
     store_trained_model(gbm_final, val_auc, index_best_model, model_folder_path)
     if method == 'lgbm':

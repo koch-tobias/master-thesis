@@ -10,7 +10,7 @@ import pickle
 import shutil
 from loguru import logger
 
-from src.data_pipeline.feature_engineering import transform_boundingbox, calculate_center_point, calculate_lwh, calculate_orientation, clean_text, vectorize_data, text_to_vec
+from src.data_pipeline.feature_engineering import transform_boundingbox, calculate_center_point, calculate_lwh, calculate_orientation, clean_text, nchar_text_to_vec, doc2vec_text_to_vec, bert_text_to_vec
 from src.config import general_params, convert_dict, train_settings
 
 # %%
@@ -72,6 +72,15 @@ def load_csv_into_df(original_prisma_data: bool, label_new_data: bool) -> list:
         return dataframes, ncars
 
 # %%
+def check_nan_values(df):
+    columns = ['X-Min','X-Max','Y-Min','Y-Max','Z-Min','Z-Max', 'ox','oy', 'oz', 'xx','xy','xz', 'yx','yy','yz','zx','zy','zz']
+    nan_rows = df[df[columns].isnull().any(axis=1)]
+    if not nan_rows.empty:
+        print("Rows with NaN values in columns:", columns)
+        print(nan_rows)
+        logger.error(f"Please check your data. There are car parts in the dataset with nan values in the following columns: {columns}")
+
+# %%
 def combine_dataframes(dataframes: list) -> pd.DataFrame:
     '''
     This function takes a list of data frames as input and checks if the dataframes have the same header. If so, the dataframes will be merged.
@@ -81,17 +90,17 @@ def combine_dataframes(dataframes: list) -> pd.DataFrame:
 
     logger.info("Combine all datasets to one...")
     columns_set = set(dataframes[0].columns)
-
     # Check if all dataframes have the same columns 
     for df in dataframes:
+        check_nan_values(df)
         if set(df.columns) != columns_set:
             logger.info(df.columns)
             logger.info(columns_set)
             raise ValueError("All dataframes must have the same columns.")
     
     # Merge all dataframes into a single dataframe
-    merged_df = pd.concat(dataframes, ignore_index=True)
-
+    merged_df = pd.concat(dataframes).reset_index(drop=True)
+    
     logger.success(f"{len(dataframes)} dataframe(s) are combined to one dataset.")
     
     return merged_df    
@@ -106,7 +115,6 @@ def prepare_and_add_labels(dataframe: pd.DataFrame):
 
     # Keep only car parts of module group EF
     index_EF_module = dataframe[dataframe[general_params["car_part_designation"]].str.contains('EF')].index[-1]
-    #index_EF_module = dataframe[dataframe[general_params["car_part_designation"]].str.startswith(f'EF {ncar}')].index[-1]
     dataframe_new = dataframe.loc[:index_EF_module-1]
 
     for modules in general_params["keep_modules"]:
@@ -115,7 +123,7 @@ def prepare_and_add_labels(dataframe: pd.DataFrame):
             startindex = dataframe[dataframe[general_params["car_part_designation"]].str.contains(modules)].index[-1]+1
             endindex = dataframe.loc[(dataframe["Ebene"] == level) & (dataframe.index > startindex)].index[0]-1
             temp = dataframe.loc[startindex:endindex]
-            dataframe_new = pd.concat([dataframe_new, temp]).reset_index(drop=True)
+            dataframe_new = pd.concat([dataframe_new, temp], ignore_index=True).reset_index(drop=True)
         except:
             logger.info(f"Module {modules} in structure tree not found!")
 
@@ -133,6 +141,8 @@ def prepare_and_add_labels(dataframe: pd.DataFrame):
     # Add columns for the label "Relevant für Messung" and "Einheitsname"
     dataframe_new.insert(len(dataframe_new.columns), 'Relevant fuer Messung', 'Nein')
     dataframe_new.insert(len(dataframe_new.columns), 'Einheitsname', 'Dummy')
+
+    dataframe_new = dataframe_new.reset_index(drop=True)
 
     logger.success(f"The features are reduced and formated to the correct data type!")
     
@@ -224,7 +234,7 @@ def preprocess_dataset(df):
     cut_point_x = x_min_transf + car_length*general_params["cut_percent_of_front"]
     df_relevants = df_relevants[df_relevants["X-Min_transf"] > cut_point_x]
     # Concatenate the two data frames vertically
-    df_relevants = pd.concat([df_relevants, df_temp]).reset_index(drop=True)
+    df_relevants = pd.concat([df_relevants, df_temp], ignore_index=True).reset_index(drop=True)
 
     df_relevants = clean_text(df_relevants)
 
@@ -232,7 +242,7 @@ def preprocess_dataset(df):
     df_new = df_relevants.drop_duplicates(subset='Sachnummer', keep=False)
     df_filtered = df_relevants[df_relevants.duplicated(subset='Sachnummer', keep=False)]
     df_filtered = df_filtered[df_filtered['yy'].astype(float) >= 0]
-    df_relevants = pd.concat([df_new, df_filtered]).reset_index(drop=True)
+    df_relevants = pd.concat([df_new, df_filtered], ignore_index=True).reset_index(drop=True)
 
     # Drop the mirrored car parts (on the right sight) which have not the same Sachnummer 
     df_relevants = df_relevants.loc[~(df_relevants.duplicated(subset='Kurzname', keep=False) & (df_relevants['L/R-Kz.'] == 'R'))]
@@ -242,7 +252,7 @@ def preprocess_dataset(df):
     # Reset the index of the merged data frame
     df_relevants = df_relevants.reset_index(drop=True)
 
-    df_relevants = df_relevants.drop_duplicates()
+    df_relevants = df_relevants.drop_duplicates().reset_index(drop=True)
 
     logger.success(f"The dataset is successfully preprocessed. The new dataset contains {df_relevants.shape[0]} samples")
 
@@ -270,8 +280,9 @@ def train_test_val(df, model_folder_path, binary_model):
     else:
         logger.info("Split the dataset into train validation and test sets for the multiclass task and store the sets in dictionaries......")
     
-    # X = vectorize_data(df, model_folder_path) # Using ngram vectorizer
-    X = text_to_vec(df, model_folder_path)
+    X = nchar_text_to_vec(df, model_folder_path) # Using ngram vectorizer
+    #X = doc2vec_text_to_vec(df, model_folder_path)
+    #X = bert_text_to_vec(df, model_folder_path)
 
     # Combine text features with other features
     features = general_params["features_for_model"]
@@ -279,7 +290,7 @@ def train_test_val(df, model_folder_path, binary_model):
     with open(model_folder_path + 'boundingbox_features.pkl', 'wb') as fp:
         pickle.dump(bbox_features_dict, fp)
 
-    if train_settings["use_only_text"] == False:
+    if general_params["use_only_text"] == False:
         X = np.concatenate((X, df[features].values), axis=1)
 
     if binary_model:
@@ -297,8 +308,8 @@ def train_test_val(df, model_folder_path, binary_model):
 
     indices = np.arange(X.shape[0])
 
-    X_train, X_val, y_train, y_val, indices_train, indices_val = train_test_split(X, y, indices, test_size=train_settings["val_size"], stratify=y, random_state=42)
-    X_val, X_test, y_val, y_test, indices_val, indices_test = train_test_split(X_val, y_val, indices_val, test_size=train_settings["test_size"], stratify=y_val, random_state=42)
+    X_train, X_val, y_train, y_val, indices_train, indices_val = train_test_split(X, y, indices, test_size=train_settings["train_val_split"], stratify=y, random_state=general_params["seed"])
+    X_val, X_test, y_val, y_test, indices_val, indices_test = train_test_split(X_val, y_val, indices_val, test_size=train_settings["val_test_split"], stratify=y_val, random_state=general_params["seed"])
 
     df_train = df.iloc[indices_train]
     df_val = df.iloc[indices_val]

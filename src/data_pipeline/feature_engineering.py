@@ -4,6 +4,7 @@ import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
 from gensim.models import Doc2Vec
 from gensim.models.doc2vec import TaggedDocument
+from transformers import BertTokenizer, BertModel
 
 import math
 import re
@@ -246,7 +247,7 @@ def clean_text(df):
 def tokenize(text):
     return text.split()
 
-def text_to_vec(data: pd.DataFrame, model_folder_path):
+def doc2vec_text_to_vec(data: pd.DataFrame, model_folder_path):
 
     # Tokenisierung der Bezeichnungen
     tokenized_texts = [tokenize(text) for text in data['Benennung (bereinigt)']]
@@ -255,7 +256,7 @@ def text_to_vec(data: pd.DataFrame, model_folder_path):
     tagged_data = [TaggedDocument(words=words, tags=[idx]) for idx, words in enumerate(tokenized_texts)]
 
     # Training des Doc2Vec-Modells
-    vectorizer = Doc2Vec(tagged_data, vector_size=500, min_count=1, epochs=30)
+    vectorizer = Doc2Vec(tagged_data, vector_size=2000, min_count=1, epochs=100)
 
     # Vokabular extrahieren
     #vocabulary = vectorizer.wv.index_to_key
@@ -276,11 +277,38 @@ def text_to_vec(data: pd.DataFrame, model_folder_path):
 
     return X_text
 
+def bert_text_to_vec(data: pd.DataFrame, model_folder_path):
+    # Laden des vortrainierten deutschen BERT-Modells
+    model_name = 'bert-base-german-cased'
+    tokenizer = BertTokenizer.from_pretrained(model_name)
+    model = BertModel.from_pretrained(model_name)
+
+    # Tokenisierung der Bezeichnungen
+    tokenized_texts = [tokenizer.tokenize(text) for text in data['Benennung (bereinigt)']]
+
+    # Vektorisierung der Sätze
+    vectors = []
+    for sentence in tokenized_texts:
+        # Konvertierung der Tokens in IDs
+        input_ids = tokenizer.convert_tokens_to_ids(sentence)
+        # Hinzufügen der Spezialtokens
+        input_ids = [tokenizer.cls_token_id] + input_ids + [tokenizer.sep_token_id]
+        with model.as_default():
+            outputs = model(input_ids)
+            embeddings = outputs[0][:, 0, :].numpy()
+            vectors.append(embeddings)
+
+    X_text = np.array(vectors)
+
+    with open(model_folder_path + 'tokenizer.pkl', 'wb') as f:
+        pickle.dump(model, f)
+
+    return X_text
 
 # %%
-def vectorize_data(data: pd.DataFrame, model_folder_path) -> tuple:
+def nchar_text_to_vec(data: pd.DataFrame, model_folder_path) -> tuple:
 
-    vectorizer = CountVectorizer(analyzer='char', ngram_range=(3, 8))
+    vectorizer = CountVectorizer(analyzer='char', ngram_range=(3, 8), max_features=8000)
 
     X_text = vectorizer.fit_transform(data['Benennung (bereinigt)']).toarray()
 

@@ -1,0 +1,1 @@
+Trainings dataset: data/processed/31072023_1319/

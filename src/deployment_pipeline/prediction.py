@@ -57,25 +57,23 @@ def store_predictions(y_test, y_pred, probs, df_preprocessed, df_test, model_fol
         y_test = y_test.to_numpy()
     except:
         pass
-
+    
     # Ausgabe der Vorhersagen, der Wahrscheinlichkeiten und der wichtigsten Features
     for i in range(len(y_test)):
-        try:
-            if y_pred[i] != y_test[i]:
-                df_wrong_predictions.loc[i,"Sachnummer"] = df_test.loc[i, "Sachnummer"]
-                df_wrong_predictions.loc[i,"Benennung (dt)"] = df_test.loc[i, "Benennung (dt)"]
-                df_wrong_predictions.loc[i,"Derivat"] = df_test.loc[i, "Derivat"]
-                df_wrong_predictions.loc[i,"Predicted"] = class_names[y_pred[i]]
-                df_wrong_predictions.loc[i,"True"] = class_names[y_test[i]]
-                if binary_model:
-                    if probs[i][1] >= 0.5:
-                        df_wrong_predictions.loc[i,"Probability"] = probs[i][1]
-                    else:
-                        df_wrong_predictions.loc[i,"Probability"] = 1 - probs[i][1]
-                else:
+        if y_pred[i] != y_test[i]:
+            df_wrong_predictions.loc[i,"Sachnummer"] = df_test.loc[i, "Sachnummer"]
+            df_wrong_predictions.loc[i,"Benennung (dt)"] = df_test.loc[i, "Benennung (dt)"]
+            df_wrong_predictions.loc[i,"Derivat"] = df_test.loc[i, "Derivat"]
+            df_wrong_predictions.loc[i,"Predicted"] = class_names[y_pred[i]]
+            df_wrong_predictions.loc[i,"True"] = class_names[y_test[i]]
+            if binary_model:
+                if probs[i][1] >= prediction_settings["prediction_threshold"]:
                     df_wrong_predictions.loc[i,"Probability"] = probs[i][1]
-        except:
-            pass
+                else:
+                    df_wrong_predictions.loc[i,"Probability"] = 1 - probs[i][1]
+            else:
+                df_wrong_predictions.loc[i,"Probability"] = probs[i][1]
+
         
     # Serialize data into file:
     df_wrong_predictions.to_csv(model_folder_path + "wrong_predictions.csv")

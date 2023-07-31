@@ -4,7 +4,7 @@ import pickle
 from loguru import logger
 from src.data_pipeline.preprocessing import prepare_and_add_labels, preprocess_dataset
 from src.data_pipeline.feature_engineering import find_valid_space
-from utils import get_model, get_X
+from src.training_pipeline.utils import get_model, get_X
 from src.config import paths, train_settings
 
 # %%

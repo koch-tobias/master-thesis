@@ -1,9 +1,7 @@
 from preprocessing import preprocess_dataset, load_csv_into_df, combine_dataframes, train_test_val
-from data_analysis import store_class_distribution
+from data_analysis import store_class_distribution, analyse_data_split
 from augmentation import data_augmentation
 from src.config import general_params
-
-from src.data_pipeline.data_analysis import analyse_data_split
 
 from datetime import datetime
 import os
@@ -33,16 +31,16 @@ def generate_dataset_dict(df, storage_path, binary_model):
     })
 
     if binary_model:
-        with open(storage_path + 'binary_train_test_val_split.pkl', 'wb') as handle:
+        with open(storage_path + 'binary/binary_train_test_val_split.pkl', 'wb') as handle:
             pickle.dump(train_val_test_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
         
-        with open(storage_path + 'binary_train_test_val_dataframes.pkl', 'wb') as handle:
+        with open(storage_path + 'binary/binary_train_test_val_dataframes.pkl', 'wb') as handle:
             pickle.dump(train_val_test_dataframes, handle, protocol=pickle.HIGHEST_PROTOCOL)
     else:
-        with open(storage_path + 'multiclass_train_test_val_split.pkl', 'wb') as handle:
+        with open(storage_path + 'multiclass/multiclass_train_test_val_split.pkl', 'wb') as handle:
             pickle.dump(train_val_test_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-        with open(storage_path + 'multiclass_train_test_val_dataframes.pkl', 'wb') as handle:
+        with open(storage_path + 'multiclass/multiclass_train_test_val_dataframes.pkl', 'wb') as handle:
             pickle.dump(train_val_test_dataframes, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     logger.success("Splitted datasets are successfully stored!")
@@ -63,16 +61,18 @@ def main():
         df_preprocessed = data_augmentation(df_preprocessed)
 
     os.makedirs(storage_path)
+    os.makedirs(storage_path + "binary")
+    os.makedirs(storage_path + "multiclass")
     df_preprocessed.to_csv(storage_path + "processed_dataset.csv")
 
     generate_dataset_dict(df_preprocessed, storage_path, binary_model=True)
     generate_dataset_dict(df_preprocessed, storage_path, binary_model=False)
 
     logger.info("Generate and store the class distribution plots...")
-    store_class_distribution(df_preprocessed, "Relevant fuer Messung", storage_path)
-    store_class_distribution(df_preprocessed, "Einheitsname", storage_path)
+    store_class_distribution(df_preprocessed, "Relevant fuer Messung", storage_path + "binary/")
+    store_class_distribution(df_preprocessed, "Einheitsname", storage_path + "multiclass/")
     filtered_df = df_preprocessed[df_preprocessed["Einheitsname"] != "Dummy"]
-    store_class_distribution(filtered_df, "Einheitsname", storage_path)
+    store_class_distribution(filtered_df, "Einheitsname", storage_path + "multiclass/")
     logger.success("Plots successfully stored!")
 
 

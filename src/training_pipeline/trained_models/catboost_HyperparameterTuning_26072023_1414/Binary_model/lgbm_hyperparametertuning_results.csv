@@ -1,2 +1,0 @@
-,model_name,train auc,train loss,validation auc,validation loss,test auc,test sensitivity,Training Time (s),lr,depth,colsample_bylevel,min_data_in_leaf,early stopping (iterations)
-1,model_9736,0.9998015864068651,0.04493710295542886,0.9736999402271369,0.06237057047841626,0.9561170212765957,0.9561170212765957,161.08973383903503,0.05,4,0.5,20,30.0

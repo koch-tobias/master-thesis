@@ -1,21 +1,22 @@
 paths = {
-    "folder_processed_dataset": "data/processed/26072023_1151/",            # Paths to the preprocessed dataset
+    "folder_processed_dataset": "data/processed/31072023_1319/",            # Paths to the preprocessed dataset
     "final_model": "lgbm_HyperparameterTuning_07072023_0936"                # Paths to the directory of the final trained models
 }
 
 general_params = {
-    "seed": 33,
+    "seed": 42,
     "cut_percent_of_front": 0.18,       # Choose number between 0 and 1. How much percent of the front of the car should be deleted - No relevant car parts in the front of a car
     "relevant_features": ['Sachnummer','Benennung (dt)', 'X-Min','X-Max','Y-Min','Y-Max','Z-Min','Z-Max', 'Wert','Einheit','Gewichtsart','Kurzname','L-Kz.', 'L/R-Kz.', 'Modul (Nr)', 'ox','oy', 'oz', 'xx','xy','xz', 'yx','yy','yz','zx','zy','zz'], # List of features which are relevant for the models - all other features will be deleted
     "features_for_model": ['volume', 'Wert', 'center_x', 'center_y', 'center_z','length','width','height','theta_x','theta_y','theta_z'], # List of features which are used for training the models
     "bounding_box_features_original": ['X-Min', 'X-Max', 'Y-Min', 'Y-Max', 'Z-Min', 'Z-Max', 'ox', 'oy', 'oz', 'xx', 'xy', 'xz', 'yx', 'yy', 'yz', 'zx', 'zy', 'zz', 'Wert'], #List of all original boundingbox features which should be set to 0 if wrong or not given
     "keep_modules": ['CE05', 'CD07'], # Keep this modules out of module group EP (CE05=interior mirror, CD07=roof antenna)
     "car_part_designation": "Benennung (dt)",
-    "augmentation": False
+    "augmentation": True,
+    "use_only_text": False,         # True for training on only Designations or False for training on designations and bounding box information
 }
 
 prediction_settings = {
-    "prediction_threshold": 0.75
+    "prediction_threshold": 0.65     # Model has to be x % sure that the car part is relevant
 }
 
 gpt_settings = {
@@ -27,15 +28,12 @@ gpt_settings = {
 
 train_settings = {
     "k-folds": 4,                   # Number of folds for k-fold crossvalidation
-    "augmentation": True,           # True for using Data Augmentation 
-    "use_only_text": False,         # True for training on only Designations or False for training on designations and bounding box information
-    "ml-method": "lgbm",            # Choose between 'lgbm', 'xgboost' and 'catboost'
-    "early_stopping": 30,           # Number of rounds for early stopping
-    "val_size": 0.4,                # Split dataset into 1-x % training and x % validation
-    "test_size": 0.5,               # Split validation set into 1-x % validation and x % test
+    "ml-method": "lgbm",        # Choose between 'lgbm', 'xgboost' and 'catboost'
+    "early_stopping": 50,           # Number of rounds for early stopping
+    "train_val_split": 0.3,         # Split dataset into 1-x % training and x % validation
+    "val_test_split": 0.5,          # Split validation set into 1-x % validation and x % test
     "top_x_models_for_cv": 0.10,    # Use the top x % of the models after hyperparamter tuning for cross validation
-    "prediction_threshold": 0.75,    # number between 0 and 1. 0.75 means theat the has to be over 75% sure that it is the class to predict it
-     "n_estimators": 10000          # Number of iterations a model will be trained
+    "n_estimators": 10000          # Number of iterations a model will be trained
     }
 
 ###############################

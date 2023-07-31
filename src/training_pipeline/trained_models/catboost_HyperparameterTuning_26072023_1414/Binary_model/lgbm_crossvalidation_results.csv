@@ -1,2 +1,0 @@
-,model_name,avg train auc,avg train loss,avg validation auc,avg validation loss,avg test accuracy,avg test sensitivity,lr,depth,colsample_bylevel,min_data_in_leaf,early stopping (iterations),index
-0,model_9736,0.999336,0.043384,0.982366,0.066323,0.956782,0.956782,0.05,4,0.5,20,30.0,1.0
