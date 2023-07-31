@@ -2,10 +2,10 @@ import pandas as pd
 import numpy as np
 import pickle
 from loguru import logger
-from src.data_pipeline.preprocessing import prepare_and_add_labels, preprocess_dataset
+from src.data_pipeline.preprocessing import load_csv_into_df, prepare_and_add_labels, preprocess_dataset
 from src.data_pipeline.feature_engineering import find_valid_space
 from src.training_pipeline.utils import get_model, get_X
-from src.config import paths, prediction_settings
+from src.config import general_params, paths, prediction_settings
 
 def get_best_iteration(model, method):
     if method == "lgbm":
@@ -77,7 +77,6 @@ def store_predictions(y_test, y_pred, probs, df_preprocessed, df_test, model_fol
         
     # Serialize data into file:
     df_wrong_predictions.to_csv(model_folder_path + "wrong_predictions.csv")
-
 
 def predict_on_new_data(df):
     logger.info("Prepare dataset...")
@@ -171,3 +170,24 @@ def predict_on_new_data(df):
     df_relevant_parts.loc[df_relevant_parts["L/R-Kz."] == "L", "L/R-Kz."] = 'Linke Ausfuehrung'
 
     return df_preprocessed, df_relevant_parts, einheitsname_not_found, ncar
+
+def label_data():
+    dataframes, ncars = load_csv_into_df(original_prisma_data=True, label_new_data=True)
+    for df in dataframes:
+        df_with_label_columns, df_relevant_parts, einheitsname_not_found, ncar = predict_on_new_data(df)
+
+        for index, row in df_relevant_parts.iterrows():
+            sachnummer = row['Sachnummer']
+            einheitsname = row['Einheitsname']
+            
+            if sachnummer in df['Sachnummer'].values:
+                df_with_label_columns.loc[df_with_label_columns['Sachnummer'] == sachnummer, 'Relevant fuer Messung'] = "Ja"
+                df_with_label_columns.loc[df_with_label_columns['Sachnummer'] == sachnummer, 'Einheitsname'] = einheitsname
+
+        features = general_params["relevant_features"] + ['Relevant fuer Messung','Einheitsname']
+        df_with_label_columns = df_with_label_columns[features]
+        df_with_label_columns.to_csv(f"data/pre_labeled/{ncar}_labeled.csv")
+
+        logger.info(f"The following car parts are not found in your dataset: {einheitsname_not_found} If essential, please add this car parts manually!")
+        logger.success(f"The prediction is done and the result is stored here: data/pre_labeled_data/{ncar}_labeled.csv!")
+
