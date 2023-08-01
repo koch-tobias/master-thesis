@@ -17,8 +17,8 @@ uvicorn==0.22.0
 xgboost==1.7.6
 xlrd==2.0.1 #For loading excel files
 xlsxwriter==3.1.0
-numba
-#cudatoolkit
-catboost
+numba==0.57.0
+catboost==1.2
 gensim==4.3.1
-## Install PyTorch for your system (https://pytorch.org/) version==1.13.1
+transformers==4.31.0
+
