@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from src.data_pipeline.feature_engineering import transform_boundingbox, find_valid_space
-from src.config import general_params, lgbm_params_binary, lgbm_params_multiclass, cb_params_binary, cb_params_multiclass, xgb_params_binary, xgb_params_multiclass
+from src.config import paths, lgbm_params_binary, lgbm_params_multiclass, cb_params_binary, cb_params_multiclass, xgb_params_binary, xgb_params_multiclass
 from sklearn.metrics import ConfusionMatrixDisplay
 import lightgbm as lgb
 import pickle
@@ -136,13 +136,18 @@ def analyse_data(df_preprocessed, y_train, y_val, y_test, model_folder_path, bin
                 fig.savefig(model_folder_path + 'Multiclass_train_val_test_split_without_dummy.png', dpi=150)
     logger.success("Dataset analysed!")
 
-def plot_metric_custom(evals, model_folder_path, method, binary_model):
+def plot_metric_custom(evals, model_folder_path, method, finalmodel):
     if method == 'catboost':
          metric_0 = cb_params_binary["metrics"][0]
          metric_1 = cb_params_binary["metrics"][1]
     else:
          metric_0 = xgb_params_binary["metrics"][0]
          metric_1 = xgb_params_binary["metrics"][1]   
+
+    if finalmodel:
+         add_to_path = "final_model_"
+    else:
+         add_to_path = ""
 
     val_auc = evals["validation_1"][metric_0]
     val_loss = evals["validation_1"][metric_1]
@@ -157,7 +162,7 @@ def plot_metric_custom(evals, model_folder_path, method, binary_model):
     plt.title('Training and Validation AUC')
     plt.legend()
     plt.ylim([0, 1])
-    plt.savefig(model_folder_path + 'auc_plot.png')
+    plt.savefig(model_folder_path + add_to_path + 'auc_plot.png')
     plt.close()
 
     plt.rcParams["figure.figsize"] = (10, 10)
@@ -168,14 +173,17 @@ def plot_metric_custom(evals, model_folder_path, method, binary_model):
     plt.title('Training and Validation Loss')
     plt.legend()
     plt.ylim([-0.5, 4])
-    plt.savefig(model_folder_path + 'loss_plot.png')
+    plt.savefig(model_folder_path + add_to_path + 'loss_plot.png')
     plt.close()
 
-
-
-def store_metrics(model, evals, model_folder_path, binary_model):
+def store_metrics(model, evals, model_folder_path, binary_model, finalmodel):
 
     early_stopping = model._best_iteration - 1
+
+    if finalmodel:
+         add_to_path = "final_model_"
+    else:
+         add_to_path = ""
 
     if binary_model:
         plt.rcParams["figure.figsize"] = (10, 10)
@@ -188,7 +196,7 @@ def store_metrics(model, evals, model_folder_path, binary_model):
         plt.legend(['Training', 'Validation'], fontsize=12)
         plt.axvline(early_stopping, color='b', label = 'early stopping')
         plt.ylim([-0.5, 4])
-        plt.savefig(model_folder_path + 'binary_logloss_plot.png')
+        plt.savefig(model_folder_path + add_to_path + 'binary_logloss_plot.png')
 
         plt.rcParams["figure.figsize"] = (10, 10)
         lgb.plot_metric(evals, metric=lgbm_params_binary["metrics"][0])
@@ -199,11 +207,11 @@ def store_metrics(model, evals, model_folder_path, binary_model):
         plt.yticks(fontsize=12)
         plt.legend(['Training', 'Validation'], fontsize=12)
         plt.axvline(early_stopping, color='b', label = 'early stopping')
-        plt.savefig(model_folder_path + 'auc_plot.png')
+        plt.savefig(model_folder_path + add_to_path + 'auc_plot.png')
 
     else:    
         plt.rcParams["figure.figsize"] = (10, 10)
-        lgb.plot_metric(evals, metric=lgbm_params_binary["metrics"][1])
+        lgb.plot_metric(evals, metric=lgbm_params_multiclass["metrics"][1])
         plt.title("")
         plt.xlabel('Iterationen', fontsize=12)
         plt.ylabel('Loss', fontsize=12)
@@ -212,10 +220,10 @@ def store_metrics(model, evals, model_folder_path, binary_model):
         plt.legend(['Training', 'Validation'], fontsize=12)
         plt.axvline(early_stopping, color='b', label = 'early stopping')
         plt.ylim([-0.5, 4])
-        plt.savefig(model_folder_path + 'multi_logloss_plot.png')
+        plt.savefig(model_folder_path + add_to_path + 'multi_logloss_plot.png')
 
 # %% 
-def store_confusion_matrix(y_test, y_pred, model_folder_path, binary_model):
+def store_confusion_matrix(y_test, y_pred, folder_path, model_folder_path, binary_model):
 
     if binary_model:
         class_names = ["Not relevant", "Relevant"]
@@ -228,7 +236,7 @@ def store_confusion_matrix(y_test, y_pred, model_folder_path, binary_model):
         plt.savefig(model_folder_path + 'confusion_matrix.png')  
 
     else:
-        with open(model_folder_path + 'label_encoder.pkl', 'rb') as f:
+        with open(paths["folder_processed_dataset"] + 'label_encoder.pkl', 'rb') as f:
             le = pickle.load(f)
 
         class_names = []
