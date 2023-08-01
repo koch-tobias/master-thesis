@@ -1,4 +1,4 @@
-from preprocessing import preprocess_dataset, load_csv_into_df, combine_dataframes, train_test_val
+from preprocessing import preprocess_dataset, load_data_into_df, combine_dataframes, train_test_val
 from data_analysis import store_class_distribution, analyse_data_split
 from augmentation import data_augmentation
 from src.config import general_params
@@ -51,7 +51,7 @@ def main():
     timestamp = dateTimeObj.strftime("%d%m%Y_%H%M")
     storage_path = f"data/processed/{timestamp}/"
 
-    dataframes_list, ncars = load_csv_into_df(original_prisma_data=False, label_new_data=False)
+    dataframes_list, ncars = load_data_into_df(original_prisma_data=False, label_new_data=False)
 
     df_combined = combine_dataframes(dataframes_list)
     df_preprocessed, df_for_plot = preprocess_dataset(df_combined)
