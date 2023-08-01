@@ -14,7 +14,7 @@ from src.data_pipeline.feature_engineering import transform_boundingbox, calcula
 from src.config import general_params, convert_dict, train_settings
 
 # %%
-def load_csv_into_df(original_prisma_data: bool, label_new_data: bool) -> list:
+def load_data_into_df(original_prisma_data: bool, label_new_data: bool) -> list:
     '''
     This function searches for all .xls files in a given directory, loads each file into a pandas dataframe and changes the header line.
     return: List with all created dataframes
@@ -53,7 +53,7 @@ def load_csv_into_df(original_prisma_data: bool, label_new_data: bool) -> list:
                     dataframes.append(df)
                     ncars.append(ncar)
 
-                    if original_prisma_data == True:
+                    if label_new_data == True:
                         old_path = os.path.join(folder_name, file)
                         new_path = os.path.join("data/raw", ncar + '_' + file) 
                         shutil.move(old_path, new_path)
@@ -108,29 +108,33 @@ def combine_dataframes(dataframes: list) -> pd.DataFrame:
 # %%
 def prepare_and_add_labels(dataframe: pd.DataFrame):
 
-    logger.info("Start preprocessing the data...")
+    logger.info("Start preparing the data...")
+
+    # Drop all empty columns
+    dataframe.dropna(how= "all", axis=1, inplace=True)
 
     # Store the ncar abbreviation for file paths
-    ncar = dataframe[general_params["car_part_designation"]][1].split(" ")[0]
+    ncar = dataframe['Code'].iloc[0]
 
-    # Keep only car parts of module group EF
-    index_EF_module = dataframe[dataframe[general_params["car_part_designation"]].str.contains('EF')].index[-1]
-    dataframe_new = dataframe.loc[:index_EF_module-1]
+    dataframe_new = pd.DataFrame(columns=dataframe.columns)
 
-    for modules in general_params["keep_modules"]:
-        try:
-            level = dataframe[dataframe[general_params["car_part_designation"]].str.contains(modules)]["Ebene"].values[0]
-            startindex = dataframe[dataframe[general_params["car_part_designation"]].str.contains(modules)].index[-1]+1
-            endindex = dataframe.loc[(dataframe["Ebene"] == level) & (dataframe.index > startindex)].index[0]-1
+    for module in general_params["keep_modules"]:
+        try: 
+            level = dataframe[dataframe["Modul (Nr)"] == module]["Ebene"].values[0]
+            startindex = dataframe[dataframe["Modul (Nr)"] == module].index[0]
+            try:
+                endindex = dataframe.loc[(dataframe["Ebene"] == level) & (dataframe.index > startindex)].index[0] - 1
+            except: 
+                endindex = dataframe.shape[0] + 1
             temp = dataframe.loc[startindex:endindex]
             dataframe_new = pd.concat([dataframe_new, temp], ignore_index=True).reset_index(drop=True)
         except:
-            logger.info(f"Module {modules} in structure tree not found!")
+            logger.info(f"Module {module} not found in the structure tree!")
 
-    # Keep only the relevant samples with Dok-Format=5P. This samples are on the last level of the car structure
+    # Keep only the relevant samples with Dok-Format=5P. This samples are on the last level of the car structure and contains only car parts
     dataframe_new = dataframe_new[dataframe_new["Dok-Format"]=='5P'].reset_index(drop=True)
 
-    # Delete the NCAR abbreviation because of data security reasons
+    # Delete the NCAR abbreviation due to data security
     dataframe_new[general_params["car_part_designation"]] = dataframe_new[general_params["car_part_designation"]].apply(lambda x: x.replace(ncar, ""))
 
     # Keep only features which are identified as relevant for the preprocessing, the predictions or for the users' next steps
@@ -144,7 +148,7 @@ def prepare_and_add_labels(dataframe: pd.DataFrame):
 
     dataframe_new = dataframe_new.reset_index(drop=True)
 
-    logger.success(f"The features are reduced and formated to the correct data type!")
+    logger.success(f"Data ist prepared. The features are reduced and formated to the correct data type, subfolder are deleted, and only relevant modules are kept!")
     
     return dataframe_new, ncar
 
@@ -318,3 +322,24 @@ def train_test_val(df, model_folder_path, binary_model):
     logger.success("Train, validation and test sets are generated!")
 
     return X_train, y_train, X_val, y_val, X_test, y_test, df_train, df_val, df_test, weight_factor
+
+def main():
+    
+    test_preprocessing = True
+    data_path = 'C:/Users/q617269/Desktop/Masterarbeit_Tobias/repos/master-thesis/data/raw_for_labeling/prismaexport-20230731-163448.xls'
+    #data_path = "C:/Users/q617269/Desktop/Masterarbeit_Tobias/repos/master-thesis/data/raw_for_labeling/prismaexport-20230731-171755.xls"
+
+    if test_preprocessing:
+        df = pd.read_excel(data_path, header=None, skiprows=1)
+        df.columns = df.iloc[0]
+        df = df.iloc[1:] 
+        df, ncar = prepare_and_add_labels(df)
+        df.to_excel("test_prepare_and_add_labels_func.xlsx")
+
+        df_relevants, df_for_plot = preprocess_dataset(df)
+        df_relevants.to_excel("test_preprocess_dataset_func.xlsx")
+
+# %%
+if __name__ == "__main__":
+    
+    main()
