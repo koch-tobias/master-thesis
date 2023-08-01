@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import pickle
 from loguru import logger
-from src.data_pipeline.preprocessing import load_csv_into_df, prepare_and_add_labels, preprocess_dataset
+from src.data_pipeline.preprocessing import load_data_into_df, prepare_and_add_labels, preprocess_dataset
 from src.data_pipeline.feature_engineering import find_valid_space
 from src.training_pipeline.utils import get_model, get_X
 from src.config import general_params, paths, prediction_settings
@@ -84,7 +84,7 @@ def predict_on_new_data(df):
     logger.info("Dataset successfully prepared!")
 
     logger.info("Load trainset..")
-    trainset = pd.read_csv(paths["processed_dataset"])
+    trainset = pd.read_csv(paths["folder_processed_dataset"] + "processed_dataset.csv")
     trainset_relevant_parts = trainset[trainset["Relevant fuer Messung"] == "Ja"]
     trainset_relevant_parts = trainset_relevant_parts[(trainset_relevant_parts['X-Min_transf'] != 0) & (trainset_relevant_parts['X-Max_transf'] != 0)]    
     unique_names = trainset_relevant_parts["Einheitsname"].unique().tolist()
@@ -95,28 +95,26 @@ def predict_on_new_data(df):
     model_folder_path = "final_models/" + paths["final_model"]
     lgbm_binary, vectorizer_binary, vocabulary_binary, boundingbox_features_binary = get_model(model_folder_path + '/Binary_model')
     lgbm_multiclass, vectorizer_multiclass, vocabulary_multiclass, boundingbox_features_multiclass = get_model(model_folder_path + '/Multiclass_model')       
-    logger.success("Pretrained models loaded!")
+    logger.success("Pretrained models are loaded!")
 
     logger.info("Preprocess data...")
     df_preprocessed, df_for_plot = preprocess_dataset(df)
 
-    method = paths["final_model"].split('_')[0]
     X_binary = get_X(vocabulary_binary, vectorizer_binary, boundingbox_features_binary["features_for_model"], df_preprocessed)
-    y_pred_binary, probs_binary = model_predict(lgbm_binary, X_binary, method, binary_model=True)
-
     X_multiclass = get_X(vocabulary_multiclass, vectorizer_multiclass, boundingbox_features_multiclass["features_for_model"], df_preprocessed)
-    y_pred_multiclass, probs_multiclass = model_predict(lgbm_multiclass, X_multiclass, method, binary_model=False)
-    logger.success("Dataset is ready for classification!")
+    logger.success("Dataset is ready for classification!")   
 
-    logger.info("Load LabelEncoder...")
+    logger.info("Identify relevant car parts and add the unique names...")
+    method = paths["final_model"].split('_')[0]
+    y_pred_binary, probs_binary = model_predict(lgbm_binary, X_binary, method, binary_model=True)
+    y_pred_multiclass, probs_multiclass = model_predict(lgbm_multiclass, X_multiclass, method, binary_model=False)
+
     # Load the LabelEncoder
     with open(model_folder_path + '/Multiclass_model/label_encoder.pkl', 'rb') as f:
         le = pickle.load(f) 
-    logger.success("LabelEncoder loaded!")
 
     y_pred_multiclass_names = le.inverse_transform(y_pred_multiclass) 
 
-    logger.info("Identify relevant car parts and add the unique names...")
     df_relevant_parts = df_preprocessed.reset_index(drop=True)
     for index, row in df_relevant_parts.iterrows():
         if y_pred_binary[index] == 1: 
@@ -131,7 +129,7 @@ def predict_on_new_data(df):
     df_relevant_parts = df_relevant_parts[df_relevant_parts['Relevant fuer Messung'] == 'Ja']
     logger.success("Relevant car parts identified!")
     
-    logger.info("Valid identified car party comparing bounding-box informations to the trainset")
+    logger.info("Valid identified car parts by comparing the position of the new car part to them in the trainset")
     einheitsname_not_found = []
     for index, row in df_relevant_parts.iterrows():
         for name in unique_names:
@@ -158,8 +156,9 @@ def predict_on_new_data(df):
                                     if (row["Wahrscheinlichkeit Relevanz"] > 0.95) and ((row["Einheitsname"] == "Dummy")):
                                         df_relevant_parts.loc[index,'Einheitsname'] = name
                                     break
-    logger.success("Comparing successfull!")
+    logger.success("Validation successfull!")
 
+    logger.info("Prepare output...")
     for name in unique_names:        
         if name not in df_relevant_parts['Einheitsname'].unique():
             einheitsname_not_found.append(name)
@@ -168,11 +167,12 @@ def predict_on_new_data(df):
     df_relevant_parts["L/R-Kz."] = df_relevant_parts["L/R-Kz."].fillna(' ')
     df_relevant_parts.loc[df_relevant_parts['Einheitsname'] == "Dummy", 'Einheitsname'] = 'Kein Einheitsname gefunden'
     df_relevant_parts.loc[df_relevant_parts["L/R-Kz."] == "L", "L/R-Kz."] = 'Linke Ausfuehrung'
+    logger.success("Output is prepared!")
 
     return df_preprocessed, df_relevant_parts, einheitsname_not_found, ncar
 
 def label_data():
-    dataframes, ncars = load_csv_into_df(original_prisma_data=True, label_new_data=True)
+    dataframes, ncars = load_data_into_df(original_prisma_data=True, label_new_data=True)
     for df in dataframes:
         df_with_label_columns, df_relevant_parts, einheitsname_not_found, ncar = predict_on_new_data(df)
 
@@ -191,3 +191,23 @@ def label_data():
         logger.info(f"The following car parts are not found in your dataset: {einheitsname_not_found} If essential, please add this car parts manually!")
         logger.success(f"The prediction is done and the result is stored here: data/pre_labeled_data/{ncar}_labeled.csv!")
 
+# %%
+def main():
+    
+    label_new_data = True
+    make_prediction = False
+    data_path = ''
+
+    if make_prediction:
+        df = pd.read_excel(data_path, header=None, skiprows=1)
+        df.columns = df.iloc[0]
+        df = df.iloc[1:] 
+        predict_on_new_data(df)
+
+    if label_new_data:
+        label_data()
+
+# %%
+if __name__ == "__main__":
+    
+    main()
