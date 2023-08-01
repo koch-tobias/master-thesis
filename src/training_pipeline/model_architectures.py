@@ -1,5 +1,3 @@
-# Used to define the model architectures
-
 # %%
 from lightgbm import LGBMClassifier
 import xgboost as xgb
@@ -21,8 +19,6 @@ def binary_classifier(weight_factor, hp, method):
                             min_child_samples=hp["min_child_samples"],
                             n_estimators=train_settings["n_estimators"] ,
                             class_weight=class_weight
-                            #device='gpu',
-                            #num_gpu = 6
                             )
         metrics = lgbm_params_binary["metrics"]
 
@@ -36,7 +32,7 @@ def binary_classifier(weight_factor, hp, method):
                             scale_pos_weight=weight_factor,
                             gamma=hp["gamma"],
                             n_estimators= train_settings["n_estimators"],
-                            verbosity=2
+                            verbosity=0
                         )        
         metrics = xgb_params_binary["metrics"]
 
@@ -49,8 +45,6 @@ def binary_classifier(weight_factor, hp, method):
                                     loss_function=cb_params_binary["metrics"][1],
                                     eval_metric=cb_params_binary["metrics"][0],
                                     early_stopping_rounds=train_settings["early_stopping"],
-                                    #task_type="GPU",
-                                    #devices='0:6',
                                     use_best_model=True
                                 )
         metrics = cb_params_binary["metrics"]
