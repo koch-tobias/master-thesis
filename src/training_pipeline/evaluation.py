@@ -93,7 +93,7 @@ def evaluate_model(model, X_test, y_test, evals, hp_in_iteration, num_models_tra
     y_pred, probs, best_iteration  = model_predict(model, X_test, method, binary_model)
 
     accuracy = accuracy_score(y_test, y_pred)
-    sensitivity = recall_score(y_test, y_pred, average='weighted')
+    sensitivity = recall_score(y_test, y_pred, average='macro')
 
     df_new = pd.DataFrame(columns=df_columns)
 
@@ -106,7 +106,7 @@ def evaluate_model(model, X_test, y_test, evals, hp_in_iteration, num_models_tra
     df_new.loc[num_models_trained, "train loss"] = train_loss
     df_new.loc[num_models_trained, "validation auc"] = val_auc
     df_new.loc[num_models_trained, "validation loss"] = val_loss
-    df_new.loc[num_models_trained, "test auc"] = accuracy
+    df_new.loc[num_models_trained, "test accuracy"] = accuracy
     df_new.loc[num_models_trained, "test sensitivity"] = sensitivity
     df_new.loc[num_models_trained, "early stopping (iterations)"] = train_settings["early_stopping"]
     df_new.loc[num_models_trained, "Training Time (s)"] = training_time 
