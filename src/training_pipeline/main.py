@@ -6,8 +6,8 @@ from src.config import train_settings
 
 # %%
 def main():
-    train_binary_model = True
-    train_multiclass_model = False
+    train_binary_model = False
+    train_multiclass_model = True
 
     method = train_settings["ml-method"]
 
@@ -15,7 +15,7 @@ def main():
     timestamp = dateTimeObj.strftime("%d%m%Y_%H%M")
 
     folder_path = f"src/training_pipeline/trained_models/{method}_HyperparameterTuning_{timestamp}/"
-
+    
     if train_binary_model:
         logger.info("Start training the binary models...")
         train_model(folder_path, binary_model=True, method=method)
