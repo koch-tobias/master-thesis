@@ -99,6 +99,7 @@ def get_model_folder_path(binary_model, folder_path):
     try:
         os.makedirs(model_folder_path)
     except FileExistsError:
+        print(f"{model_folder_path}, already exist!")
         # directory already exists
         pass
 
@@ -117,7 +118,7 @@ def fit_eval_model(X_train, y_train, X_val, y_val, X_test, y_test, weight_factor
     model_results_dict["evals_list"].append(evals)
     model_results_dict["test_sensitivity_results"].append(test_sensitivity)
     model_results_dict["y_pred_list"].append(y_pred)
-    model_results_dict["test_auc_results"].append(test_accuracy)
+    model_results_dict["test_accuracy_results"].append(test_accuracy)
     model_results_dict["val_auc_results"].append(val_auc)
     model_results_dict["val_loss_results"].append(val_loss)
     model_results_dict["train_auc_results"].append(train_auc)
@@ -144,7 +145,7 @@ def grid_search(X_train, y_train, X_val, y_val, X_test, y_test, weight_factor, h
 
     logger.info("Start training with grid search hyperparameter tuning...")
 
-    model_results_dict = {"models_list": [], "evals_list": [], "test_sensitivity_results": [], "test_auc_results": [], "val_auc_results": [], "val_loss_results": [], "train_auc_results": [], "train_loss_results": [], "y_pred_list": [], "probs_list": []}
+    model_results_dict = {"models_list": [], "evals_list": [], "test_sensitivity_results": [], "test_accuracy_results": [], "val_auc_results": [], "val_loss_results": [], "train_auc_results": [], "train_loss_results": [], "y_pred_list": [], "probs_list": []}
     num_models_trained = 1
 
     df, total_models = create_result_df(hp_dict)
@@ -157,6 +158,10 @@ def grid_search(X_train, y_train, X_val, y_val, X_test, y_test, weight_factor, h
                     hp_in_iteration = {hp[0]: hp_0, hp[1]: hp_1, hp[2]: hp_2, hp[3]: hp_3}
                     model_results_dict, df = fit_eval_model(X_train, y_train, X_val, y_val, X_test, y_test, weight_factor, hp_in_iteration, df, model_results_dict, num_models_trained, total_models, binary_model, method)
                     num_models_trained = num_models_trained + 1
+                    break
+                break
+            break
+        break
 
     logger.success("Grid search hyperparameter tuning was successfull!")
 
@@ -198,7 +203,7 @@ def k_fold_crossvalidation(X, y, X_test, y_test, weight_factor, df, model_result
 
     logger.info(f"Start to validate the top {top_x_models} models by using {number_of_folds}-fold cross-validation... ")
     for i in range(top_x_models):
-        cv_results_dict = {"models_list": [], "evals_list": [], "test_sensitivity_results": [], "test_auc_results": [], "val_auc_results": [], "val_loss_results": [], "train_auc_results": [], "train_loss_results": [], "y_pred_list": [], "probs_list": []}
+        cv_results_dict = {"models_list": [], "evals_list": [], "test_sensitivity_results": [], "test_accuracy_results": [], "val_auc_results": [], "val_loss_results": [], "train_auc_results": [], "train_loss_results": [], "y_pred_list": [], "probs_list": []}
         #list_shap_values = []
         #list_val_sets = []
 
@@ -227,7 +232,7 @@ def k_fold_crossvalidation(X, y, X_test, y_test, weight_factor, df, model_result
         avg_train_auc = round(mean(cv_results_dict["train_auc_results"]), 6)
         avg_train_loss = round(mean(cv_results_dict["train_loss_results"]), 6)
         avg_test_sensitivity = round(mean(cv_results_dict["test_sensitivity_results"]), 6)
-        avg_test_auc = round(mean(cv_results_dict["test_auc_results"]), 6)
+        avg_test_auc = round(mean(cv_results_dict["test_accuracy_results"]), 6)
         for key in list(hp_dict.keys()):
             df_cv.loc[i, key] = df[key].iloc[i]
         df_cv.loc[i, "model_name"] = df["model_name"].iloc[i]
@@ -295,33 +300,35 @@ def train_model(folder_path, binary_model, method):
     logger.info("Start storing the best model with metrics plots and wrong predictions according to the validation auc...")
     best_model = model_results_dict["models_list"][index_best_model]
     if method == 'lgbm':
-        store_metrics(best_model, model_results_dict["evals_list"][index_best_model], model_folder_path, binary_model=binary_model)
+        store_metrics(best_model, model_results_dict["evals_list"][index_best_model], model_folder_path, binary_model, finalmodel=False)
     else:
-        plot_metric_custom(model_results_dict["evals_list"][index_best_model], model_folder_path, method, binary_model)
+        plot_metric_custom(model_results_dict["evals_list"][index_best_model], model_folder_path, method, finalmodel=False)
 
-    store_trained_model(best_model, df_cv["avg validation auc"].iloc[0], index_best_model, model_folder_path)
-    y_pred, probs, best_iteration = model_predict(best_model, X_test, method, binary_model)
-    store_confusion_matrix(y_test, y_pred, model_folder_path, binary_model)
-    store_predictions(y_test, y_pred, probs, df_preprocessed, df_test, model_folder_path, binary_model)
-    logger.success("Storing was successfull!")
-
-    # Train the best model identified by the holdout method and crossvalidation on the entire data
-    logger.info("Train a new model on the entire data with the parameters of the best identified model...")
-    #X_train = np.concatenate((X_train, X_val, X_test), axis=0)
-    #y_train = np.concatenate((y_train, y_val, y_test), axis=0)
-    X_train = np.concatenate((X_train, X_test), axis=0)
-    y_train = np.concatenate((y_train, y_test), axis=0)
     hp_keys = list(hp_dict.keys())
     best_hp = {}
     for key in hp_keys:
         best_hp[key] = df[key].iloc[index_best_model]
+
+    best_iteration = get_best_iteration(best_model, method)
+    store_trained_model(best_model, best_iteration, df_cv["avg validation auc"].iloc[0], best_hp, index_best_model, model_folder_path, finalmodel=False)
+    y_pred, probs, best_iteration = model_predict(best_model, X_test, method, binary_model)
+    store_confusion_matrix(y_test, y_pred, folder_path, model_folder_path, binary_model)
+    store_predictions(y_test, y_pred, probs, df_preprocessed, df_test, model_folder_path, binary_model)
+    logger.success("Storing was successfull!")
+
+    logger.info("Train a new model on the entire data with the parameters of the best identified model...")
+    X_train = np.concatenate((X_train, X_test), axis=0)
+    y_train = np.concatenate((y_train, y_test), axis=0)
         
-    #gbm_final, evals_final = model_fit(X, y, 0, 0, weight_factor, best_hp, binary_model, method)
     gbm_final, evals_final = model_fit(X_train, y_train, X_val, y_val, weight_factor, best_hp, binary_model, method)
     best_iteration = get_best_iteration(gbm_final, method)
     _, _, val_auc, _ = get_best_metric_results(evals_final, best_iteration, method, binary_model)
-    store_trained_model(gbm_final, val_auc, index_best_model, model_folder_path)
+    store_trained_model(gbm_final, best_iteration, val_auc, best_hp, index_best_model, model_folder_path, finalmodel=True)
     if method == 'lgbm':
+        store_metrics(best_model, model_results_dict["evals_list"][index_best_model], model_folder_path, binary_model, finalmodel=True)
         df_feature_importance_final_model = add_feature_importance(gbm_final, model_folder_path=paths["folder_processed_dataset"])
         df_feature_importance_final_model.to_csv(paths["folder_processed_dataset"] + "/final_model_feature_importance.csv")
+    else:
+        plot_metric_custom(model_results_dict["evals_list"][index_best_model], model_folder_path, method, finalmodel=True)
+
     logger.success("Training the model on the entire data was successfull!")
