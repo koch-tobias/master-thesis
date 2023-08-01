@@ -9,7 +9,7 @@ general_params = {
     "relevant_features": ['Sachnummer','Benennung (dt)', 'X-Min','X-Max','Y-Min','Y-Max','Z-Min','Z-Max', 'Wert','Einheit','Gewichtsart','Kurzname','L-Kz.', 'L/R-Kz.', 'Modul (Nr)', 'ox','oy', 'oz', 'xx','xy','xz', 'yx','yy','yz','zx','zy','zz'], # List of features which are relevant for the models - all other features will be deleted
     "features_for_model": ['volume', 'Wert', 'center_x', 'center_y', 'center_z','length','width','height','theta_x','theta_y','theta_z'], # List of features which are used for training the models
     "bounding_box_features_original": ['X-Min', 'X-Max', 'Y-Min', 'Y-Max', 'Z-Min', 'Z-Max', 'ox', 'oy', 'oz', 'xx', 'xy', 'xz', 'yx', 'yy', 'yz', 'zx', 'zy', 'zz', 'Wert'], #List of all original boundingbox features which should be set to 0 if wrong or not given
-    "keep_modules": ['CE05', 'CD07'], # Keep this modules out of module group EP (CE05=interior mirror, CD07=roof antenna)
+    "keep_modules": ['FBEP', 'CE05', 'CD07'], # Keep this modules out of module group EP (CE05=interior mirror, CD07=roof antenna)
     "car_part_designation": "Benennung (dt)",
     "augmentation": True,
     "use_only_text": False,         # True for training on only Designations or False for training on designations and bounding box information
