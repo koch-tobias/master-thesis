@@ -6,7 +6,7 @@ import os
 from loguru import logger
 import pickle
 
-from src.config import train_settings, paths
+from src.config import paths, general_params
 
 def get_model(folder_path):
     final_model_path = ""
@@ -52,7 +52,7 @@ def get_X(vocab, vectorizer, bbox_features, df_preprocessed):
     X = vectorizer.transform(df_preprocessed['Benennung (bereinigt)']).toarray()
 
     # Combine text features with other features
-    if train_settings["use_only_text"] == False:      
+    if general_params["use_only_text"] == False:      
         X = np.concatenate((X, df_preprocessed[bbox_features].values), axis=1)
     
     return X
@@ -95,20 +95,35 @@ def load_dataset(binary_model: bool):
     return X_train, y_train, X_val, y_val, X_test, y_test, df_preprocessed, df_test, weight_factor
 
 # %%
-def store_trained_model(model, val_auc, index_best_model, model_folder_path):
+def store_trained_model(model, best_iteration, val_auc, hp, index_best_model, model_folder_path, finalmodel):
     # save model
-    if val_auc != -1:
-        model_path = model_folder_path + f"model{index_best_model}_{str(val_auc)[2:6]}_validation_auc.pkl"
+    if finalmodel:
+        model_path = model_folder_path + f"final_model_{str(val_auc)[2:6]}_validation_auc.pkl"
     else:
-        model_path = model_folder_path + f"final_model.pkl"
+        model_path = model_folder_path + f"model_{str(val_auc)[2:6]}_validation_auc.pkl"
 
     with open(model_path, "wb") as filestore:
         pickle.dump(model, filestore)
 
-    log_text = "Trainings dataset: {}\n".format(paths["folder_processed_dataset"])
-    f= open(model_folder_path + "logging.txt","w+")
-    f.write(log_text)
-    f.close()
+    logging_file_path = model_folder_path + "logging.txt"
+    if os.path.isfile(logging_file_path):
+        log_text = "\nValidation AUC (final model): {}\n".format(val_auc)
+        f= open(model_folder_path + "logging.txt","a")
+        f.write("\n_________________________________________________\n")
+        f.write(log_text)
+        f.write("Trained Iterations: {}\n".format(best_iteration))
+        f.close()
+    else:
+        log_text = "Trainings dataset path: {}\n".format(paths["folder_processed_dataset"])
+        f= open(model_folder_path + "logging.txt","w+")
+        f.write(log_text)
+        f.write("Validation AUC: {}\n".format(val_auc))
+        f.write("Trained Iterations: {}\n".format(best_iteration))
+        f.write("Model index in GridSearch Hyperparametertuning: {}\n".format(index_best_model))
+        f.write("Hyperparameter:\n")
+        for key in hp:
+            f.write("{}: {}\n".format(key, hp[key]))
+        f.close()
 
 # %%
 def store_predictions(y_test, y_pred, probs, df_preprocessed, df_test, model_folder_path, binary_model):
