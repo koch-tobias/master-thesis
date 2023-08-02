@@ -21,7 +21,7 @@ from evaluation import evaluate_model, add_feature_importance, get_best_metric_r
 from plot_functions import store_metrics, plot_metric_custom, store_confusion_matrix
 from utils import store_trained_model, load_dataset
 from src.deployment_pipeline.prediction import model_predict, store_predictions, get_best_iteration 
-from src.config import xgb_params_multiclass, train_settings, general_params, paths
+from src.config import train_settings, general_params, paths
 from src.config import lgbm_hyperparameter as lgbm_hp
 from src.config import xgb_hyperparameter as xgb_hp
 from src.config import cb_hyperparameter as cb_hp
