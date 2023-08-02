@@ -6,15 +6,21 @@ WORKDIR /code
 
 # Copy the file with the requirements to the /code directory.
 COPY ./requirements.txt /code/requirements.txt
-COPY ./src /code/src
-COPY ./models /code/models
 COPY ./__init__.py /code/__init__.py
+COPY ./setup.py /code/setup.py
+COPY ./final_models /code/final_models
+COPY ./data/processed /code/data/processed
+COPY ./src/__init__.py /code/src/__init__.py
+COPY ./src/config.py /code/src/config.py
+COPY ./src/data_pipeline /code/src/data_pipeline
+COPY ./src/deployment_pipeline /code/src/deployment_pipeline
 
 # Install the package dependencies in the requirements file.
 RUN apt-get update && apt-get install -y git
 RUN pip install -i https://nexus.bmwgroup.net/repository/pypi/simple -r /code/requirements.txt
+RUN python /code/setup.py install
 
 ENV PYTHONPATH "${PYTHONPATH}:/code/src"
 
 # Start API
-CMD ["uvicorn", "src.api.api:app", "--proxy-headers", "--host", "0.0.0.0", "--port", "7070"]
+CMD ["uvicorn", "src.deployment_pipeline.api:app", "--proxy-headers", "--host", "0.0.0.0", "--port", "7070"]
