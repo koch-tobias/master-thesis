@@ -8,7 +8,7 @@ import yaml
 from yaml.loader import SafeLoader
 from pyxlsb import open_workbook as open_xlsb
 
-from prediction import predict_on_new_data
+from src.deployment_pipeline.prediction import predict_on_new_data
 from loguru import logger
 
 # create sidebar to upload the csv file and display the possible labels
