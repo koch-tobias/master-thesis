@@ -313,7 +313,7 @@ def train_model(folder_path, binary_model, method):
     if method == 'lgbm':
         store_metrics(evals_final, best_iteration, model_folder_path, binary_model, finalmodel=True)
         df_feature_importance_final_model = add_feature_importance(gbm_final, model_folder_path=paths["folder_processed_dataset"])
-        df_feature_importance_final_model.to_csv(paths["folder_processed_dataset"] + "/final_model_feature_importance.csv")
+        df_feature_importance_final_model.to_csv(model_folder_path + "final_model_feature_importance.csv")
     else:
         plot_metric_custom(evals_final, best_iteration, model_folder_path, method, binary_model, finalmodel=True)
 
