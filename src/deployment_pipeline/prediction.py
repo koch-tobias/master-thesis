@@ -1,11 +1,62 @@
 import pandas as pd
 import numpy as np
 import pickle
+import os
 from loguru import logger
 from src.data_pipeline.preprocessing import load_data_into_df, prepare_and_add_labels, preprocess_dataset
 from src.data_pipeline.feature_engineering import find_valid_space
-from src.training_pipeline.utils import get_model, get_X, get_dataset_path_from_logging
 from src.config import general_params, paths, prediction_settings
+
+def get_dataset_path_from_logging(file_path):
+    with open(file_path, 'r') as file:
+        for line in file:
+            if "Dataset:" in line:
+                return line.split(":")[1].strip()
+    return None
+
+def get_model(folder_path):
+    final_model_path = folder_path + "/final_model.pkl"
+    pretrained_model_path = folder_path + "/model.pkl"
+
+    if os.path.exists(final_model_path):
+        model_path =  final_model_path
+    else:
+        model_path =  pretrained_model_path
+
+    with open(model_path, "rb") as fid:
+        model = pickle.load(fid)
+
+    dataset_path = get_dataset_path_from_logging(folder_path + "/logging.txt")
+
+    # Load the vectorizer from the file
+    vectorizer_path = dataset_path + "vectorizer.pkl"
+    with open(vectorizer_path, 'rb') as f:
+        vectorizer = pickle.load(f)
+
+    # Get the vocabulary of the training data
+    vocab_path = dataset_path + "vocabulary.pkl"
+    with open(vocab_path, 'rb') as f:
+        vocabulary = pickle.load(f) 
+
+    bbox_features_path = dataset_path + "boundingbox_features.pkl"
+    with open(bbox_features_path, 'rb') as f:
+        bbox_features = pickle.load(f)  
+
+    return model, vectorizer, vocabulary, bbox_features
+
+def get_X(vocab, vectorizer, bbox_features, df_preprocessed):
+    # Convert the vocabulary list to a dictionary
+    vocabulary_dict = {word: index for index, word in enumerate(vocab)}
+
+    # Set the vocabulary of the vectorizer to the loaded vocabulary
+    vectorizer.vocabulary_ = vocabulary_dict
+    X = vectorizer.transform(df_preprocessed['Benennung (bereinigt)']).toarray()
+
+    # Combine text features with other features
+    if general_params["use_only_text"] == False:      
+        X = np.concatenate((X, df_preprocessed[bbox_features].values), axis=1)
+    
+    return X
 
 def get_best_iteration(model, method):
     if method == "lgbm":
