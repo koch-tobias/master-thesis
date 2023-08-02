@@ -1,1 +1,2 @@
-Trainings dataset: data/processed/31072023_1319/
+Dataset: data/processed/31072023_1319/
+Method: lgbm

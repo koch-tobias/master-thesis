@@ -1,4 +1,5 @@
-Trainings dataset path: data/processed/31072023_1319/
+Dataset: data/processed/31072023_1319/
+Method: lgbm
 Validation AUC: 0.99998
 Trained Iterations: 133
 Model index in GridSearch Hyperparametertuning: 20
