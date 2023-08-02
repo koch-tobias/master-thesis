@@ -125,8 +125,8 @@ if authentication_status:
         
     else:
         st.subheader(f"Hello {name}, please follow the instructions for downloading the car part structure tree:")
-        st.image("plots_images/Instruction_data_collection/Anleitung_ExcelDownload.PNG")
-        st.image("plots_images/Instruction_data_collection/Anleitung_ExcelDownload2.PNG")
+        st.image("images/Instruction_data_collection/Anleitung_ExcelDownload.PNG")
+        st.image("images/Instruction_data_collection/Anleitung_ExcelDownload2.PNG")
 elif authentication_status == False:
     st.error('Username/password is incorrect')
 elif authentication_status == None:
