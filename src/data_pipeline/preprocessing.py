@@ -43,7 +43,10 @@ def load_data_into_df(original_prisma_data: bool, label_new_data: bool) -> list:
                         df = pd.read_excel(os.path.join(folder_name, file), header=None, skiprows=1)
                         df.columns = df.iloc[0]
                         df = df.iloc[1:]
-                        ncar = df[general_params["car_part_designation"]][1].split(" ")[0]
+                        # Drop all empty columns
+                        dataframe = df.dropna(how= "all", axis=1, inplace=False)
+                        # Store the ncar abbreviation for file paths
+                        ncar = dataframe['Code'].iloc[0]
                     else:
                         df = pd.read_csv(os.path.join(folder_name, file))
                         ncar = file.split("_")[0]
@@ -120,14 +123,15 @@ def prepare_and_add_labels(dataframe: pd.DataFrame):
 
     for module in general_params["keep_modules"]:
         try: 
-            level = dataframe[dataframe["Modul (Nr)"] == module]["Ebene"].values[0]
-            startindex = dataframe[dataframe["Modul (Nr)"] == module].index[0]
-            try:
-                endindex = dataframe.loc[(dataframe["Ebene"] == level) & (dataframe.index > startindex)].index[0] - 1
-            except: 
-                endindex = dataframe.shape[0] + 1
-            temp = dataframe.loc[startindex:endindex]
-            dataframe_new = pd.concat([dataframe_new, temp], ignore_index=True).reset_index(drop=True)
+            for i in range(dataframe[dataframe["Modul (Nr)"] == module].shape[0]):
+                level = dataframe[dataframe["Modul (Nr)"] == module]["Ebene"].values[i]
+                startindex = dataframe[dataframe["Modul (Nr)"] == module].index[i]
+                try:
+                    endindex = dataframe.loc[(dataframe["Ebene"] == level) & (dataframe.index > startindex)].index[i] - 1
+                except: 
+                    endindex = dataframe.shape[0] + 1
+                temp = dataframe.loc[startindex:endindex]
+                dataframe_new = pd.concat([dataframe_new, temp], ignore_index=True).reset_index(drop=True)
         except:
             logger.info(f"Module {module} not found in the structure tree!")
 
