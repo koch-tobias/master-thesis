@@ -24,12 +24,15 @@ async def unicorn_exception_handler(request: Request, exc: UnicornException):
     )
 
 # Function to convert a dataframe to a dictionary
-def dataframe_to_dict(df):
+def dataframe_to_dict(df, einheitsname_not_found):
     result_dict = {}
     for index, row in df.iterrows():
         sachnummer = row['Sachnummer']
+        designation = row['Benennung (dt)']
         einheitsname = row['Einheitsname']
-        result_dict[sachnummer] = einheitsname
+        result_dict[sachnummer] = [designation, einheitsname]
+    
+    result_dict["Fehlende Bauteile"] = einheitsname_not_found
 
     return result_dict    
 
@@ -42,7 +45,7 @@ async def post_relevant_parts(file: UploadFile = File(...)):
             df = pd.read_excel(BytesIO(contents))
             df.columns = df.iloc[0]
             df = df.iloc[1:]
-
+            
         except Exception:
             return JSONResponse(status_code=400, content={"error": "Error reading file. Make sure it is a valid Excel file."})
       
@@ -52,7 +55,7 @@ async def post_relevant_parts(file: UploadFile = File(...)):
             return JSONResponse(status_code=400, content={"error": "Error in identifying the relevant components."})
         
         try:
-            df_json = dataframe_to_dict(df_relevant_parts)
+            df_json = dataframe_to_dict(df_relevant_parts, einheitsname_not_found)
             return JSONResponse(status_code=200, content=df_json)
         except Exception:
             return JSONResponse(status_code=400, content={"error": "Error converting the file to json format."})
