@@ -98,9 +98,9 @@ def load_dataset(binary_model: bool):
 def store_trained_model(model, best_iteration, val_auc, hp, index_best_model, model_folder_path, finalmodel):
     # save model
     if finalmodel:
-        model_path = model_folder_path + f"final_model_{str(val_auc)[2:6]}_validation_auc.pkl"
+            model_path = model_folder_path + f"final_model.pkl"
     else:
-        model_path = model_folder_path + f"model_{str(val_auc)[2:6]}_validation_auc.pkl"
+            model_path = model_folder_path + f"model.pkl"
 
     with open(model_path, "wb") as filestore:
         pickle.dump(model, filestore)
@@ -114,12 +114,16 @@ def store_trained_model(model, best_iteration, val_auc, hp, index_best_model, mo
         f.write("Trained Iterations: {}\n".format(best_iteration))
         f.close()
     else:
-        log_text = "Trainings dataset path: {}\n".format(paths["folder_processed_dataset"])
+        dataset_path = "Trainings dataset path: {}\n".format(paths["folder_processed_dataset"])
+        model_folder = "Model folder path: {}\n".format(model_folder_path)
         f= open(model_folder_path + "logging.txt","w+")
-        f.write(log_text)
+        f.write(dataset_path)
+        f.write(model_folder)
+        f.write("\n_________________________________________________\n")
+        f.write("Best model after hyperparameter tuning:\n")
         f.write("Validation AUC: {}\n".format(val_auc))
         f.write("Trained Iterations: {}\n".format(best_iteration))
-        f.write("Model index in GridSearch Hyperparametertuning: {}\n".format(index_best_model))
+        f.write("Model index in hyperparameter tuning: {}\n".format(index_best_model+1))
         f.write("Hyperparameter:\n")
         for key in hp:
             f.write("{}: {}\n".format(key, hp[key]))
