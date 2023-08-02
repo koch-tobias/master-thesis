@@ -4,7 +4,7 @@ import pickle
 from loguru import logger
 from src.data_pipeline.preprocessing import load_data_into_df, prepare_and_add_labels, preprocess_dataset
 from src.data_pipeline.feature_engineering import find_valid_space
-from src.training_pipeline.utils import get_model, get_X
+from src.training_pipeline.utils import get_model, get_X, get_dataset_path_from_logging
 from src.config import general_params, paths, prediction_settings
 
 def get_best_iteration(model, method):
@@ -78,23 +78,24 @@ def store_predictions(y_test, y_pred, probs, df_preprocessed, df_test, model_fol
     # Serialize data into file:
     df_wrong_predictions.to_csv(model_folder_path + "wrong_predictions.csv")
 
+def get_method_from_logging(model_folder_path):
+    logging_path = model_folder_path + "/logging.txt"
+    with open(logging_path, 'r') as file:
+        for line in file:
+            if "Method:" in line:
+                return line.split(":")[1].strip()
+    return None
+
 def predict_on_new_data(df):
     logger.info("Prepare dataset...")
     df, ncar = prepare_and_add_labels(df)
     logger.info("Dataset successfully prepared!")
-
-    logger.info("Load trainset..")
-    trainset = pd.read_csv(paths["folder_processed_dataset"] + "processed_dataset.csv")
-    trainset_relevant_parts = trainset[trainset["Relevant fuer Messung"] == "Ja"]
-    trainset_relevant_parts = trainset_relevant_parts[(trainset_relevant_parts['X-Min_transf'] != 0) & (trainset_relevant_parts['X-Max_transf'] != 0)]    
-    unique_names = trainset_relevant_parts["Einheitsname"].unique().tolist()
-    unique_names.sort()
-    logger.success("Trainset loaded!")
     
     logger.info("Load pretrained models...")
-    model_folder_path = "final_models/" + paths["final_model"]
-    lgbm_binary, vectorizer_binary, vocabulary_binary, boundingbox_features_binary = get_model(model_folder_path + '/Binary_model')
-    lgbm_multiclass, vectorizer_multiclass, vocabulary_multiclass, boundingbox_features_multiclass = get_model(model_folder_path + '/Multiclass_model')       
+    model_folder_path_binary = paths["final_model"] + "/Binary_model"
+    model_folder_path_multiclass = paths["final_model"] + "/Multiclass_model"
+    binary_model, vectorizer_binary, vocabulary_binary, boundingbox_features_binary = get_model(model_folder_path_binary)
+    multiclass_model, vectorizer_multiclass, vocabulary_multiclass, boundingbox_features_multiclass = get_model(model_folder_path_multiclass)       
     logger.success("Pretrained models are loaded!")
 
     logger.info("Preprocess data...")
@@ -105,12 +106,16 @@ def predict_on_new_data(df):
     logger.success("Dataset is ready for classification!")   
 
     logger.info("Identify relevant car parts and add the unique names...")
-    method = paths["final_model"].split('_')[0]
-    y_pred_binary, probs_binary = model_predict(lgbm_binary, X_binary, method, binary_model=True)
-    y_pred_multiclass, probs_multiclass = model_predict(lgbm_multiclass, X_multiclass, method, binary_model=False)
+    binary_method = get_method_from_logging(model_folder_path_binary)
+    multiclass_method = get_method_from_logging(model_folder_path_multiclass)
+    y_pred_binary, probs_binary, _  = model_predict(binary_model, X_binary, binary_method, binary_model=True)
+    y_pred_multiclass, probs_multiclass, _ = model_predict(multiclass_model, X_multiclass, multiclass_method, binary_model=False)
+
+    dataset_path_binary = get_dataset_path_from_logging(model_folder_path_binary + "/logging.txt")
+    dataset_path_multiclass = get_dataset_path_from_logging(model_folder_path_multiclass + "/logging.txt")
 
     # Load the LabelEncoder
-    with open(model_folder_path + '/Multiclass_model/label_encoder.pkl', 'rb') as f:
+    with open(dataset_path_multiclass + 'label_encoder.pkl', 'rb') as f:
         le = pickle.load(f) 
 
     y_pred_multiclass_names = le.inverse_transform(y_pred_multiclass) 
@@ -130,6 +135,15 @@ def predict_on_new_data(df):
     logger.success("Relevant car parts identified!")
     
     logger.info("Valid identified car parts by comparing the position of the new car part to them in the trainset")
+
+    logger.info("Load dataset used for training..")
+    trainset = pd.read_csv(dataset_path_binary + "processed_dataset.csv")
+    trainset_relevant_parts = trainset[trainset["Relevant fuer Messung"] == "Ja"]
+    trainset_relevant_parts = trainset_relevant_parts[(trainset_relevant_parts['X-Min_transf'] != 0) & (trainset_relevant_parts['X-Max_transf'] != 0)]    
+    unique_names = trainset_relevant_parts["Einheitsname"].unique().tolist()
+    unique_names.sort()
+    logger.success("Dataset loaded!")
+
     einheitsname_not_found = []
     for index, row in df_relevant_parts.iterrows():
         for name in unique_names:
@@ -164,9 +178,10 @@ def predict_on_new_data(df):
             einheitsname_not_found.append(name)
 
     df_relevant_parts = df_relevant_parts.reset_index(drop=True)
-    df_relevant_parts["L/R-Kz."] = df_relevant_parts["L/R-Kz."].fillna(' ')
     df_relevant_parts.loc[df_relevant_parts['Einheitsname'] == "Dummy", 'Einheitsname'] = 'Kein Einheitsname gefunden'
-    df_relevant_parts.loc[df_relevant_parts["L/R-Kz."] == "L", "L/R-Kz."] = 'Linke Ausfuehrung'
+
+    df_relevant_parts = df_relevant_parts.drop_duplicates(subset=["Sachnummer"])
+
     logger.success("Output is prepared!")
 
     return df_preprocessed, df_relevant_parts, einheitsname_not_found, ncar
@@ -194,15 +209,16 @@ def label_data():
 # %%
 def main():
     
-    label_new_data = True
-    make_prediction = False
-    data_path = ''
+    label_new_data = False
+    make_prediction = True
+    data_path = 'data/raw_for_labeling/G60_G60_G60_G60_G60_G60_G60_G60_G60_G60_G60_G60_G60_G60_G60_EP_prismaexport-20230731-171755.xls'
 
     if make_prediction:
         df = pd.read_excel(data_path, header=None, skiprows=1)
         df.columns = df.iloc[0]
         df = df.iloc[1:] 
-        predict_on_new_data(df)
+        df_preprocessed, df_relevant_parts, einheitsname_not_found, ncar = predict_on_new_data(df)
+        print(df_relevant_parts)
 
     if label_new_data:
         label_data()

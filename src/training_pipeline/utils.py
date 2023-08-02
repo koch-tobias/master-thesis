@@ -8,36 +8,38 @@ import pickle
 
 from src.config import paths, general_params
 
+def get_dataset_path_from_logging(file_path):
+    with open(file_path, 'r') as file:
+        for line in file:
+            if "Dataset:" in line:
+                return line.split(":")[1].strip()
+    return None
+
 def get_model(folder_path):
-    final_model_path = ""
-    pre_model_path = ""
+    final_model_path = folder_path + "/final_model.pkl"
+    pretrained_model_path = folder_path + "/model.pkl"
 
-    # Load model for relevance
-    for file in os.listdir(folder_path):
-        if file.startswith("final"):
-            final_model_path =  os.path.join(folder_path, file)
-        elif file.startswith("model"):
-            pre_model_path =  os.path.join(folder_path, file)
-
-    if final_model_path != "":
-        model_path = final_model_path
+    if os.path.exists(final_model_path):
+        model_path =  final_model_path
     else:
-        model_path = pre_model_path
+        model_path =  pretrained_model_path
 
     with open(model_path, "rb") as fid:
         model = pickle.load(fid)
 
+    dataset_path = get_dataset_path_from_logging(folder_path + "/logging.txt")
+
     # Load the vectorizer from the file
-    vectorizer_path = folder_path + "/vectorizer.pkl"
+    vectorizer_path = dataset_path + "vectorizer.pkl"
     with open(vectorizer_path, 'rb') as f:
         vectorizer = pickle.load(f)
 
     # Get the vocabulary of the training data
-    vocab_path = folder_path + "/vocabulary.pkl"
+    vocab_path = dataset_path + "vocabulary.pkl"
     with open(vocab_path, 'rb') as f:
         vocabulary = pickle.load(f) 
 
-    bbox_features_path = folder_path + "/boundingbox_features.pkl"
+    bbox_features_path = dataset_path + "boundingbox_features.pkl"
     with open(bbox_features_path, 'rb') as f:
         bbox_features = pickle.load(f)  
 
@@ -114,7 +116,7 @@ def store_trained_model(model, best_iteration, val_auc, hp, index_best_model, mo
         f.write("Trained Iterations: {}\n".format(best_iteration))
         f.close()
     else:
-        dataset_path = "Trainings dataset path: {}\n".format(paths["folder_processed_dataset"])
+        dataset_path = "Dataset: {}\n".format(paths["folder_processed_dataset"])
         model_folder = "Model folder path: {}\n".format(model_folder_path)
         f= open(model_folder_path + "logging.txt","w+")
         f.write(dataset_path)
