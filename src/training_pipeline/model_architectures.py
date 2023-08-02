@@ -32,6 +32,9 @@ def binary_classifier(weight_factor, hp, method):
                             scale_pos_weight=weight_factor,
                             gamma=hp["gamma"],
                             n_estimators= train_settings["n_estimators"],
+                            tree_method= 'gpu_hist',
+                            predictor='gpu_predictor',
+                            gpu_id=5,
                             verbosity=0
                         )        
         metrics = xgb_params_binary["metrics"]
@@ -41,6 +44,7 @@ def binary_classifier(weight_factor, hp, method):
                                     learning_rate=hp["lr"], 
                                     depth=hp["depth"],
                                     colsample_bylevel=hp["colsample_bylevel"],
+                                    #l2_leaf_reg=hp["l2_leaf_reg"],
                                     min_data_in_leaf=hp["min_data_in_leaf"],
                                     loss_function=cb_params_binary["metrics"][1],
                                     eval_metric=cb_params_binary["metrics"][0],
@@ -65,22 +69,38 @@ def multiclass_classifier(weight_factor, hp, method):
                             n_estimators=train_settings["n_estimators"] ,
                             num_class=len(weight_factor),
                             class_weight=weight_factor
-                            #device='gpu'
                             )
         metrics = lgbm_params_multiclass["metrics"]
         
     elif method == "xgboost":
         model = xgb.XGBClassifier(booster=xgb_params_multiclass["boosting_type"], 
-                            objective="multi:logistic",
+                            objective="multi:softprob",
+                            eval_metric = xgb_params_multiclass["metrics"],
                             max_depth=hp["max_depth"],   
                             learning_rate=hp["lr"],
                             colsample_bytree=hp["colsample_bytree"],
                             scale_pos_weight=weight_factor,
                             gamma=hp["gamma"],
                             n_estimators= train_settings["n_estimators"],
-                            verbosity=2
+                            tree_method= 'gpu_hist',
+                            predictor='gpu_predictor',
+                            gpu_id=5,
+                            verbosity=0
                         )   
         metrics = xgb_params_multiclass["metrics"]
-        
+    
+    elif method == "catboost":
+        model = CatBoostClassifier(iterations=train_settings["n_estimators"], 
+                                    learning_rate=hp["lr"], 
+                                    depth=hp["depth"],
+                                    colsample_bylevel=hp["colsample_bylevel"],         #Not supported by GPU
+                                    #l2_leaf_reg=hp["l2_leaf_reg"],
+                                    min_data_in_leaf=hp["min_data_in_leaf"],
+                                    loss_function=cb_params_multiclass["metrics"][1],
+                                    eval_metric=cb_params_multiclass["metrics"][0],
+                                    early_stopping_rounds=train_settings["early_stopping"],
+                                    use_best_model=True
+                                )
+        metrics = cb_params_multiclass["metrics"]
 
     return model, metrics     
