@@ -12,7 +12,7 @@ from src.deployment_pipeline.prediction import predict_on_new_data
 from loguru import logger
 
 # create sidebar to upload the csv file and display the possible labels
-st.set_page_config(page_title="Car Part Identification", page_icon="plots_images/logos/Download.png")
+st.set_page_config(page_title="Car Part Identification", page_icon="images/logos/Download.png")
 
 with open('config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
@@ -62,7 +62,7 @@ if authentication_status:
 
     st.sidebar.button('Logout', on_click=logout)
 
-    st.sidebar.image("plots_images/logos/BMWGrey.svg")
+    st.sidebar.image("images/logos/BMWGrey.svg")
 
     dataframes = []
     # Display the uploaded file as a pandas dataframe
