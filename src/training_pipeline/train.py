@@ -21,7 +21,7 @@ from evaluation import evaluate_model, add_feature_importance, get_best_metric_r
 from plot_functions import store_metrics, plot_metric_custom, store_confusion_matrix
 from utils import store_trained_model, load_dataset
 from src.deployment_pipeline.prediction import model_predict, store_predictions, get_best_iteration 
-from src.config import train_settings, general_params, paths
+from src.config import train_settings, general_params, paths, xgb_params_binary, xgb_params_multiclass
 from src.config import lgbm_hyperparameter as lgbm_hp
 from src.config import xgb_hyperparameter as xgb_hp
 from src.config import cb_hyperparameter as cb_hp
@@ -45,7 +45,11 @@ def model_fit(X_train, y_train, X_val, y_val, weight_factor, hp_in_iteration, bi
     if method == "lgbm":
         callbacks = [lgb.early_stopping(train_settings["early_stopping"], verbose=5), lgb.record_evaluation(evals)]
     elif method == "xgboost":
-        callbacks = [xgb.callback.EarlyStopping(train_settings["early_stopping"], metric_name='auc')]
+        if binary_model:
+            metric_name = xgb_params_binary["metrics"][0]
+        else:
+            metric_name = xgb_params_multiclass["metrics"][0]
+        callbacks = [xgb.callback.EarlyStopping(train_settings["early_stopping"], metric_name=metric_name)]
 
     if binary_model:
         model, metrics = binary_classifier(weight_factor, hp_in_iteration, method)
