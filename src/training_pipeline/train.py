@@ -101,7 +101,7 @@ def fit_eval_model(X_train, y_train, X_val, y_val, X_test, y_test, weight_factor
     training_time = int(stop - start)
     y_pred, probs, test_accuracy, test_sensitivity, val_auc, val_loss, train_auc, train_loss, df_new = evaluate_model(gbm, X_test, y_test, evals, hp_in_iteration, num_models_trained, training_time, df.columns, binary_model=binary_model, method=method)    
     df = pd.concat([df, df_new])
-    logger.info(f"Modell {num_models_trained}/{total_models} trained with a evaluation accuracy = {val_auc} and with a evaluation loss = {val_loss}")
+    logger.info(f"Modell {num_models_trained+1}/{total_models} trained with a evaluation accuracy = {val_auc} and with a evaluation loss = {val_loss}")
     model_results_dict["models_list"].append(gbm)
     model_results_dict["evals_list"].append(evals)
     model_results_dict["test_sensitivity_results"].append(test_sensitivity)
@@ -134,7 +134,7 @@ def grid_search(X_train, y_train, X_val, y_val, X_test, y_test, weight_factor, h
     logger.info("Start training with grid search hyperparameter tuning...")
 
     model_results_dict = {"models_list": [], "evals_list": [], "test_sensitivity_results": [], "test_accuracy_results": [], "val_auc_results": [], "val_loss_results": [], "train_auc_results": [], "train_loss_results": [], "y_pred_list": [], "probs_list": []}
-    num_models_trained = 1
+    num_models_trained = 0
 
     df, total_models = create_result_df(hp_dict)
     hp = list(hp_dict.keys())
@@ -178,7 +178,7 @@ def k_fold_crossvalidation(X, y, X_test, y_test, weight_factor, df, model_result
     top_x_models = math.ceil(df.shape[0] * train_settings["top_x_models_for_cv"])
     number_of_folds = train_settings["k-folds"]
     total_cv_models = number_of_folds * top_x_models
-    count_trained_models = 1
+    count_trained_models = 0
 
     #logger.info("Store the features with importance score...")
     #df_features = add_feature_importance(model, model_folder_path)
@@ -226,8 +226,8 @@ def k_fold_crossvalidation(X, y, X_test, y_test, weight_factor, df, model_result
         df_cv.loc[i, "avg train loss"] = avg_train_loss     
         df_cv.loc[i, "avg test accuracy"] = avg_test_auc
         df_cv.loc[i, "avg test sensitivity"] = avg_test_sensitivity
-        df_cv.loc[i, "early stopping (iterations)"] = train_settings["early_stopping"]
-        df_cv.loc[i, "index"] = df.index[i]
+        df_cv.loc[i, "early stopping (iterations)"] = int(train_settings["early_stopping"])
+        df_cv.loc[i, "index"] = int(df.index[i])
 
         '''
         if binary_model:
@@ -279,7 +279,7 @@ def train_model(folder_path, binary_model, method):
     df_cv.to_csv(model_folder_path + "lgbm_crossvalidation_results.csv")
     df_cv = df_cv.sort_values(by=["avg validation auc"], ascending=False)
 
-    index_best_model = int(df_cv["index"].iloc[0]-1)
+    index_best_model = int(df_cv["index"].iloc[0])
 
     logger.info("Start storing the best model with metrics plots and wrong predictions according to the validation auc...")
     best_model = model_results_dict["models_list"][index_best_model]
