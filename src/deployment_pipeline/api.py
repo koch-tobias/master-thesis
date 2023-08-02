@@ -6,7 +6,7 @@ import pandas as pd
 from pyxlsb import open_workbook as open_xlsb
 from io import BytesIO
 
-from prediction import predict_on_new_data
+from src.deployment_pipeline.prediction import predict_on_new_data
 
 app = FastAPI() # Initialize api
 
