@@ -108,7 +108,7 @@ def evaluate_model(model, X_test, y_test, evals, hp_in_iteration, num_models_tra
     df_new.loc[num_models_trained, "validation loss"] = val_loss
     df_new.loc[num_models_trained, "test accuracy"] = accuracy
     df_new.loc[num_models_trained, "test sensitivity"] = sensitivity
-    df_new.loc[num_models_trained, "early stopping (iterations)"] = train_settings["early_stopping"]
+    df_new.loc[num_models_trained, "early stopping (iterations)"] = int(train_settings["early_stopping"])
     df_new.loc[num_models_trained, "Training Time (s)"] = training_time 
 
     return y_pred, probs, accuracy, sensitivity, val_auc, val_loss, train_auc, train_loss, df_new
