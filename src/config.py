@@ -1,6 +1,6 @@
 paths = {
     "folder_processed_dataset": "data/processed/31072023_1319/",            # Paths to the preprocessed dataset
-    "final_model": "lgbm_HyperparameterTuning_07072023_0936"                # Paths to the directory of the final trained models
+    "final_model": "final_models"                                           # Paths to the directory of the final trained models
 }
 
 general_params = {
