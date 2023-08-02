@@ -57,12 +57,12 @@ lgbm_hyperparameter = {
 ###############################
 xgb_params_binary = {
     "boosting_type": 'gbtree',              # Boosting type for Gradient-boosting decision tree
-    "metrics": ['auc', 'error']            # Area-under-the-curve and loss
+    "metrics": ['auc', 'logloss']            # Area-under-the-curve and loss
 }
 
 xgb_params_multiclass = {
     "boosting_type": 'gbtree',              # Boosting type for Gradient-boosting decision tree
-    "metrics": ['auc', 'multi:softprob'],   # Area-under-the-curve and multilogloss
+    "metrics": ['auc', 'mlogloss'],   # Area-under-the-curve and multilogloss
     }
 
 xgb_hyperparameter = {
@@ -76,18 +76,19 @@ xgb_hyperparameter = {
 ###############################
 cb_params_binary = {
     "boosting_type": 'Plain',                # boosting type for lightgbm binary model
-    "metrics": ['AUC', 'CrossEntropy']     # Area-under-the-curcve and crossentropy are used for training and evaluation
+    "metrics": ['AUC', 'Logloss']            # Area-under-the-curcve and crossentropy are used for training and evaluation
 }
 
 cb_params_multiclass = {
     "boosting_type": 'Plain',                # boosting type for lightgbm binary model
-    "metrics": ['auc_mu', 'multi_logloss']  # Area-under-the-curcve mu and logloss are used for training and evaluation
+    "metrics": ['AUC', 'MultiClass']  # Area-under-the-curcve mu and logloss are used for training and evaluation
     }
 
 cb_hyperparameter = {
     "lr": [0.05, 0.07, 0.1],                # Learning rate
     "depth": [4, 6, 9],                     # How long can be the distance from root to leafe node (to reduce overfitting)
-    "colsample_bylevel": [0.5, 0.7, 0.9],   # How much percent of the features are used in an iteration (to reduce overfitting)
+    "colsample_bylevel": [0.5, 0.7, 0.9],   # How much percent of the features are used in an iteration (to reduce overfitting) -> Not supported using gpu
+    #'l2_leaf_reg':[1,5,10,100],
     "min_data_in_leaf": [20, 30, 40]        # Minimal number of datapoints a node must contain (to reduce overfitting)
 }
 ################################
