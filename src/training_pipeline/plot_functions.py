@@ -82,6 +82,7 @@ def plot_vehicle(df: pd.DataFrame, add_valid_space:bool, preprocessed_data:bool,
 
         # Show the plot
         plt.show()    
+        plt.close()
 
 def analyse_data(df_preprocessed, y_train, y_val, y_test, model_folder_path, binary_model):
     
@@ -134,15 +135,24 @@ def analyse_data(df_preprocessed, y_train, y_val, y_test, model_folder_path, bin
                 fig.savefig(model_folder_path + 'Multiclass_train_val_test_split.png', dpi=150)
             else: 
                 fig.savefig(model_folder_path + 'Multiclass_train_val_test_split_without_dummy.png', dpi=150)
+    plt.close('all')
     logger.success("Dataset analysed!")
 
-def plot_metric_custom(evals, model_folder_path, method, finalmodel):
+def plot_metric_custom(evals, best_iteration, model_folder_path, method, binary, finalmodel):
     if method == 'catboost':
-         metric_0 = cb_params_binary["metrics"][0]
-         metric_1 = cb_params_binary["metrics"][1]
+        if binary:
+            metric_0 = cb_params_binary["metrics"][0]
+            metric_1 = cb_params_binary["metrics"][1]
+        else:
+            metric_0 = cb_params_multiclass["metrics"][0]
+            metric_1 = cb_params_multiclass["metrics"][1]             
     else:
-         metric_0 = xgb_params_binary["metrics"][0]
-         metric_1 = xgb_params_binary["metrics"][1]   
+        if binary:
+            metric_0 = xgb_params_binary["metrics"][0]
+            metric_1 = xgb_params_binary["metrics"][1]
+        else:
+            metric_0 = xgb_params_multiclass["metrics"][0]
+            metric_1 = xgb_params_multiclass["metrics"][1] 
 
     if finalmodel:
          add_to_path = "final_model_"
@@ -160,6 +170,7 @@ def plot_metric_custom(evals, model_folder_path, method, finalmodel):
     plt.xlabel('Number of Iterations')
     plt.ylabel('AUC')
     plt.title('Training and Validation AUC')
+    plt.axvline(best_iteration, color='b', label = 'early stopping')
     plt.legend()
     plt.ylim([0, 1])
     plt.savefig(model_folder_path + add_to_path + 'auc_plot.png')
@@ -171,14 +182,13 @@ def plot_metric_custom(evals, model_folder_path, method, finalmodel):
     plt.xlabel('Number of Iterations')
     plt.ylabel('Loss')
     plt.title('Training and Validation Loss')
+    plt.axvline(best_iteration, color='b', label = 'early stopping')
     plt.legend()
     plt.ylim([-0.5, 4])
     plt.savefig(model_folder_path + add_to_path + 'loss_plot.png')
     plt.close()
 
-def store_metrics(model, evals, model_folder_path, binary_model, finalmodel):
-
-    early_stopping = model._best_iteration - 1
+def store_metrics(evals, best_iteration, model_folder_path, binary_model, finalmodel):
 
     if finalmodel:
          add_to_path = "final_model_"
@@ -194,9 +204,10 @@ def store_metrics(model, evals, model_folder_path, binary_model, finalmodel):
         plt.xticks(fontsize=12)
         plt.yticks(fontsize=12)
         plt.legend(['Training', 'Validation'], fontsize=12)
-        plt.axvline(early_stopping, color='b', label = 'early stopping')
+        plt.axvline(best_iteration, color='b', label = 'early stopping')
         plt.ylim([-0.5, 4])
         plt.savefig(model_folder_path + add_to_path + 'binary_logloss_plot.png')
+        plt.close()
 
         plt.rcParams["figure.figsize"] = (10, 10)
         lgb.plot_metric(evals, metric=lgbm_params_binary["metrics"][0])
@@ -206,8 +217,9 @@ def store_metrics(model, evals, model_folder_path, binary_model, finalmodel):
         plt.xticks(fontsize=12)
         plt.yticks(fontsize=12)
         plt.legend(['Training', 'Validation'], fontsize=12)
-        plt.axvline(early_stopping, color='b', label = 'early stopping')
+        plt.axvline(best_iteration, color='b', label = 'early stopping')
         plt.savefig(model_folder_path + add_to_path + 'auc_plot.png')
+        plt.close()
 
     else:    
         plt.rcParams["figure.figsize"] = (10, 10)
@@ -218,9 +230,10 @@ def store_metrics(model, evals, model_folder_path, binary_model, finalmodel):
         plt.xticks(fontsize=12)
         plt.yticks(fontsize=12)
         plt.legend(['Training', 'Validation'], fontsize=12)
-        plt.axvline(early_stopping, color='b', label = 'early stopping')
+        plt.axvline(best_iteration, color='b', label = 'early stopping')
         plt.ylim([-0.5, 4])
         plt.savefig(model_folder_path + add_to_path + 'multi_logloss_plot.png')
+        plt.close()
 
 # %% 
 def store_confusion_matrix(y_test, y_pred, folder_path, model_folder_path, binary_model):
@@ -254,3 +267,4 @@ def store_confusion_matrix(y_test, y_pred, folder_path, model_folder_path, binar
         cm_display.plot(ax=ax, xticks_rotation='vertical', cmap='Blues', colorbar=False,  text_kw={'fontsize': 12})
         # Speichere das Diagramm
         plt.savefig(model_folder_path + 'confusion_matrix.png')
+    plt.close('all')
