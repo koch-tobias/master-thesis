@@ -53,37 +53,25 @@ def model_fit(X_train, y_train, X_val, y_val, weight_factor, hp_in_iteration, bi
         model, metrics = multiclass_classifier(weight_factor, hp_in_iteration, method)
     
     if method == "lgbm":
-        try:
-            model.fit(X_train, y_train,
-                    eval_set=[(X_train, y_train), (X_val, y_val)], 
-                    eval_metric=metrics,
-                    callbacks=callbacks
-                    )
-        except:
-            model.fit(X_train, y_train)
+        model.fit(X_train, y_train,
+                eval_set=[(X_train, y_train), (X_val, y_val)], 
+                eval_metric=metrics,
+                callbacks=callbacks
+                )
 
     elif method == "xgboost":
-        try:
-            model.fit(X_train, y_train,
-                    eval_set=[(X_train, y_train), (X_val, y_val)], 
-                    callbacks=callbacks
-                    )
-        except:
-            model.fit(X_train, y_train)       
+        model.fit(X_train, y_train,
+                eval_set=[(X_train, y_train), (X_val, y_val)], 
+                callbacks=callbacks
+                )      
 
         evals = model.evals_result()    
           
     elif method == "catboost":
-        try:
-            model.fit(X_train, y_train,
-                    eval_set=[(X_train, y_train), (X_val, y_val)], 
-                    silent=True
-                    )
-        except:
-            model.fit(X_train, y_train,
-                    eval_set=[(X_train, y_train)], 
-                    silent=True
-                    )
+        model.fit(X_train, y_train,
+                eval_set=[(X_train, y_train), (X_val, y_val)], 
+                silent=True
+                )
 
         evals = model.get_evals_result()
 
@@ -110,7 +98,7 @@ def fit_eval_model(X_train, y_train, X_val, y_val, X_test, y_test, weight_factor
     start = time.time()
     gbm, evals = model_fit(X_train, y_train, X_val, y_val, weight_factor, hp_in_iteration, binary_model, method)
     stop = time.time()
-    training_time = stop - start
+    training_time = int(stop - start)
     y_pred, probs, test_accuracy, test_sensitivity, val_auc, val_loss, train_auc, train_loss, df_new = evaluate_model(gbm, X_test, y_test, evals, hp_in_iteration, num_models_trained, training_time, df.columns, binary_model=binary_model, method=method)    
     df = pd.concat([df, df_new])
     logger.info(f"Modell {num_models_trained}/{total_models} trained with a evaluation accuracy = {val_auc} and with a evaluation loss = {val_loss}")
@@ -129,7 +117,7 @@ def fit_eval_model(X_train, y_train, X_val, y_val, X_test, y_test, weight_factor
 
 @jit(target_backend='cuda')  
 def create_result_df(hp_dict):
-    fix_columns = ["model_name", "train auc", "train loss", "validation auc", "validation loss", "test auc", "test sensitivity", "Training Time (s)"]
+    fix_columns = ["model_name", "train auc", "train loss", "validation auc", "validation loss", "test accuracy", "test sensitivity", "Training Time (s)"]
 
     total_models = 1
     for hp in hp_dict:
@@ -158,10 +146,6 @@ def grid_search(X_train, y_train, X_val, y_val, X_test, y_test, weight_factor, h
                     hp_in_iteration = {hp[0]: hp_0, hp[1]: hp_1, hp[2]: hp_2, hp[3]: hp_3}
                     model_results_dict, df = fit_eval_model(X_train, y_train, X_val, y_val, X_test, y_test, weight_factor, hp_in_iteration, df, model_results_dict, num_models_trained, total_models, binary_model, method)
                     num_models_trained = num_models_trained + 1
-                    break
-                break
-            break
-        break
 
     logger.success("Grid search hyperparameter tuning was successfull!")
 
@@ -299,17 +283,19 @@ def train_model(folder_path, binary_model, method):
 
     logger.info("Start storing the best model with metrics plots and wrong predictions according to the validation auc...")
     best_model = model_results_dict["models_list"][index_best_model]
+
+    best_iteration = get_best_iteration(best_model, method)
+
     if method == 'lgbm':
-        store_metrics(best_model, model_results_dict["evals_list"][index_best_model], model_folder_path, binary_model, finalmodel=False)
+        store_metrics(model_results_dict["evals_list"][index_best_model], best_iteration, model_folder_path, binary_model, finalmodel=False)
     else:
-        plot_metric_custom(model_results_dict["evals_list"][index_best_model], model_folder_path, method, finalmodel=False)
+        plot_metric_custom(model_results_dict["evals_list"][index_best_model], best_iteration, model_folder_path, method, binary_model, finalmodel=False)
 
     hp_keys = list(hp_dict.keys())
     best_hp = {}
     for key in hp_keys:
         best_hp[key] = df[key].iloc[index_best_model]
 
-    best_iteration = get_best_iteration(best_model, method)
     store_trained_model(best_model, best_iteration, df_cv["avg validation auc"].iloc[0], best_hp, index_best_model, model_folder_path, finalmodel=False)
     y_pred, probs, best_iteration = model_predict(best_model, X_test, method, binary_model)
     store_confusion_matrix(y_test, y_pred, folder_path, model_folder_path, binary_model)
@@ -325,10 +311,10 @@ def train_model(folder_path, binary_model, method):
     _, _, val_auc, _ = get_best_metric_results(evals_final, best_iteration, method, binary_model)
     store_trained_model(gbm_final, best_iteration, val_auc, best_hp, index_best_model, model_folder_path, finalmodel=True)
     if method == 'lgbm':
-        store_metrics(best_model, model_results_dict["evals_list"][index_best_model], model_folder_path, binary_model, finalmodel=True)
+        store_metrics(evals_final, best_iteration, model_folder_path, binary_model, finalmodel=True)
         df_feature_importance_final_model = add_feature_importance(gbm_final, model_folder_path=paths["folder_processed_dataset"])
         df_feature_importance_final_model.to_csv(paths["folder_processed_dataset"] + "/final_model_feature_importance.csv")
     else:
-        plot_metric_custom(model_results_dict["evals_list"][index_best_model], model_folder_path, method, finalmodel=True)
+        plot_metric_custom(evals_final, best_iteration, model_folder_path, method, binary_model, finalmodel=True)
 
     logger.success("Training the model on the entire data was successfull!")
