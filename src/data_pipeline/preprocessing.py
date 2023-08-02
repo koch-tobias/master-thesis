@@ -109,12 +109,27 @@ def combine_dataframes(dataframes: list) -> pd.DataFrame:
     return merged_df    
 
 # %%
+def check_if_columns_available(dataframe):
+    relevant_features = general_params["relevant_features"]
+    
+    missing_columns = []
+    for column in relevant_features:
+        if column not in dataframe.columns:
+            missing_columns.append(column)
+    
+    return missing_columns
+
+# %%
 def prepare_and_add_labels(dataframe: pd.DataFrame):
 
     logger.info("Start preparing the data...")
 
     # Drop all empty columns
     dataframe.dropna(how= "all", axis=1, inplace=True)
+
+    missing_columns = check_if_columns_available(dataframe)
+    if len(missing_columns) > 0:
+        logger.exit(f"Please check your dataset. The following attributes are missing: {missing_columns}")
 
     # Store the ncar abbreviation for file paths
     ncar = dataframe['Code'].iloc[0]
