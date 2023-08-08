@@ -5,26 +5,26 @@ import numpy as np
 import math
 import random
 from loguru import logger
-from feature_engineering import find_valid_space, random_centerpoint_in_valid_space, calculate_corners
+from src.data_pipeline.feature_engineering import find_valid_space, random_centerpoint_in_valid_space, calculate_corners
 from src.config import gpt_settings, train_settings
 
 # %%
-def random_order(description: str) -> str:
+def random_order(designation: str) -> str:
     '''
     This function takes a sentence as input and changes the word order randomly. 
     '''
-    # Split the description into individual words
-    words = description.split()
-    new_description = description
+    # Split the designation into individual words
+    words = designation.split()
+    new_designation = designation
 
-    # Shuffle the words in the description
-    while new_description == description:
+    # Shuffle the words in the designation
+    while new_designation == designation:
         random.shuffle(words)
 
         # Join the shuffled words back into a string
-        new_description = ' '.join(words)
+        new_designation = ' '.join(words)
 
-    return new_description
+    return new_designation
 
 # %%
 def swap_chars(description: str) -> str:
@@ -43,9 +43,11 @@ def swap_chars(description: str) -> str:
     
     return ''.join(chars)
 
-
 # %%
 def add_char(description: str) -> str:
+    '''
+    This function takes a text as input and randomly adds a char to a random position
+    '''
     # German alphabet
     alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
     
@@ -62,6 +64,9 @@ def add_char(description: str) -> str:
 
 # %%
 def delete_char(description: str) -> str:
+    '''
+    This function takes a text as input and randomly deletes a char
+    '''
     index = random.randrange(len(description))
     new_description = description[:index] + description[index+1:]
     
@@ -103,6 +108,7 @@ def remove_prefix(response: str) -> str:
     index = response.find(":")
 
     if index != -1:
+        # Keep only the text after the prefix ending with ":"
         new_response = response[index+1:].lstrip()
     else:
         new_response = response
@@ -118,6 +124,9 @@ def init_openai():
 
 # %%
 def create_prompt(text: str) -> str:
+    ''' 
+    This functions adds the designation to the costumized prompt    
+    '''
     prompt = f'''
                 Task:
                 Write a modified car component designation based on the given German language input. Your output must be slightly different to the input while retaining the same meaning.
@@ -154,27 +163,10 @@ def create_prompt(text: str) -> str:
     return prompt
 
 # %%
-def gpt30_designation(text: str) -> str:
-    prompt= create_prompt(text)
-    new_response = text
-    while new_response == text:
-        response = openai.Completion.create(
-            engine="davinci-003-deployment",
-            prompt=prompt,
-            temperature=0.7,
-            max_tokens=200,
-            top_p=1,
-            frequency_penalty=0,
-            presence_penalty=0,
-            stop=None,
-            n=1
-        )
-        response = [choice.text.strip() for choice in response.choices]
-        new_response = remove_prefix(response[0])
-    return new_response
-
-# %%
 def gpt35_designation(text:str) -> str:
+    ''' 
+    This functions calls the GPT API and generates the response  
+    '''
     prompt= create_prompt(text)
     new_response = text
     while new_response == text:
@@ -192,7 +184,11 @@ def gpt35_designation(text:str) -> str:
 
 # %%
 def augmented_boundingbox(df_original, df_temp):
+    ''' 
+    This function generates a synthetic bounding box based on the car parts in the trainset
+    '''
     corners, valid_length, valid_width, valid_height = find_valid_space(df_original)
+
     list_corners = []
     list_corners.append(corners)
 
@@ -227,9 +223,8 @@ def augmented_boundingbox(df_original, df_temp):
         height = np.random.uniform(min_height, max_height)
         volume = length * width * height
         
-
     center_point = random_centerpoint_in_valid_space(corners, length, width, height)
-    x_min, x_max, y_min, y_max, z_min, z_max = calculate_corners(center_point, length, width, height, df_temp["theta_x"], df_temp["theta_y"], df_temp["theta_z"])
+    x_min, x_max, y_min, y_max, z_min, z_max = calculate_corners(center_point, length, width, height, df_temp.loc[0, "theta_x"], df_temp.loc[0, "theta_y"], df_temp.loc[0, "theta_z"])
 
     # Modify the bounding box information
     df_temp.loc[0, "X-Min_transf"] = x_min
@@ -255,8 +250,8 @@ def data_augmentation(df: pd.DataFrame) -> pd.DataFrame:
     This function generates synthetic data to extend the data set. 
     Only the data points that are relevant for a measurement are expanded, since this class is very underrepresented. 
     A component name is expanded if it contains more than 2 words and at least one of the three data augmentation techniques is activated.
-    Return: New dataset 
     '''
+    df.to_csv("df_for_data_augmentation.csv")
     init_openai()
 
     logger.info("Start adding artificial designations...")
