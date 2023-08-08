@@ -3,9 +3,10 @@ import pandas as pd
 
 import os
 import pickle
+import json
 from loguru import logger
 
-from src.config import paths
+from src.config import paths, train_settings, prediction_settings
 
 # %%
 def load_dataset(binary_model: bool):
@@ -45,7 +46,7 @@ def load_dataset(binary_model: bool):
     return X_train, y_train, X_val, y_val, X_test, y_test, df_preprocessed, df_test, weight_factor
 
 # %%
-def store_trained_model(model, best_iteration, val_auc, hp, index_best_model, model_folder_path, finalmodel):
+def store_trained_model(model, metrics, best_iteration, val_auc, hp, index_best_model, model_folder_path, finalmodel):
     # save model
     if finalmodel:
             model_path = model_folder_path + f"final_model.pkl"
@@ -77,6 +78,11 @@ def store_trained_model(model, best_iteration, val_auc, hp, index_best_model, mo
         f.write("Hyperparameter:\n")
         for key in hp:
             f.write("{}: {}\n".format(key, hp[key]))
+        f.write(f"Metrics: {metrics} \n")
+        f.write(json.dumps(train_settings))
+        f.write("\n")
+        f.write(json.dumps(prediction_settings))
+        f.write("\n")
         f.close()
 
 # %%
