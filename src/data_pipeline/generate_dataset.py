@@ -60,7 +60,6 @@ def main():
         # Generate the new dataset
         df_preprocessed = data_augmentation(df_preprocessed)
 
-    os.makedirs(storage_path)
     os.makedirs(storage_path + "binary")
     os.makedirs(storage_path + "multiclass")
     df_preprocessed.to_csv(storage_path + "processed_dataset.csv")
