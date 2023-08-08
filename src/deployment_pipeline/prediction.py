@@ -5,7 +5,7 @@ import os
 from loguru import logger
 from src.data_pipeline.preprocessing import load_data_into_df, prepare_and_add_labels, preprocess_dataset
 from src.data_pipeline.feature_engineering import find_valid_space
-from src.config import general_params, paths, prediction_settings
+from src.config import general_params, prediction_settings
 
 def get_dataset_path_from_logging(file_path):
     with open(file_path, 'r') as file:
@@ -68,22 +68,20 @@ def get_best_iteration(model, method):
 
     return best_iteration
 
-def get_probabilities(model, X_test, method):
+def get_probabilities(model, X_test, best_iteration, method):
     if method == "lgbm":
-        best_iteration = model._best_iteration - 1
         probs = model.predict_proba(X_test, num_iteration=best_iteration)
     elif method == "xgboost":
-        best_iteration = model.get_booster().best_ntree_limit - 1
         probs = model.predict_proba(X_test, ntree_limit=best_iteration)
     elif method == "catboost":
-        best_iteration = model.get_best_iteration() - 1
         probs = model.predict_proba(X_test)
 
     return probs
+
 # %%
 def model_predict(model, X_test, method, binary_model):
     best_iteration = get_best_iteration(model, method)
-    probs = get_probabilities(model, X_test, method)
+    probs = get_probabilities(model, X_test, best_iteration, method)
 
     if binary_model:
         y_pred = (probs[:,1] >= prediction_settings["prediction_threshold"])
@@ -143,8 +141,8 @@ def predict_on_new_data(df):
     logger.info("Dataset successfully prepared!")
     
     logger.info("Load pretrained models...")
-    model_folder_path_binary = paths["final_model"] + "/Binary_model"
-    model_folder_path_multiclass = paths["final_model"] + "/Multiclass_model"
+    model_folder_path_binary = "final_models/Binary_model"
+    model_folder_path_multiclass = "final_models/Multiclass_model"
     binary_model, vectorizer_binary, vocabulary_binary, boundingbox_features_binary = get_model(model_folder_path_binary)
     multiclass_model, vectorizer_multiclass, vocabulary_multiclass, boundingbox_features_multiclass = get_model(model_folder_path_multiclass)       
     logger.success("Pretrained models are loaded!")
