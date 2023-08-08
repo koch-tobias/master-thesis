@@ -78,7 +78,10 @@ def get_best_metric_results(evals, best_iteration, method, binary_model):
             auc = cb_params_binary["metrics"][0]
             loss = cb_params_binary["metrics"][1] 
         else:
-            auc = cb_params_multiclass["metrics"][0]
+            if cb_params_multiclass["metrics"][0] == 'AUC':
+                auc = 'AUC:type=Mu'
+            else:
+                auc = cb_params_multiclass["metrics"][0]
             loss = cb_params_multiclass["metrics"][1]        
 
     val_auc = evals[valid_name][auc][best_iteration]
