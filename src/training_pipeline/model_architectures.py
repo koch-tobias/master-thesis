@@ -44,7 +44,6 @@ def binary_classifier(weight_factor, hp, method):
                                     learning_rate=hp["lr"], 
                                     depth=hp["depth"],
                                     colsample_bylevel=hp["colsample_bylevel"],
-                                    #l2_leaf_reg=hp["l2_leaf_reg"],
                                     min_data_in_leaf=hp["min_data_in_leaf"],
                                     loss_function=cb_params_binary["metrics"][1],
                                     eval_metric=cb_params_binary["metrics"][0],
@@ -94,7 +93,6 @@ def multiclass_classifier(weight_factor, hp, method):
                                     learning_rate=hp["lr"], 
                                     depth=hp["depth"],
                                     colsample_bylevel=hp["colsample_bylevel"],         #Not supported by GPU
-                                    #l2_leaf_reg=hp["l2_leaf_reg"],
                                     min_data_in_leaf=hp["min_data_in_leaf"],
                                     loss_function=cb_params_multiclass["metrics"][1],
                                     eval_metric=cb_params_multiclass["metrics"][0],
