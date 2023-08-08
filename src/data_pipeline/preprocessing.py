@@ -10,7 +10,7 @@ import pickle
 import shutil
 from loguru import logger
 
-from src.data_pipeline.feature_engineering import transform_boundingbox, calculate_center_point, calculate_lwh, calculate_orientation, clean_text, nchar_text_to_vec, doc2vec_text_to_vec, bert_text_to_vec
+from src.data_pipeline.feature_engineering import transform_boundingbox, calculate_center_point, calculate_lwh, calculate_orientation, clean_text, nchar_text_to_vec
 from src.config import general_params, convert_dict, train_settings
 
 # %%
@@ -76,12 +76,13 @@ def load_data_into_df(original_prisma_data: bool, label_new_data: bool) -> list:
 
 # %%
 def check_nan_values(df):
-    columns = ['X-Min','X-Max','Y-Min','Y-Max','Z-Min','Z-Max', 'ox','oy', 'oz', 'xx','xy','xz', 'yx','yy','yz','zx','zy','zz']
-    nan_rows = df[df[columns].isnull().any(axis=1)]
-    if not nan_rows.empty:
-        print("Rows with NaN values in columns:", columns)
-        print(nan_rows)
-        logger.error(f"Please check your data. There are car parts in the dataset with nan values in the following columns: {columns}")
+    """
+    This function checks if there are nan values in the dataframe and returns all columns with nan values inside
+    """
+    columns_with_nan = df.columns[df.isna().any()].tolist()
+    if len(columns_with_nan) > 0:
+        logger.error(f"Please check your data. There are car parts in the dataset with nan values in the following columns: {columns_with_nan}")
+    return columns_with_nan
 
 # %%
 def combine_dataframes(dataframes: list) -> pd.DataFrame:
@@ -95,7 +96,7 @@ def combine_dataframes(dataframes: list) -> pd.DataFrame:
     columns_set = set(dataframes[0].columns)
     # Check if all dataframes have the same columns 
     for df in dataframes:
-        check_nan_values(df)
+        cols_with_nan_values = check_nan_values(df)
         if set(df.columns) != columns_set:
             logger.info(df.columns)
             logger.info(columns_set)
@@ -109,8 +110,7 @@ def combine_dataframes(dataframes: list) -> pd.DataFrame:
     return merged_df    
 
 # %%
-def check_if_columns_available(dataframe):
-    relevant_features = general_params["relevant_features"]
+def check_if_columns_available(dataframe, relevant_features):
     
     missing_columns = []
     for column in relevant_features:
@@ -127,7 +127,7 @@ def prepare_and_add_labels(dataframe: pd.DataFrame):
     # Drop all empty columns
     dataframe.dropna(how= "all", axis=1, inplace=True)
 
-    missing_columns = check_if_columns_available(dataframe)
+    missing_columns = check_if_columns_available(dataframe, general_params["relevant_features"])
     if len(missing_columns) > 0:
         logger.exit(f"Please check your dataset. The following attributes are missing: {missing_columns}")
 
@@ -150,7 +150,7 @@ def prepare_and_add_labels(dataframe: pd.DataFrame):
         except:
             logger.info(f"Module {module} not found in the structure tree!")
 
-    # Keep only the relevant samples with Dok-Format=5P. This samples are on the last level of the car structure and contains only car parts
+    # Keep only the relevant samples with Dok-Format=5P. These are on the last level of the car structure and contains only car parts
     dataframe_new = dataframe_new[dataframe_new["Dok-Format"]=='5P'].reset_index(drop=True)
 
     # Delete the NCAR abbreviation due to data security
@@ -176,6 +176,7 @@ def add_new_features(df):
     for index, row in df.iterrows():  
         # Calculate and add new features to represent the bounding boxes
         transformed_boundingbox = transform_boundingbox(row['X-Min'], row['X-Max'], row['Y-Min'], row['Y-Max'], row['Z-Min'], row['Z-Max'],row['ox'],row['oy'],row['oz'],row['xx'],row['xy'],row['xz'],row['yx'],row['yy'],row['yz'],row['zx'],row['zy'],row['zz'])
+        logger.info(transformed_boundingbox)
         center_x, center_y, center_z = calculate_center_point(transformed_boundingbox)
         length, width, height = calculate_lwh(transformed_boundingbox)
         theta_x, theta_y, theta_z = calculate_orientation(transformed_boundingbox)
@@ -215,14 +216,7 @@ def add_new_features(df):
     return df
 
 # %%
-def preprocess_dataset(df):
-    logger.info(f"Start preprocessing the dataframe with {df.shape[0]} samples...")
-
-    df.loc[df['X-Max'] == 10000, ['X-Min', 'X-Max', 'Y-Min', 'Y-Max', 'Z-Min', 'Z-Max', 'ox', 'oy', 'oz', 'xx', 'xy', 'xz', 'yx', 'yy', 'yz', 'zx', 'zy', 'zz', 'Wert']] = 0
-
-    df_new_features = add_new_features(df)
-
-    ##########
+def outlier_detection(df_new_features):
     # OUTLIER DETECTION
     # Calculate the upper and lower limits
     Q1 = df_new_features['X-Max_transf'].quantile(0.25)
@@ -238,11 +232,22 @@ def preprocess_dataset(df):
     # Set the bounding box features to zero if detected as outlier
     df_new_features.loc[upper_array, general_params["bounding_box_features_original"]] = 0
     df_new_features.loc[lower_array, general_params["bounding_box_features_original"]] = 0
-    #################
+
+    return df_new_features
+# %%
+def preprocess_dataset(df):
+    logger.info(f"Start preprocessing the dataframe with {df.shape[0]} samples...")
+
+    df.loc[df['X-Max'] == 10000, ['X-Min', 'X-Max', 'Y-Min', 'Y-Max', 'Z-Min', 'Z-Max', 'ox', 'oy', 'oz', 'xx', 'xy', 'xz', 'yx', 'yy', 'yz', 'zx', 'zy', 'zz', 'Wert']] = 0
+
+    df_new_features = add_new_features(df)
+
+    df_new_features = outlier_detection(df_new_features)
 
     # Using dictionary to convert specific columns
     df_new_features = df_new_features.astype(convert_dict)
 
+    # Select only car parts with bounding box information
     df_new_features = df_new_features[(df_new_features['X-Min'] != 0) & (df_new_features['X-Max'] != 0)]
 
     # Save the samples without/wrong bounding box information in a new df, as they will need to be added back later
@@ -256,9 +261,11 @@ def preprocess_dataset(df):
     car_length = x_max_transf - x_min_transf
     cut_point_x = x_min_transf + car_length*general_params["cut_percent_of_front"]
     df_relevants = df_relevants[df_relevants["X-Min_transf"] > cut_point_x]
-    # Concatenate the two data frames vertically
+
+    # Concatenate the two dataframes
     df_relevants = pd.concat([df_relevants, df_temp], ignore_index=True).reset_index(drop=True)
 
+    # Clean the designations and store the result in the column "Benennung (bereinigt)"
     df_relevants = clean_text(df_relevants)
 
     # Drop the mirrored car parts (on the right sight) which have the same Sachnummer
@@ -291,8 +298,12 @@ def get_weight_factor(y, df, binary_model):
             weight_factor[name] = round(np.count_nonzero(y != name) / np.count_nonzero(y == name))
             if weight_factor[name] == 0:
                 weight_factor[name] = 1
-    else:    
-        weight_factor = round(df[df["Relevant fuer Messung"]=="Nein"].shape[0] / df[df["Relevant fuer Messung"]=="Ja"].shape[0])
+    else:
+        if df[df["Relevant fuer Messung"]=="Ja"].shape[0] == 0:
+            weight_factor = 0
+            logger.error("The dataset does not contain any ""Ja"" labeled samples")
+        else:
+            weight_factor = round(df[df["Relevant fuer Messung"]=="Nein"].shape[0] / df[df["Relevant fuer Messung"]=="Ja"].shape[0])
 
     return weight_factor
 
@@ -330,7 +341,6 @@ def train_test_val(df, model_folder_path, binary_model):
     weight_factor = get_weight_factor(y, df, binary_model)     
 
     indices = np.arange(X.shape[0])
-
     X_train, X_val, y_train, y_val, indices_train, indices_val = train_test_split(X, y, indices, test_size=train_settings["train_val_split"], stratify=y, random_state=general_params["seed"])
     X_val, X_test, y_val, y_test, indices_val, indices_test = train_test_split(X_val, y_val, indices_val, test_size=train_settings["val_test_split"], stratify=y_val, random_state=general_params["seed"])
 
