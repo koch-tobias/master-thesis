@@ -2,16 +2,16 @@ import numpy as np
 import pandas as pd
 
 from sklearn.feature_extraction.text import CountVectorizer
-from gensim.models import Doc2Vec
-from gensim.models.doc2vec import TaggedDocument
-from transformers import BertTokenizer, BertModel
 
 import math
 import re
 import pickle
 
-# %%
 def transform_boundingbox(x_min, x_max, y_min, y_max, z_min, z_max, ox, oy, oz, xx, xy, xz, yx, yy, yz, zx, zy, zz):
+    '''
+    This function transforms a bounding box by applying rotation and translation.
+    '''
+    # Create an array of corner points of the bounding box
     corners = np.array([[x_min, y_min, z_min],
                         [x_min, y_min, z_max],
                         [x_min, y_max, z_min],
@@ -20,16 +20,29 @@ def transform_boundingbox(x_min, x_max, y_min, y_max, z_min, z_max, ox, oy, oz, 
                         [x_max, y_min, z_max],
                         [x_max, y_max, z_min],
                         [x_max, y_max, z_max]])
-    
+
+    # Create a rotation matrix using the provided rotation values
     rotation_matrix = np.array([[xx, xy, xz], [yx, yy, yz], [zx, zy, zz]])
+
+    # Create a translation vector using the provided shift values
     shift_vec = np.array([ox, oy, oz])
-    rotated_corners = np.dot(corners, rotation_matrix) 
+
+    # Apply rotation to the corner points
+    rotated_corners = np.dot(corners, rotation_matrix)
+
+    # Apply translation to the rotated corner points
     transformed_corners = rotated_corners + shift_vec
 
-    return transformed_corners 
+    # Return the transformed corner points
+    return transformed_corners
+
 
 # %%
 def get_minmax(list_transformed_bboxes):
+    '''
+    This function calculates the minimum and maximum coordinates of a list of transformed bounding boxes.
+    '''
+    # Initialize the minimum and maximum coordinates to infinity and negative infinity, respectively
     x_min = np.inf
     x_max = -np.inf
     y_min = np.inf
@@ -37,11 +50,14 @@ def get_minmax(list_transformed_bboxes):
     z_min = np.inf
     z_max = -np.inf
 
+    # Iterate over each transformed bounding box in the list
     for arr in list_transformed_bboxes:
+        # Extract the x, y, and z coordinates from the transformed bounding box
         x_coords = arr[:, 0]
         y_coords = arr[:, 1]
         z_coords = arr[:, 2]
         
+        # Update the minimum and maximum coordinates for each axis
         x_min = min(x_min, np.min(x_coords))
         x_max = max(x_max, np.max(x_coords))
         y_min = min(y_min, np.min(y_coords))
@@ -49,10 +65,17 @@ def get_minmax(list_transformed_bboxes):
         z_min = min(z_min, np.min(z_coords))
         z_max = max(z_max, np.max(z_coords))
 
+    # Return the minimum and maximum coordinates for each axis
     return x_min, x_max, y_min, y_max, z_min, z_max
+
 
 # %%
 def find_valid_space(df):
+    '''
+    This function finds the valid space by calculating the minimum and maximum coordinates of a DataFrame and expanding it by 10%.
+    '''
+
+    # Initialize the minimum and maximum coordinates with the values from the first row of the DataFrame
     x_min = df.loc[0, 'X-Min_transf']
     x_max = df.loc[0, 'X-Max_transf']
     y_min = df.loc[0, 'Y-Min_transf']
@@ -60,7 +83,9 @@ def find_valid_space(df):
     z_min = df.loc[0, 'Z-Min_transf']
     z_max = df.loc[0, 'Z-Max_transf']
 
+    # Iterate over each row in the DataFrame
     for index, row in df.iterrows():
+        # Update the minimum and maximum coordinates for each axis if necessary
         if row['X-Min_transf'] < x_min:
             x_min = row['X-Min_transf']
         if row['X-Max_transf'] > x_max:
@@ -74,23 +99,24 @@ def find_valid_space(df):
         if row['Z-Max_transf'] > z_max:
             z_max = row['Z-Max_transf']
 
-    # Add 10% to each side
+    # Add 10% to each side to expand the bounding box
     expand_box_percent = 0.10
     add_length = (x_max - x_min) * expand_box_percent
     add_width = (y_max - y_min) * expand_box_percent
     add_height = (z_max - z_min) * expand_box_percent
-    x_min = x_min-add_length
-    x_max = x_max+add_length
-    y_min = y_min-add_width
-    y_max = y_max+add_width
-    z_min = z_min-add_height
-    z_max = z_max+add_height
+    x_min = x_min - add_length
+    x_max = x_max + add_length
+    y_min = y_min - add_width
+    y_max = y_max + add_width
+    z_min = z_min - add_height
+    z_max = z_max + add_height
 
+    # Calculate the length, width, and height of the expanded bounding box
     length = x_max - x_min 
     width = y_max - y_min
     height = z_max - z_min
 
-    # Define the corner matrix
+    # Define the corner matrix using the expanded bounding box coordinates
     corners = np.array([[x_min, y_min, z_min],
                 [x_min, y_min, z_max],
                 [x_min, y_max, z_min],
@@ -100,58 +126,92 @@ def find_valid_space(df):
                 [x_max, y_max, z_min],
                 [x_max, y_max, z_max]])
 
+    # Return the corner matrix, length, width, and height of the expanded bounding box
     return corners, length, width, height
+
 
 # %%
 def random_centerpoint_in_valid_space(corners, length, width, height):
+    '''
+    This function generates a random center point within the valid space defined by the corners and dimensions.
+    '''
+    # Extract the minimum and maximum coordinates from the corners
     x_min, y_min, z_min = corners[0]
     x_max, y_max, z_max = corners[7]
-    x_min = x_min + (length/2)
-    x_max = x_max - (length/2)
-    y_min = y_min + (width/2)
-    y_max = y_max - (width/2)
-    z_min = z_min + (height/2)
-    z_max = z_max - (height/2)    
+
+    # Adjust the minimum and maximum coordinates by half of the dimensions
+    x_min = x_min + (length / 2)
+    x_max = x_max - (length / 2)
+    y_min = y_min + (width / 2)
+    y_max = y_max - (width / 2)
+    z_min = z_min + (height / 2)
+    z_max = z_max - (height / 2)
+
+    # Generate random coordinates within the adjusted minimum and maximum ranges
     x = np.random.uniform(x_min, x_max)
     y = np.random.uniform(y_min, y_max)
     z = np.random.uniform(z_min, z_max)
+
+    # Return the random center point as a numpy array
     return np.array([x, y, z])
 
+
 # %%
-def calculate_center_point(transf_bbox):
+def calculate_center_point(transformed_boundingbox):
+    '''
+    This function calculates the center point of a transformed bounding box.
+    '''
+
+    # Initialize variables to store the sum of X, Y, and Z coordinates
     sum_X = 0
     sum_Y = 0
     sum_Z = 0
-    num_corners = len(transf_bbox)
-    for xyz in transf_bbox:
+
+    # Get the number of corners in the transformed bounding box
+    num_corners = len(transformed_boundingbox)
+
+    # Iterate over each corner in the transformed bounding box
+    for xyz in transformed_boundingbox:
+        # Add the X, Y, and Z coordinates to the respective sums
         sum_X = sum_X + xyz[0]
         sum_Y = sum_Y + xyz[1]
         sum_Z = sum_Z + xyz[2]
     
-    center_x = sum_X/num_corners
-    center_y = sum_Y/num_corners
-    center_z = sum_Z/num_corners
+    # Calculate the center coordinates by dividing the sums by the number of corners
+    center_x = sum_X / num_corners
+    center_y = sum_Y / num_corners
+    center_z = sum_Z / num_corners
 
+    # Return the center coordinates
     return center_x, center_y, center_z
+
 
 # %%
 def calculate_lwh(transformed_boundingbox):
+    '''
+    This function calculates the length, width, and height of a transformed bounding box.
+    '''
+
+    # Initialize empty lists to store the X, Y, and Z coordinates
     x = []
     y = []
     z = []
 
+    # Iterate over each corner in the transformed bounding box
     for xyz in transformed_boundingbox:
+        # Append the X, Y, and Z coordinates to their respective lists
         x.append(xyz[0])  
         y.append(xyz[1])  
         z.append(xyz[2])   
 
+    # Calculate the length, width, and height by finding the difference between the maximum and minimum coordinates
     length = max(x) - min(x) 
     width = max(y) - min(y) 
     height = max(z) - min(z) 
     
+    # Return the length, width, and height
     return length, width, height
 
-# %%
 def calculate_orientation(transformed_boundingbox):
     # Center the corners around the origin
     centered_corners = transformed_boundingbox - np.mean(transformed_boundingbox, axis=0) 
@@ -166,14 +226,13 @@ def calculate_orientation(transformed_boundingbox):
 
     return theta_x, theta_y, theta_z
 
-
 # %%
 def calculate_corners(center_point, length, width, height, theta_x, theta_y, theta_z): 
     # Calculate the rotation matrix using the Euler angles
     rotation_matrix = np.array([
-        [math.cos(float(theta_y.iloc[0])) * math.cos(float(theta_z.iloc[0])), -math.cos(float(theta_y.iloc[0])) * math.sin(float(theta_z.iloc[0])), math.sin(float(theta_y.iloc[0]))],
-        [math.cos(float(theta_x.iloc[0])) * math.sin(float(theta_z.iloc[0])) + math.sin(float(theta_x.iloc[0])) * math.sin(float(theta_y.iloc[0])) * math.cos(float(theta_z.iloc[0])), math.cos(float(theta_x.iloc[0])) * math.cos(float(theta_z.iloc[0])) - math.sin(float(theta_x.iloc[0])) * math.sin(float(theta_y.iloc[0])) * math.sin(float(theta_z.iloc[0])), -math.sin(float(theta_x.iloc[0])) * math.cos(float(theta_y.iloc[0]))],
-        [math.sin(float(theta_x.iloc[0])) * math.sin(float(theta_z.iloc[0])) - math.cos(float(theta_x.iloc[0])) * math.sin(float(theta_y.iloc[0])) * math.cos(float(theta_z.iloc[0])), math.sin(float(theta_x.iloc[0])) * math.cos(float(theta_z.iloc[0])) + math.cos(float(theta_x.iloc[0])) * math.sin(float(theta_y.iloc[0])) * math.sin(float(theta_z.iloc[0])), math.cos(float(theta_x.iloc[0])) * math.cos(float(theta_y.iloc[0]))]
+        [math.cos(float(theta_y)) * math.cos(float(theta_z)), -math.cos(float(theta_y)) * math.sin(float(theta_z)), math.sin(float(theta_y))],
+        [math.cos(float(theta_x)) * math.sin(float(theta_z)) + math.sin(float(theta_x)) * math.sin(float(theta_y)) * math.cos(float(theta_z)), math.cos(float(theta_x)) * math.cos(float(theta_z)) - math.sin(float(theta_x)) * math.sin(float(theta_y)) * math.sin(float(theta_z)), -math.sin(float(theta_x)) * math.cos(float(theta_y))],
+        [math.sin(float(theta_x)) * math.sin(float(theta_z)) - math.cos(float(theta_x)) * math.sin(float(theta_y)) * math.cos(float(theta_z)), math.sin(float(theta_x)) * math.cos(float(theta_z)) + math.cos(float(theta_x)) * math.sin(float(theta_y)) * math.sin(float(theta_z)), math.cos(float(theta_x)) * math.cos(float(theta_y))]
     ])
 
     # Calculate the half-lengths of the box along each axis
@@ -183,13 +242,13 @@ def calculate_corners(center_point, length, width, height, theta_x, theta_y, the
 
     # Calculate the coordinates of the eight corners of the box
     corners = np.array([
-        [-half_length, -half_width, -half_height],
         [half_length, -half_width, -half_height],
-        [half_length, half_width, -half_height],
-        [-half_length, half_width, -half_height],
-        [-half_length, -half_width, half_height],
         [half_length, -half_width, half_height],
+        [half_length, half_width, -half_height],
         [half_length, half_width, half_height],
+        [-half_length, -half_width, -half_height],
+        [-half_length, -half_width, half_height],
+        [-half_length, half_width, -half_height],
         [-half_length, half_width, half_height]
     ])
 
@@ -215,7 +274,7 @@ def prepare_text(designation: str) -> str:
     text = str(designation).upper()
 
     # Removing punctations
-    text = re.sub(r"[^\w\s]", "", text)
+    text = re.sub(r"[^\w\s]", " ", text)
 
     # Removing numbers
     text = ''.join([i for i in text if not i.isdigit()])
@@ -243,7 +302,7 @@ def clean_text(df):
     df["Benennung (bereinigt)"] = df.apply(lambda x: prepare_text(x["Benennung (dt)"]), axis=1)
 
     return df
-
+'''
 def tokenize(text):
     return text.split()
 
@@ -304,29 +363,144 @@ def bert_text_to_vec(data: pd.DataFrame, model_folder_path):
         pickle.dump(model, f)
 
     return X_text
-
+'''
 # %%
-def nchar_text_to_vec(data: pd.DataFrame, model_folder_path) -> tuple:
+def nchar_text_to_vec(data: pd.DataFrame, model_folder_path: str) -> tuple:
+    '''
+    This function converts text data into vector representation using the n-gram approach.
 
+    Args:
+        data (pd.DataFrame): The input DataFrame containing the text data.
+        model_folder_path (str): The path to the folder where the model files will be saved.
+
+    Returns:
+        tuple: A tuple containing the vectorized text data.
+    '''
+
+    # Initialize the CountVectorizer with the desired settings
     vectorizer = CountVectorizer(analyzer='char', ngram_range=(3, 8), max_features=8000)
 
+    # Convert the text data into a vector representation
     X_text = vectorizer.fit_transform(data['Benennung (bereinigt)']).toarray()
 
     # Store the vocabulary
     vocabulary = vectorizer.get_feature_names_out()
 
-    with open(model_folder_path + 'vectorizer.pkl', 'wb') as f:
-        pickle.dump(vectorizer, f)
-    with open(model_folder_path + 'vocabulary.pkl', 'wb') as f:
-        pickle.dump(vocabulary, f)
+    # Save the vectorizer and vocabulary if a model folder path is provided
+    if model_folder_path != "":
+        with open(model_folder_path + 'vectorizer.pkl', 'wb') as f:
+            pickle.dump(vectorizer, f)
+        with open(model_folder_path + 'vocabulary.pkl', 'wb') as f:
+            pickle.dump(vocabulary, f)
 
+    # Return the vectorized text data
     return X_text
+
 
 # %%
 def get_vocabulary(column):
+    '''
+    This function extracts the vocabulary from a given column of text data.
+
+    Args:
+        column: The input column containing the text data.
+
+    Returns:
+        list: A list of unique words in the text data.
+    '''
+
+    # Concatenate all the text data into a single string
     text = ' '.join(column.astype(str))
+
+    # Split the text into individual words and convert them to uppercase
     words = text.upper().split()
+
+    # Count the occurrences of each word and sort them in descending order
     word_counts = pd.Series(words).value_counts()
+
+    # Extract the unique words as the vocabulary
     vocabulary = word_counts.index.tolist()
 
+    # Return the vocabulary
     return vocabulary
+
+# %%
+def calculate_orientation2(transformed_boundingbox):
+    # Calculate the centroid of the bounding box
+    centroid = np.mean(transformed_boundingbox, axis=0)
+
+    # Calculate the differences between each corner and the centroid
+    differences = transformed_boundingbox - centroid
+
+    # Calculate the covariance matrix of the differences
+    covariance_matrix = np.cov(differences, rowvar=False)
+
+    # Perform eigenvalue decomposition on the covariance matrix
+    eigenvalues, eigenvectors = np.linalg.eig(covariance_matrix)
+
+    # Sort the eigenvalues and eigenvectors in descending order
+    sorted_indices = np.argsort(eigenvalues)[::-1]
+    eigenvalues = eigenvalues[sorted_indices]
+    eigenvectors = eigenvectors[:, sorted_indices]
+
+    # Extract the eigenvector corresponding to the largest eigenvalue
+    largest_eigenvector = eigenvectors[:, 0]
+
+    # Calculate the orientation angles
+    theta_x = np.arctan2(largest_eigenvector[2], largest_eigenvector[1])
+    theta_y = np.arctan2(largest_eigenvector[0], largest_eigenvector[2])
+    theta_z = np.arctan2(largest_eigenvector[1], largest_eigenvector[0])
+
+    return theta_x, theta_y, theta_z
+
+import matplotlib.pyplot as plt
+def plot_box(transformed_box):
+   fig = plt.figure()
+   ax = fig.add_subplot(111, projection='3d')
+
+   # Unpack the coordinates from the transformed box
+   x = [point[0] for point in transformed_box]
+   y = [point[1] for point in transformed_box]
+   z = [point[2] for point in transformed_box]
+
+   # Plot the box
+   ax.scatter(x, y, z)
+   ax.set_xlabel('X Label')
+   ax.set_ylabel('Y Label')
+   ax.set_zlabel('Z Label')
+   # Set axis limits
+   ax.set_xlim(-2000, 5000)
+   ax.set_ylim(-1500, 1500)
+   ax.set_zlim(-100, 1500)
+   
+   plt.show()
+
+# %%
+def main():
+    # Define input DataFrame    
+    transformed_boundingbox = np.array([[3187.35199114, -102.46603984,  333.48725461],
+                                        [3169.54398131, -102.46604762,  363.38566237],
+                                        [3187.35199114,  102.53396016,  333.48730043],
+                                        [3169.54398131,  102.53395238,  363.38570818],
+                                        [3267.95969216, -102.46603984,  381.49859835],
+                                        [3250.15168233, -102.46604762,  411.39700611],
+                                        [3267.95969216,  102.53396016,  381.49864417],
+                                        [3250.15168233,  102.53395238,  411.39705192]])
+    
+    #plot_box(transformed_boundingbox)
+    # Call the function
+    #result = calculate_orientation2(transformed_boundingbox)
+    #result2 = calculate_orientation(transformed_boundingbox)
+
+    #print(result)
+    #print(result2)
+
+    input_text = "This is a test A.F.-51232/AF designation." 
+    print(input_text)
+    result = prepare_text(input_text)
+    print(result)
+    
+# %%
+if __name__ == "__main__":
+    
+    main()
