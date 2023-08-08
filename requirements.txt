@@ -1,26 +1,42 @@
-fastapi[all]==0.97.0
-ipynb==0.5.1
-lightgbm==3.3.5
-loguru==0.7.0
 matplotlib==3.7.2
-nbformat==5.8.0
 numpy==1.23.5
-nltk==3.8.1
-openai==0.27.4
-openpyxl==3.1.2
 pandas==2.0.0
-pyxlsb==1.0.10
-shap==0.41.0
-streamlit==1.23.1
-streamlit-authenticator==0.2.2
-uvicorn==0.22.0
+nltk==3.8.1
+
+# ML models
 xgboost==1.7.6
-xlrd==2.0.1 #For loading excel files
-xlsxwriter==3.1.0
-numba==0.57.0
+lightgbm==3.3.5
 catboost==1.2
-gensim==4.3.1
-transformers==4.31.0
+
+# Explainability
+shap==0.41.0
+
+# GPU
+numba==0.57.0
+
+# Testing
 pytest==7.4.0
 
+# API
+uvicorn==0.22.0
+fastapi[all]==0.97.0
+
+# Website
+streamlit==1.23.1
+streamlit-authenticator==0.2.2
+
+# Utils
+openpyxl==3.1.2
+pyxlsb==1.0.10
+xlrd==2.0.1 
+xlsxwriter==3.1.0
+
+ipynb==0.5.1
+loguru==0.7.0
+
+nbformat==5.8.0
+
+openai==0.27.4
+gensim==4.3.1
+transformers==4.31.0
 
