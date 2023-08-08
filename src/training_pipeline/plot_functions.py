@@ -144,7 +144,10 @@ def plot_metric_custom(evals, best_iteration, model_folder_path, method, binary,
             metric_0 = cb_params_binary["metrics"][0]
             metric_1 = cb_params_binary["metrics"][1]
         else:
-            metric_0 = cb_params_multiclass["metrics"][0]
+            if cb_params_multiclass["metrics"][0] == 'AUC':
+                metric_0 = 'AUC:type=Mu'
+            else:
+                metric_0 = cb_params_multiclass["metrics"][0]
             metric_1 = cb_params_multiclass["metrics"][1]             
     else:
         if binary:
