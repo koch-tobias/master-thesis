@@ -11,20 +11,26 @@ import shutil
 from loguru import logger
 
 from src.data_pipeline.feature_engineering import transform_boundingbox, calculate_center_point, calculate_lwh, calculate_orientation, clean_text, nchar_text_to_vec
-from src.config import general_params, convert_dict, train_settings
+
+import yaml
+from yaml.loader import SafeLoader
+with open('src/config.yaml') as file:
+    config = yaml.load(file, Loader=SafeLoader)
 
 # %%
-def load_data_into_df(original_prisma_data: bool, label_new_data: bool) -> list:
-    '''
-    This function searches for all .xls files in a given directory, loads each file into a pandas dataframe and changes the header line.
-    return: List with all created dataframes
+def load_data_into_df() -> tuple[list, str]:
+    ''' 
+    This function loads data from the specified folder path. It reads data from all files in the folder, converts them to pandas dataframes and stores the dataframes in a list. 
+    The list of dataframes and a list of associated NCAR codes are returned as outputs. 
+    Args:
+        None
+    Return:
+        dataframes: a list containing pandas dataframes of all the files read from the specified folder path
+        ncars: a list of the associated NCAR codes for all the files in the dataframes 
     '''
 
     # Check if the folder exists
-    if label_new_data:
-        folder_name = "data/raw_for_labeling"
-    else:
-        folder_name = "data/labeled"
+    folder_name = "data/labeled"
         
     if not os.path.exists(folder_name):
         logger.error(f"The path {folder_name} does not exist.")
@@ -38,28 +44,13 @@ def load_data_into_df(original_prisma_data: bool, label_new_data: bool) -> list:
         # Loop through all files in the folder and open them as dataframes
         for file in os.listdir(folder_name):
                 try:
-                    # Load the excel into a pandas dataframe, delete the header and declare the second row as new header
-                    if original_prisma_data == True:
-                        df = pd.read_excel(os.path.join(folder_name, file), header=None, skiprows=1)
-                        df.columns = df.iloc[0]
-                        df = df.iloc[1:]
-                        # Drop all empty columns
-                        dataframe = df.dropna(how= "all", axis=1, inplace=False)
-                        # Store the ncar abbreviation for file paths
-                        ncar = dataframe['Code'].iloc[0]
-                    else:
-                        df = pd.read_csv(os.path.join(folder_name, file))
-                        ncar = file.split("_")[0]
-                        df["Derivat"] = ncar
+                    df = pd.read_csv(os.path.join(folder_name, file))
+                    ncar = file.split("_")[0]
+                    df["Derivat"] = ncar
 
                     # Add the created dataframe to the list of dataframes
                     dataframes.append(df)
                     ncars.append(ncar)
-
-                    if label_new_data == True:
-                        old_path = os.path.join(folder_name, file)
-                        new_path = os.path.join("data/raw", ncar + '_' + file) 
-                        shutil.move(old_path, new_path)
 
                 except:
                     logger.info(f"Error reading file {file}. Skipping...")
@@ -75,28 +66,37 @@ def load_data_into_df(original_prisma_data: bool, label_new_data: bool) -> list:
         return dataframes, ncars
 
 # %%
-def check_nan_values(df):
-    """
-    This function checks if there are nan values in the dataframe and returns all columns with nan values inside
-    """
+def check_nan_values(df: pd.DataFrame, ncar: str) -> list:
+    '''
+    The function takes a pandas DataFrame as input and checks for the existence of any NaN values. It returns a list of columns that contain NaN values. 
+    Args: 
+        df: A pandas DataFrame 
+    Return: 
+        columns_with_nan: A list of columns that contain NaN values in the input DataFrame. If no NaN values are present, an empty list is returned.
+    '''
+    df = df[config["general_params"]["check_features_for_nan_values"]]
     columns_with_nan = df.columns[df.isna().any()].tolist()
     if len(columns_with_nan) > 0:
-        logger.error(f"Please check your data. There are car parts in the dataset with nan values in the following columns: {columns_with_nan}")
+        logger.error(f"{ncar}: There are car parts in the dataset with NaN values in the following columns: {columns_with_nan}")
     return columns_with_nan
 
 # %%
-def combine_dataframes(dataframes: list) -> pd.DataFrame:
+def combine_dataframes(dataframes: list, ncars: list) -> pd.DataFrame:
     '''
-    This function takes a list of data frames as input and checks if the dataframes have the same header. If so, the dataframes will be merged.
-    return: Merged dataframe
+    The function takes a list of pandas DataFrames and combines them into a single data frame. Before merging, it checks if all dataframes have the same columns and returns an error if there are discrepancies. 
+    If any NaN values exist in the input data frames, it uses the check_nan_values function to obtain the list of columns with the NaN values. 
+    It returns a single merged dataframe containing all columns from all input data frames. 
+    Args: 
+        dataframes: A list of pandas DataFrame objects. 
+    Return: 
+        merged_df: A single pandas DataFrame object that contains all rows and columns from all input data frames
     '''
-    
     # Set the header information
     logger.info("Combine all datasets to one...")
     columns_set = set(dataframes[0].columns)
     # Check if all dataframes have the same columns 
-    for df in dataframes:
-        cols_with_nan_values = check_nan_values(df)
+    for df, ncar in zip(dataframes, ncars):
+        cols_with_nan_values = check_nan_values(df, ncar)
         if set(df.columns) != columns_set:
             logger.info(df.columns)
             logger.info(columns_set)
@@ -110,8 +110,16 @@ def combine_dataframes(dataframes: list) -> pd.DataFrame:
     return merged_df    
 
 # %%
-def check_if_columns_available(dataframe, relevant_features):
-    
+def check_if_columns_available(dataframe: pd.DataFrame, relevant_features: list) -> list:
+    '''
+    The function takes a pandas DataFrame and a list of relevant features/columns as input. 
+    It checks if all relevant features/columns are present in the input DataFrame and returns a list of missing features/columns. 
+    Args: 
+        dataframe: A pandas DataFrame object 
+        relevant_features: list of feature names that are required in the input DataFrame. 
+    Return: 
+        missing_columns: a list of features/columns that are missing in the input DataFrame. If all relevant features/columns are present in the input DataFrame, an empty list is returned.
+    '''    
     missing_columns = []
     for column in relevant_features:
         if column not in dataframe.columns:
@@ -120,14 +128,23 @@ def check_if_columns_available(dataframe, relevant_features):
     return missing_columns
 
 # %%
-def prepare_and_add_labels(dataframe: pd.DataFrame):
-
+def prepare_and_add_labels(dataframe: pd.DataFrame) -> tuple[pd.DataFrame, str]:
+    '''
+    The function takes a pandas DataFrame as input and prepares the data by performing several data preprocessing steps. 
+    It drops all empty columns, checks if all relevant features are available, stores the NCAR abbreviation for file paths, retains only the relevant samples with Dok-Format=5P and only keep relevant features. 
+    It then creates and adds two new columns "Relevant fuer Messung" and "Einheitsname". Finally, it returns a tuple with the preprocessed DataFrame object and the NCAR abbreviation. 
+    Args: 
+        dataframe: A pandas DataFrame object. 
+    Return: 
+        dataframe: preprocessed pandas DataFrame object 
+        ncar: string (NCAR abbreviation) which is used for file paths.
+    '''
     logger.info("Start preparing the data...")
 
     # Drop all empty columns
     dataframe.dropna(how= "all", axis=1, inplace=True)
 
-    missing_columns = check_if_columns_available(dataframe, general_params["relevant_features"])
+    missing_columns = check_if_columns_available(dataframe=dataframe, relevant_features=config["general_params"]["relevant_features"])
     if len(missing_columns) > 0:
         logger.exit(f"Please check your dataset. The following attributes are missing: {missing_columns}")
 
@@ -136,7 +153,7 @@ def prepare_and_add_labels(dataframe: pd.DataFrame):
 
     dataframe_new = pd.DataFrame(columns=dataframe.columns)
 
-    for module in general_params["keep_modules"]:
+    for module in config["general_params"]["keep_modules"]:
         try: 
             for i in range(dataframe[dataframe["Modul (Nr)"] == module].shape[0]):
                 level = dataframe[dataframe["Modul (Nr)"] == module]["Ebene"].values[i]
@@ -154,12 +171,12 @@ def prepare_and_add_labels(dataframe: pd.DataFrame):
     dataframe_new = dataframe_new[dataframe_new["Dok-Format"]=='5P'].reset_index(drop=True)
 
     # Delete the NCAR abbreviation due to data security
-    dataframe_new[general_params["car_part_designation"]] = dataframe_new[general_params["car_part_designation"]].apply(lambda x: x.replace(ncar, ""))
+    dataframe_new[config["general_params"]["car_part_designation"]] = dataframe_new[config["general_params"]["car_part_designation"]].apply(lambda x: x.replace(ncar, ""))
 
     # Keep only features which are identified as relevant for the preprocessing, the predictions or for the users' next steps
-    dataframe_new = dataframe_new[general_params["relevant_features"]]
+    dataframe_new = dataframe_new[config["general_params"]["relevant_features"]]
     
-    dataframe_new = dataframe_new.astype(convert_dict)
+    dataframe_new = dataframe_new.astype(config["convert_dict"])
 
     # Add columns for the label "Relevant für Messung" and "Einheitsname"
     dataframe_new.insert(len(dataframe_new.columns), 'Relevant fuer Messung', 'Nein')
@@ -172,14 +189,21 @@ def prepare_and_add_labels(dataframe: pd.DataFrame):
     return dataframe_new, ncar
 
 # %%
-def add_new_features(df):
+def add_new_features(df: pd.DataFrame) -> pd.DataFrame:
+    '''
+    The function takes a pandas DataFrame as input and adds new features/variables by calculating the bounding box coordinates, orientation, center point, length, width, height, volume, and density for each car part in the DataFrame. 
+    It returns the updated pandas DataFrame with the new features/variables added. 
+    Args: 
+        dataframe: A pandas DataFrame object. 
+    Return: 
+        df: A pandas DataFrame object with the new features/variables added.
+    '''
     for index, row in df.iterrows():  
         # Calculate and add new features to represent the bounding boxes
         transformed_boundingbox = transform_boundingbox(row['X-Min'], row['X-Max'], row['Y-Min'], row['Y-Max'], row['Z-Min'], row['Z-Max'],row['ox'],row['oy'],row['oz'],row['xx'],row['xy'],row['xz'],row['yx'],row['yy'],row['yz'],row['zx'],row['zy'],row['zz'])
-        logger.info(transformed_boundingbox)
         center_x, center_y, center_z = calculate_center_point(transformed_boundingbox)
-        length, width, height = calculate_lwh(transformed_boundingbox)
-        theta_x, theta_y, theta_z = calculate_orientation(transformed_boundingbox)
+        length, width, height = calculate_lwh(transformed_boundingbox=transformed_boundingbox)
+        theta_x, theta_y, theta_z = calculate_orientation(transformed_boundingbox=transformed_boundingbox)
 
         x_coords = transformed_boundingbox[:, 0]
         y_coords = transformed_boundingbox[:, 1]
@@ -216,8 +240,16 @@ def add_new_features(df):
     return df
 
 # %%
-def outlier_detection(df_new_features):
-    # OUTLIER DETECTION
+def outlier_detection(df_new_features: pd.DataFrame) -> pd.DataFrame:
+    '''
+    The function takes a pandas DataFrame as input and implements an outlier detection method to identify outliers in the "X-Max_transf" column. 
+    It calculates the upper and lower limits, creates arrays of Boolean values indicating the outlier rows, and sets the bounding box features to zero if detected as an outlier. 
+    The function returns the updated pandas DataFrame with the outliers removed/set to zero. 
+    Args: 
+        df_new_features: A pandas DataFrame object. 
+    Return: 
+        df_new_features: A pandas DataFrame object with the outlier bounding box features set to zero.
+    '''
     # Calculate the upper and lower limits
     Q1 = df_new_features['X-Max_transf'].quantile(0.25)
     Q3 = df_new_features['X-Max_transf'].quantile(0.75)
@@ -230,12 +262,22 @@ def outlier_detection(df_new_features):
     lower_array = np.where(df_new_features['X-Max_transf']<=lower)[0]
     
     # Set the bounding box features to zero if detected as outlier
-    df_new_features.loc[upper_array, general_params["bounding_box_features_original"]] = 0
-    df_new_features.loc[lower_array, general_params["bounding_box_features_original"]] = 0
+    df_new_features.loc[upper_array, config["general_params"]["bounding_box_features_original"]] = 0
+    df_new_features.loc[lower_array, config["general_params"]["bounding_box_features_original"]] = 0
 
     return df_new_features
 # %%
-def preprocess_dataset(df):
+def preprocess_dataset(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+    '''
+    The function takes in a pandas DataFrame and performs various preprocessing steps on the data. 
+    It fills the bounding box information, calculates features, drops outliers, selects new relevant features, removes data points from the front area of the car, cleans designations, removes mirrored car parts and removes duplicates. 
+    It returns two DataFrames, one with the preprocessed data, and another with parts suitable for visualization purposes. 
+    Args: 
+        df: A pandas DataFrame object. 
+    Return: 
+        df_relevants: dataframe with the preprocessed data
+        df_for_plot: dataframe with parts suitable for visualization purposes 
+    '''
     logger.info(f"Start preprocessing the dataframe with {df.shape[0]} samples...")
 
     df.loc[df['X-Max'] == 10000, ['X-Min', 'X-Max', 'Y-Min', 'Y-Max', 'Z-Min', 'Z-Max', 'ox', 'oy', 'oz', 'xx', 'xy', 'xz', 'yx', 'yy', 'yz', 'zx', 'zy', 'zz', 'Wert']] = 0
@@ -245,7 +287,7 @@ def preprocess_dataset(df):
     df_new_features = outlier_detection(df_new_features)
 
     # Using dictionary to convert specific columns
-    df_new_features = df_new_features.astype(convert_dict)
+    df_new_features = df_new_features.astype(config["convert_dict"])
 
     # Select only car parts with bounding box information
     df_new_features = df_new_features[(df_new_features['X-Min'] != 0) & (df_new_features['X-Max'] != 0)]
@@ -259,7 +301,7 @@ def preprocess_dataset(df):
     # Delete all samples where the parts are in the front area of the car
     x_min_transf, x_max_transf = df_relevants["X-Min_transf"].min(), df_relevants["X-Max_transf"].max()
     car_length = x_max_transf - x_min_transf
-    cut_point_x = x_min_transf + car_length*general_params["cut_percent_of_front"]
+    cut_point_x = x_min_transf + car_length*config["general_params"]["cut_percent_of_front"]
     df_relevants = df_relevants[df_relevants["X-Min_transf"] > cut_point_x]
 
     # Concatenate the two dataframes
@@ -289,7 +331,20 @@ def preprocess_dataset(df):
     return df_relevants, df_for_plot
 
 # %%
-def get_weight_factor(y, df, binary_model):
+def get_weight_factor(y, df: pd.DataFrame, binary_model: bool) -> int or dict:
+    '''
+    The function takes the labels (y), a pandas DataFrame, and a binary flag as input. 
+    Depending on the binary flag, the function calculates and returns a weight factor either for multi-class or binary classifications. 
+    For multi-class classification, it calculates the ratio of negative and positive samples for each class and returns a dictionary of weight factors. 
+    For binary classification, the function calculates the ratio of samples labeled "Nein" to "Ja" and returns a single weight factor. 
+    If there are no samples labeled "Ja" in the binary classification dataset, the function returns 0 and logs an error message. 
+    Args: 
+        y: The labels as a numpy array
+        df: a pandas DataFrame object
+        binary_model: binary flag (True or False) to set if it is a binary or a multiclass model
+    Return: 
+        weight_factor: A dictionary with keys as class labels and values as corresponding weight factors for multi-class classification or a single integer indicating the weight factor for binary classification. If there are no samples labeled "Ja" in the binary classification dataset, the function returns 0.
+    '''
     if binary_model == False:
         # Get list of unique values in column "Einheitsname"
         unique_einheitsnamen = np.unique(y)
@@ -308,23 +363,37 @@ def get_weight_factor(y, df, binary_model):
     return weight_factor
 
 # %%
-def train_test_val(df, model_folder_path, binary_model):
+def train_test_val(df: pd.DataFrame, model_folder_path: str, binary_model: bool):
+    '''
+    This function splits the input dataframe into training, validation and test sets for binary or multiclass task. 
+    The function also stores the generated sets in dictionaries. This prepares the data for the model training process.
+    Args:
+        df: Pandas DataFrame: The input dataframe for splitting into sets.
+        model_folder_path: String: The path where different model files will be stored.
+        binary_model: bool: A boolean variable indicating whether binary model will be used or multiclass model will be used for the classification task.
+    Return:
+        Tuple: A tuple containing X_train, y_train, X_val, y_val, X_test, y_test, df_train, df_val, df_test, weight_factor. 
+               X_train, X_val and X_test respectively contain the data points of the training, validation and testing sets. 
+               y_train, y_val and y_test contain the corresponding labels for the data points in X_train, X_val and X_test. 
+               df_train, df_val and df_test contain the respective dataframes for the training, validation and test sets. 
+               weight_factor is used as a parameter for the loss function depending on the data imbalance.
+    '''
     if binary_model:
         logger.info("Split the dataset into train validation and test sets for the binary task and store the sets in dictionaries...")
     else:
         logger.info("Split the dataset into train validation and test sets for the multiclass task and store the sets in dictionaries......")
     
-    X = nchar_text_to_vec(df, model_folder_path) # Using ngram vectorizer
+    X = nchar_text_to_vec(data=df, model_folder_path=model_folder_path) # Using ngram vectorizer
     #X = doc2vec_text_to_vec(df, model_folder_path)
     #X = bert_text_to_vec(df, model_folder_path)
 
     # Combine text features with other features
-    features = general_params["features_for_model"]
+    features = config["general_params"]["features_for_model"]
     bbox_features_dict = {"features_for_model": features}
     with open(model_folder_path + 'boundingbox_features.pkl', 'wb') as fp:
         pickle.dump(bbox_features_dict, fp)
 
-    if general_params["use_only_text"] == False:
+    if config["general_params"]["use_only_text"] == False:
         X = np.concatenate((X, df[features].values), axis=1)
 
     if binary_model:
@@ -338,11 +407,11 @@ def train_test_val(df, model_folder_path, binary_model):
         with open(model_folder_path + 'label_encoder.pkl', 'wb') as f: 
             pickle.dump(le, f)  
 
-    weight_factor = get_weight_factor(y, df, binary_model)     
+    weight_factor = get_weight_factor(y=y, df=df, binary_model=binary_model)     
 
     indices = np.arange(X.shape[0])
-    X_train, X_val, y_train, y_val, indices_train, indices_val = train_test_split(X, y, indices, test_size=train_settings["train_val_split"], stratify=y, random_state=general_params["seed"])
-    X_val, X_test, y_val, y_test, indices_val, indices_test = train_test_split(X_val, y_val, indices_val, test_size=train_settings["val_test_split"], stratify=y_val, random_state=general_params["seed"])
+    X_train, X_val, y_train, y_val, indices_train, indices_val = train_test_split(X, y, indices, test_size=config["train_settings"]["train_val_split"], stratify=y, random_state=config["general_params"]["seed"])
+    X_val, X_test, y_val, y_test, indices_val, indices_test = train_test_split(X_val, y_val, indices_val, test_size=config["train_settings"]["val_test_split"], stratify=y_val, random_state=config["general_params"]["seed"])
 
     df_train = df.iloc[indices_train]
     df_val = df.iloc[indices_val]

@@ -1,14 +1,26 @@
 from preprocessing import preprocess_dataset, load_data_into_df, combine_dataframes, train_test_val
 from data_analysis import store_class_distribution, analyse_data_split
 from augmentation import data_augmentation
-from src.config import general_params
-
+import pandas as pd
 from datetime import datetime
 import os
 import pickle
 from loguru import logger
 
-def generate_dataset_dict(df, storage_path, binary_model):
+def generate_dataset_dict(df: pd.DataFrame, storage_path: str, binary_model: bool) -> None:
+    '''
+    This function takes a pandas DataFrame containing the dataset, path of the folder where the train, validation and test splits will be stored, and a boolean value indicating whether the model is binary or not. 
+    The function does the following:
+        Calls train_test_val() function on the input DataFrame to split the dataset into train, validation and test sets.
+        Calls analyse_data_split() function to analyze and visualize the distribution of data in the train, validation and test splits.
+        Stores the train, validation and test splits as dictionaries with the keys "X_train", "y_train", "X_val", "y_val", "X_test", "y_test", "weight_factor" in the path specified by the input argument "storage_path".
+        Stores the pandas dataframes of the train, validation and test splits as dictionaries in the path specified by the input argument "storage_path". 
+    Args:
+        df: a pandas DataFrame which contains the dataset to be split
+        storage_path: a string which contains the path to the folder where the train, validation and test splits will be stored
+        binary_model: a boolean which indicates if the model is binary or not 
+    Return: None 
+    '''
 
     X_train, y_train, X_val, y_val, X_test, y_test, df_train, df_val, df_test, weight_factor = train_test_val(df, model_folder_path=storage_path, binary_model=binary_model)
 
@@ -45,20 +57,18 @@ def generate_dataset_dict(df, storage_path, binary_model):
 
     logger.success("Splitted datasets are successfully stored!")
 
-# %%
-def main():
+def generate_dataset() -> None:
     dateTimeObj = datetime.now()
     timestamp = dateTimeObj.strftime("%d%m%Y_%H%M")
     storage_path = f"data/processed/{timestamp}/"
 
-    dataframes_list, ncars = load_data_into_df(original_prisma_data=False, label_new_data=False)
+    dataframes_list, ncars = load_data_into_df()
 
-    df_combined = combine_dataframes(dataframes_list)
+    df_combined = combine_dataframes(dataframes_list, ncars)
     df_preprocessed, df_for_plot = preprocess_dataset(df_combined)
 
-    if general_params["augmentation"]:
-        # Generate the new dataset
-        df_preprocessed = data_augmentation(df_preprocessed)
+    # Generate the new dataset
+    df_preprocessed = data_augmentation(df_preprocessed)
 
     os.makedirs(storage_path + "binary")
     os.makedirs(storage_path + "multiclass")
@@ -74,6 +84,9 @@ def main():
     store_class_distribution(filtered_df, "Einheitsname", storage_path + "multiclass/")
     logger.success("Plots successfully stored!")
 
+# %%
+def main():
+    generate_dataset()
 
 # %%
 if __name__ == "__main__":

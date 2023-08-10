@@ -2,14 +2,36 @@ import numpy as np
 import pandas as pd
 
 from sklearn.feature_extraction.text import CountVectorizer
+from loguru import logger
 
 import math
 import re
 import pickle
 
-def transform_boundingbox(x_min, x_max, y_min, y_max, z_min, z_max, ox, oy, oz, xx, xy, xz, yx, yy, yz, zx, zy, zz):
-    '''
-    This function transforms a bounding box by applying rotation and translation.
+def transform_boundingbox(x_min, x_max, y_min, y_max, z_min, z_max, ox, oy, oz, xx, xy, xz, yx, yy, yz, zx, zy, zz) -> np.array:
+    ''' 
+    This function takes the minimum and maximum coordinates of a bounding box as well as rotation and translation parameters as inputs. It returns the new coordinates of the bounding box after applying the provided rotation and translation. 
+    Args:
+        x_min: a float which corresponds to the minimum x-coordinate value of the bounding box
+        x_max: a float which corresponds to the maximum x-coordinate value of the bounding box
+        y_min: a float which corresponds to the minimum y-coordinate value of the bounding box
+        y_max: a float which corresponds to the maximum y-coordinate value of the bounding box
+        z_min: a float which corresponds to the minimum z-coordinate value of the bounding box
+        z_max: a float which corresponds to the maximum z-coordinate value of the bounding box
+        ox: a float which corresponds to the x-coordinate value of the translation vector
+        oy: a float which corresponds to the y-coordinate value of the translation vector
+        oz: a float which corresponds to the z-coordinate value of the translation vector
+        xx: a float which corresponds to the (1,1) element of the rotation matrix
+        xy: a float which corresponds to the (1,2) element of the rotation matrix
+        xz: a float which corresponds to the (1,3) element of the rotation matrix
+        yx: a float which corresponds to the (2,1) element of the rotation matrix
+        yy: a float which corresponds to the (2,2) element of the rotation matrix
+        yz: a float which corresponds to the (2,3) element of the rotation matrix
+        zx: a float which corresponds to the (2,3) element of the rotation matrix
+        zy: a float which corresponds to the (2,3) element of the rotation matrix
+        zz: a float which corresponds to the (2,3) element of the rotation matrix
+    Return:
+        transformed corners
     '''
     # Create an array of corner points of the bounding box
     corners = np.array([[x_min, y_min, z_min],
@@ -38,9 +60,18 @@ def transform_boundingbox(x_min, x_max, y_min, y_max, z_min, z_max, ox, oy, oz, 
 
 
 # %%
-def get_minmax(list_transformed_bboxes):
+def get_minmax(list_transformed_bboxes: list) -> float:
     '''
-    This function calculates the minimum and maximum coordinates of a list of transformed bounding boxes.
+    This function takes a list of transformed bounding boxes and returns the minimum and maximum coordinates for each axis 
+    Args:
+        list_transformed_bboxes: a list of transformed bounding boxes. Each list element should be a 2D numpy array of shape (8,3) where each row corresponds to a 3D coordinate in (x,y,z) order which describes the corners of a bounding box 
+    Return:
+        x_min: a float which corresponds to the minimum x-coordinate value
+        x_max: a float which corresponds to the maximum x-coordinate value
+        y_min: a float which corresponds to the minimum y-coordinate value
+        y_max: a float which corresponds to the maximum y-coordinate value
+        z_min: a float which corresponds to the minimum z-coordinate value
+        z_max: a float which corresponds to the maximum z-coordinate value 
     '''
     # Initialize the minimum and maximum coordinates to infinity and negative infinity, respectively
     x_min = np.inf
@@ -70,9 +101,13 @@ def get_minmax(list_transformed_bboxes):
 
 
 # %%
-def find_valid_space(df):
-    '''
-    This function finds the valid space by calculating the minimum and maximum coordinates of a DataFrame and expanding it by 10%.
+def find_valid_space(df: pd.DataFrame) -> tuple[np.array, float, float, float]:
+    ''' 
+    This function takes in a Pandas DataFrame containing the transformed bounding box specifications of one or more 3D objects and calculates the expanded bounding box containing all of the 3D objects. 
+    Args:
+        df: A Pandas DataFrame containing the transformed bounding box specifications of one or more 3D objects. The DataFrame should have the columns "X-Min_transf", "X-Max_transf", "Y-Min_transf", "Y-Max_transf", "Z-Min_transf", and "Z-Max_transf" defining the bounding box specifications of each object. 
+    Return: 
+        A tuple containing the corner matrix, length, width, and height of the expanded bounding box. The corner matrix is a numpy array of eight corner points, each represented as a tuple of (x, y, z) coordinates. The length, width, and height are represented as float values. 
     '''
 
     # Initialize the minimum and maximum coordinates with the values from the first row of the DataFrame
@@ -131,9 +166,16 @@ def find_valid_space(df):
 
 
 # %%
-def random_centerpoint_in_valid_space(corners, length, width, height):
-    '''
-    This function generates a random center point within the valid space defined by the corners and dimensions.
+def random_centerpoint_in_valid_space(corners: list, length: float, width: float, height: float) -> np.array:
+    ''' 
+    This function generates a random center point within the valid space defined by a 3D object's bounding box. 
+    Args:
+        corners: A list of eight corner points of the transformed bounding box in 3D space. Each point is a tuple of (x, y, z) coordinates.
+        length: The length of the 3D object along the x-axis.
+        width: The width of the 3D object along the y-axis.
+        height: The height of the 3D object along the z-axis. 
+    Return: 
+        A numpy array containing three float values representing the random center point within the valid space of the 3D object, along the x, y, and z axes, respectively. 
     '''
     # Extract the minimum and maximum coordinates from the corners
     x_min, y_min, z_min = corners[0]
@@ -157,9 +199,12 @@ def random_centerpoint_in_valid_space(corners, length, width, height):
 
 
 # %%
-def calculate_center_point(transformed_boundingbox):
-    '''
-    This function calculates the center point of a transformed bounding box.
+def calculate_center_point(transformed_boundingbox: np.array) -> float:
+    ''' 
+    This function takes in the transformed bounding box as a list of 8 corner points in 3D space and computes the center point of the box. 
+    Args: 
+        transformed_boundingbox: A array of eight corner points of the transformed bounding box in 3D space. Each point is a tuple of (x, y, z) coordinates. 
+    Return: center_x, center_y, center_z -> Three float values representing the center point of the bounding box along the x, y, and z axes, respectively. 
     '''
 
     # Initialize variables to store the sum of X, Y, and Z coordinates
@@ -187,9 +232,13 @@ def calculate_center_point(transformed_boundingbox):
 
 
 # %%
-def calculate_lwh(transformed_boundingbox):
-    '''
-    This function calculates the length, width, and height of a transformed bounding box.
+def calculate_lwh(transformed_boundingbox: list) -> float:
+    ''' 
+    This function takes in the transformed bounding box as a list of 8 corner points in 3D space and computes the length, width, and height of the bounding box. 
+    Args: 
+        transformed_boundingbox: A list of eight corner points of the transformed bounding box in 3D space. 
+        Each point is a tuple of (x, y, z) coordinates. 
+    Return: Three float values representing the length, width, and height of the bounding box, respectively. 
     '''
 
     # Initialize empty lists to store the X, Y, and Z coordinates
@@ -212,7 +261,16 @@ def calculate_lwh(transformed_boundingbox):
     # Return the length, width, and height
     return length, width, height
 
-def calculate_orientation(transformed_boundingbox):
+def calculate_orientation(transformed_boundingbox: np.array) -> float:
+    ''' 
+    Calculates the orientation angles (in radians) of a given transformed bounding box in 3D space.
+    Args:
+        transformed_boundingbox: an array of eight corners of a transformed bounding box in 3D space
+    Return:
+        theta_x: orientation angle of largest eigenvector with respect to x axis
+        theta_y: orientation angle of largest eigenvector with respect to y axis
+        theta_z: orientation angle of largest eigenvector with respect to z axis 
+    '''
     # Center the corners around the origin
     centered_corners = transformed_boundingbox - np.mean(transformed_boundingbox, axis=0) 
 
@@ -227,19 +285,31 @@ def calculate_orientation(transformed_boundingbox):
     return theta_x, theta_y, theta_z
 
 # %%
-def calculate_corners(center_point, length, width, height, theta_x, theta_y, theta_z): 
+def calculate_transformed_corners(center_point: np.array, length: float, width: float, height: float, theta_x: float, theta_y: float, theta_z: float) -> float: 
+    ''' 
+    This function takes in the location, dimensions, and orientation of a 3D object and calculates the coordinates of its eight corners. 
+    It takes in seven arguments and returns six outputs: the minimum and maximum x, y, and z coordinates of the bounding box of the 3D object. 
+    Args:
+        center_point: A tuple containing the (x, y, z) coordinates of the center of the 3D object.
+        length: The length of the 3D object along the x-axis.
+        width: The width of the 3D object along the y-axis.
+        height: The height of the 3D object along the z-axis.
+        theta_x: The rotation of the 3D object around the x-axis, measured in radians.
+        theta_y: The rotation of the 3D object around the y-axis, measured in radians.
+        theta_z: The rotation of the 3D object around the z-axis, measured in radians. 
+    Return: Six float values representing the minimum and maximum x, y, and z coordinates of the bounding box of the 3D object. 
+    '''
     # Calculate the rotation matrix using the Euler angles
+    
     rotation_matrix = np.array([
         [math.cos(float(theta_y)) * math.cos(float(theta_z)), -math.cos(float(theta_y)) * math.sin(float(theta_z)), math.sin(float(theta_y))],
         [math.cos(float(theta_x)) * math.sin(float(theta_z)) + math.sin(float(theta_x)) * math.sin(float(theta_y)) * math.cos(float(theta_z)), math.cos(float(theta_x)) * math.cos(float(theta_z)) - math.sin(float(theta_x)) * math.sin(float(theta_y)) * math.sin(float(theta_z)), -math.sin(float(theta_x)) * math.cos(float(theta_y))],
         [math.sin(float(theta_x)) * math.sin(float(theta_z)) - math.cos(float(theta_x)) * math.sin(float(theta_y)) * math.cos(float(theta_z)), math.sin(float(theta_x)) * math.cos(float(theta_z)) + math.cos(float(theta_x)) * math.sin(float(theta_y)) * math.sin(float(theta_z)), math.cos(float(theta_x)) * math.cos(float(theta_y))]
     ])
-
     # Calculate the half-lengths of the box along each axis
     half_length = length / 2
     half_width = width / 2
     half_height = height / 2
-
     # Calculate the coordinates of the eight corners of the box
     corners = np.array([
         [half_length, -half_width, -half_height],
@@ -251,13 +321,10 @@ def calculate_corners(center_point, length, width, height, theta_x, theta_y, the
         [-half_length, half_width, -half_height],
         [-half_length, half_width, half_height]
     ])
-
     # Rotate the corners using the rotation matrix
     rotated_corners = np.dot(corners, rotation_matrix)
-
     # Translate the corners to the center point
     translated_corners = rotated_corners + np.array([center_point[0], center_point[1], center_point[2]])
-
     # Calculate the minimum and maximum x, y, and z coordinates of the new bounding box
     x_min = np.min(translated_corners[:, 0])
     x_max = np.max(translated_corners[:, 0])
@@ -270,6 +337,14 @@ def calculate_corners(center_point, length, width, height, theta_x, theta_y, the
 
 # %%
 def prepare_text(designation: str) -> str:
+    ''' 
+    This function takes in a string, performs a series of text preprocessing tasks, and returns the resulting cleaned string. 
+    The tasks it performs include converting all characters to uppercase, removing all punctuation marks, removing all numeric digits, removing predefined words, removing all words with only one letter, and removing all empty tokens. 
+    Args:
+        designation: A string that needs to be prepared. 
+    Return:
+        designation: The function returns a string which is the cleaned version of the original input string. 
+    '''
     # transform to lower case
     text = str(designation).upper()
 
@@ -298,7 +373,14 @@ def prepare_text(designation: str) -> str:
     return prepared_designation
 
 # %%
-def clean_text(df):
+def clean_text(df: pd.DataFrame) -> pd.DataFrame:
+    ''' 
+    Description: Cleans text data in the DataFrame by applying the 'prepare_text' function on the 'Benennung (dt)' column, and adds the cleaned text data as a new column, 'Benennung (bereinigt)'.
+    Args:
+        df: DataFrame containing 'Benennung (dt)' column
+    Return:
+        df: DataFrame with an additional cleaned text column, 'Benennung (bereinigt)' 
+    '''
     df["Benennung (bereinigt)"] = df.apply(lambda x: prepare_text(x["Benennung (dt)"]), axis=1)
 
     return df
@@ -368,11 +450,9 @@ def bert_text_to_vec(data: pd.DataFrame, model_folder_path):
 def nchar_text_to_vec(data: pd.DataFrame, model_folder_path: str) -> tuple:
     '''
     This function converts text data into vector representation using the n-gram approach.
-
     Args:
         data (pd.DataFrame): The input DataFrame containing the text data.
         model_folder_path (str): The path to the folder where the model files will be saved.
-
     Returns:
         tuple: A tuple containing the vectorized text data.
     '''
@@ -398,13 +478,11 @@ def nchar_text_to_vec(data: pd.DataFrame, model_folder_path: str) -> tuple:
 
 
 # %%
-def get_vocabulary(column):
+def get_vocabulary(column) -> list:
     '''
     This function extracts the vocabulary from a given column of text data.
-
     Args:
         column: The input column containing the text data.
-
     Returns:
         list: A list of unique words in the text data.
     '''
@@ -425,7 +503,17 @@ def get_vocabulary(column):
     return vocabulary
 
 # %%
-def calculate_orientation2(transformed_boundingbox):
+def calculate_orientation2(transformed_boundingbox: np.array) -> float:
+    ''' 
+    Calculates the orientation angles (in radians) of a given transformed bounding box in 3D space.
+    Args:
+        transformed_boundingbox: an array of eight corners of a transformed bounding box in 3D space
+    Return:
+        theta_x: orientation angle of largest eigenvector with respect to x axis
+        theta_y: orientation angle of largest eigenvector with respect to y axis
+        theta_z: orientation angle of largest eigenvector with respect to z axis 
+    '''
+
     # Calculate the centroid of the bounding box
     centroid = np.mean(transformed_boundingbox, axis=0)
 
@@ -495,10 +583,7 @@ def main():
     #print(result)
     #print(result2)
 
-    input_text = "This is a test A.F.-51232/AF designation." 
-    print(input_text)
-    result = prepare_text(input_text)
-    print(result)
+    calculate_transformed_corners(np.array[(3,4,5)], 5.0,4.5,3.5,0.11,0.22,0.33)
     
 # %%
 if __name__ == "__main__":

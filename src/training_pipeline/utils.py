@@ -1,16 +1,35 @@
 # %%
 import pandas as pd
+import numpy as np
 
 import os
 import pickle
 import json
 from loguru import logger
 
-from src.config import paths, train_settings, prediction_settings
+import yaml
+from yaml.loader import SafeLoader
+with open('../config.yaml') as file:
+    config = yaml.load(file, Loader=SafeLoader)
 
 # %%
 def load_dataset(binary_model: bool):
-    data_folder = paths["folder_processed_dataset"]
+    ''' 
+    This function loads the preprocessed dataset along with train, validation and test sets from the specified data folder. The binary_model parameter indicates whether the dataset is for a binary classification task or not.
+    Args:
+        binary_model: A boolean value indicating whether the dataset is for a binary classification task or not.
+    Return:
+        X_train: An array or DataFrame containing the training set features.
+        y_train: An array or DataFrame containing the training set labels.
+        X_val: An array or DataFrame containing the validation set features.
+        y_val: An array or DataFrame containing the validation set labels.
+        X_test: An array or DataFrame containing the test set features.
+        y_test: An array or DataFrame containing the test set labels.
+        df_preprocessed: The preprocessed dataset.
+        df_test: A DataFrame containing the test set data.
+        weight_factor: A float value indicating the weight factor for the dataset.
+    '''
+    data_folder = config["paths"]["folder_processed_dataset"]
     path_trainset = os.path.join(data_folder, "processed_dataset.csv")  
 
     if os.path.exists(path_trainset):
@@ -46,7 +65,20 @@ def load_dataset(binary_model: bool):
     return X_train, y_train, X_val, y_val, X_test, y_test, df_preprocessed, df_test, weight_factor
 
 # %%
-def store_trained_model(model, metrics, best_iteration, val_auc, hp, index_best_model, model_folder_path, finalmodel):
+def store_trained_model(model, metrics: str, best_iteration: int, val_auc: float, hp: dict, index_best_model: int, model_folder_path: str, finalmodel: bool) -> None:
+    ''' 
+    This function stores the trained model, hyperparameters, metrics and best iteration information in a pickled file at the provided model folder path and logs the validation AUC and training information in a txt file.
+    Args:
+        model: The trained model.
+        metrics: A dictionary containing the evaluation metrics and their values for the model.
+        best_iteration: An integer indicating the number of iterations the model took to converge to the best solution.
+        val_auc: A float representing the AUC score of the validation set.
+        hp: A dictionary containing the hyperparameters used to train the model.
+        index_best_model: An integer indicating the index of the best model in the hyperparameter tuning process.
+        model_folder_path: A string indicating the path where the trained model and logs will be saved.
+        finalmodel: A boolean value indicating whether the model to be saved is the final model.
+    Return: None
+    '''
     # save model
     if finalmodel:
             model_path = model_folder_path + f"final_model.pkl"
@@ -65,7 +97,7 @@ def store_trained_model(model, metrics, best_iteration, val_auc, hp, index_best_
         f.write("Trained Iterations: {}\n".format(best_iteration))
         f.close()
     else:
-        dataset_path = "Dataset: {}\n".format(paths["folder_processed_dataset"])
+        dataset_path = "Dataset: {}\n".format(config["paths"]["folder_processed_dataset"])
         model_folder = "Model folder path: {}\n".format(model_folder_path)
         f= open(model_folder_path + "logging.txt","w+")
         f.write(dataset_path)
@@ -79,14 +111,26 @@ def store_trained_model(model, metrics, best_iteration, val_auc, hp, index_best_
         for key in hp:
             f.write("{}: {}\n".format(key, hp[key]))
         f.write(f"Metrics: {metrics} \n")
-        f.write(json.dumps(train_settings))
+        f.write(json.dumps(config["train_settings"]))
         f.write("\n")
-        f.write(json.dumps(prediction_settings))
+        f.write(json.dumps(config["prediction_settings"]))
         f.write("\n")
         f.close()
 
 # %%
-def store_predictions(y_test, y_pred, probs, df_preprocessed, df_test, model_folder_path, binary_model):
+def store_predictions(y_test: np.arry, y_pred: np.arry, probs: np.arry, df_preprocessed: pd.DataFrame, df_test: pd.DataFrame, model_folder_path: str, binary_model: bool) -> None:
+    ''' 
+    This function saves the predicted outputs and related information in a CSV file called wrong_predictions.csv at the provided model folder path.
+    Args:
+        y_test: An array or DataFrame containing the true labels of the test set.
+        y_pred: An array or DataFrame containing the predicted labels of the test set.
+        probs: An array or DataFrame containing the predicted probabilities for each label of the test set.
+        df_preprocessed: The preprocessed dataset.
+        df_test: A DataFrame containing the test set data.
+        model_folder_path: A string indicating the path where the prediction results will be saved.
+        binary_model: A boolean value indicating whether the dataset is for a binary classification task or not.
+    Return: None
+    '''
 
     if binary_model:
         class_names = df_preprocessed['Relevant fuer Messung'].unique()

@@ -3,18 +3,39 @@ import numpy as np
 import pickle
 import os
 from loguru import logger
-from src.data_pipeline.preprocessing import load_data_into_df, prepare_and_add_labels, preprocess_dataset
+from src.data_pipeline.preprocessing import prepare_and_add_labels, preprocess_dataset
 from src.data_pipeline.feature_engineering import find_valid_space
-from src.config import general_params, prediction_settings
 
-def get_dataset_path_from_logging(file_path):
+import yaml
+from yaml.loader import SafeLoader
+with open('../config.yaml') as file:
+    config = yaml.load(file, Loader=SafeLoader)
+
+def get_dataset_path_from_logging(file_path: str) -> str or None:
+    '''
+    This function takes the path of the logging file as input and returns the path of the dataset that was used for model training from the logging file.
+    Args:
+        file_path: String: The path of the logging file.
+    Return:
+        String: The path of the dataset used for model training. If the "Dataset:" keyword is not present in the logging file, it returns None.
+    '''
     with open(file_path, 'r') as file:
         for line in file:
             if "Dataset:" in line:
                 return line.split(":")[1].strip()
     return None
 
-def get_model(folder_path):
+def get_model(folder_path: str):
+    '''
+    Search in the model folder path for the trained models and load the vectorizer, vocabulary, and boundingbox_features used for training.
+    Args:
+        folder_path = path to the folder where the models are stored
+    Return:
+        model = final trained model
+        vectorizer = vectorizer used to train the final model
+        vocabulary = vocabulary used to train the final model
+        bbox_features = bounding box features used to train the final model
+    '''
     final_model_path = folder_path + "/final_model.pkl"
     pretrained_model_path = folder_path + "/model.pkl"
 
@@ -44,7 +65,17 @@ def get_model(folder_path):
 
     return model, vectorizer, vocabulary, bbox_features
 
-def get_X(vocab, vectorizer, bbox_features, df_preprocessed):
+def get_X(vocab, vectorizer, bbox_features: list, df_preprocessed: pd.DataFrame) -> np.array:
+    '''
+    Prepare the text data and combine with additional features to generate the dataset to train the model 
+    Args:
+        vocab = vocabulary of the dataset
+        vectorizer = vectorizer trained on the dataset
+        bbox_features = list of bounding box features which should be used additionally to the designation 
+        df_preprocessed = dataframe with the preprocessed data
+    Return:
+        X = dataset prepared to train the model
+    '''
     # Convert the vocabulary list to a dictionary
     vocabulary_dict = {word: index for index, word in enumerate(vocab)}
 
@@ -53,12 +84,20 @@ def get_X(vocab, vectorizer, bbox_features, df_preprocessed):
     X = vectorizer.transform(df_preprocessed['Benennung (bereinigt)']).toarray()
 
     # Combine text features with other features
-    if general_params["use_only_text"] == False:      
+    if config["general_params"]["use_only_text"] == False:      
         X = np.concatenate((X, df_preprocessed[bbox_features].values), axis=1)
     
     return X
 
-def get_best_iteration(model, method):
+def get_best_iteration(model, method: str) -> int:
+    '''
+    Get the best iteration of the trained model
+    Args:
+        model = trained model
+        method = string which method is used for training ("lgbm", "xgboost", "catboost")
+    Return:
+        best_iteration
+    '''
     if method == "lgbm":
         best_iteration = model._best_iteration - 1
     elif method == "xgboost":
@@ -68,7 +107,17 @@ def get_best_iteration(model, method):
 
     return best_iteration
 
-def get_probabilities(model, X_test, best_iteration, method):
+def get_probabilities(model, X_test: np.array, best_iteration: int, method: str) -> np.array:
+    '''
+    Get the probibilities for the model prediction
+    Args:
+        model = trained model
+        X_test = test set
+        best_iteration = best iteration of the trained model
+        method = string which method is used for training ("lgbm", "xgboost", "catboost")
+    Return:
+        probs = probabilities
+    '''
     if method == "lgbm":
         probs = model.predict_proba(X_test, num_iteration=best_iteration)
     elif method == "xgboost":
@@ -79,12 +128,25 @@ def get_probabilities(model, X_test, best_iteration, method):
     return probs
 
 # %%
-def model_predict(model, X_test, method, binary_model):
-    best_iteration = get_best_iteration(model, method)
-    probs = get_probabilities(model, X_test, best_iteration, method)
+def model_predict(model, X_test: np.array, method: str, binary_model: bool) -> tuple[np.array, np.array, int]:
+    ''' 
+    Returns predicted output, probabilities, and best iteration number of a given machine learning model on test data using the chosen method. If binary_model flag is True, it predicts binary output; otherwise, it predicts the class with the highest probability.
+
+    Args:
+        model: machine learning model
+        X_test: test data
+        method: str, the chosen method for identifying best iteration
+        binary_model: bool, indicates whether binary classification or multiclass classification is expected
+    Return:
+        y_pred: predicted output
+        probs: probability values
+        best_iteration: the best iteration number based on the chosen method 
+    '''
+    best_iteration = get_best_iteration(method=model, method=method)
+    probs = get_probabilities(model=model, X_test=X_test, best_iteration=best_iteration, method=method)
 
     if binary_model:
-        y_pred = (probs[:,1] >= prediction_settings["prediction_threshold"])
+        y_pred = (probs[:,1] >= config["prediction_settings"]["prediction_threshold"])
         y_pred =  np.where(y_pred, 1, 0)
     else:
         y_pred = probs.argmax(axis=1)   
@@ -92,8 +154,19 @@ def model_predict(model, X_test, method, binary_model):
     return y_pred, probs, best_iteration
 
 # %%
-def store_predictions(y_test, y_pred, probs, df_preprocessed, df_test, model_folder_path, binary_model):
-
+def store_predictions(y_test: np.array, y_pred: np.array, probs: np.array, df_preprocessed: pd.DataFrame, df_test: pd.DataFrame, model_folder_path: str, binary_model: bool) -> None:
+    ''' 
+    Stores wrong predictions, true labels, predicted labels, probabilities, and additional information based on the input parameters in a CSV file.
+    Args:
+        y_test: true labels
+        y_pred: predicted labels
+        probs: probability values
+        df_preprocessed: preprocessed DataFrame
+        df_test: test DataFrame
+        model_folder_path: path to store the wrong_predictions.csv file
+        binary_model: bool, indicates whether binary classification or multiclass classification is expected
+    Return: None 
+    '''
     if binary_model:
         class_names = df_preprocessed['Relevant fuer Messung'].unique()
     else:
@@ -116,18 +189,25 @@ def store_predictions(y_test, y_pred, probs, df_preprocessed, df_test, model_fol
             df_wrong_predictions.loc[i,"Predicted"] = class_names[y_pred[i]]
             df_wrong_predictions.loc[i,"True"] = class_names[y_test[i]]
             if binary_model:
-                if probs[i][1] >= prediction_settings["prediction_threshold"]:
+                if probs[i][1] >= config["prediction_settings"]["prediction_threshold"]:
                     df_wrong_predictions.loc[i,"Probability"] = probs[i][1]
                 else:
                     df_wrong_predictions.loc[i,"Probability"] = 1 - probs[i][1]
             else:
                 df_wrong_predictions.loc[i,"Probability"] = probs[i][1]
-
-        
+ 
     # Serialize data into file:
     df_wrong_predictions.to_csv(model_folder_path + "wrong_predictions.csv")
 
-def get_method_from_logging(model_folder_path):
+def get_method_from_logging(model_folder_path: str) -> str or None:
+    ''' 
+    Description: Returns the method used for training the model by reading the 'logging.txt' file of the given model path.
+    Args:
+        model_folder_path: path of folder containing the model
+    Return:
+        method used for training the model
+        None if 'Method:' not found in the 'logging.txt' file 
+    '''
     logging_path = model_folder_path + "/logging.txt"
     with open(logging_path, 'r') as file:
         for line in file:
@@ -135,30 +215,43 @@ def get_method_from_logging(model_folder_path):
                 return line.split(":")[1].strip()
     return None
 
-def predict_on_new_data(df):
+def predict_on_new_data(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, list, str]:
+    ''' 
+    Predicts relevant car parts and unique names on a new dataset by using a binary model and a multiclass model. 
+    It also validates the identified car parts for their position and compatibility with the training set. 
+    Then, the function prepares the output as DataFrames and a list, and returns a tuple containing four values: preprocessed DataFrame, DataFrame of relevant car parts with unique names, a list of unique names that were not found, and the 'ncar' value which is the car derivat.
+
+    Args:
+        df: new dataset
+    Return:
+        df_preprocessed: preprocessed DataFrame for the input data
+        df_relevant_parts: DataFrame containing relevant car parts with their unique names and additional information about them
+        einheitsname_not_found: list of unique names not found
+        ncar: number of recognized VINs 
+    '''
     logger.info("Prepare dataset...")
-    df, ncar = prepare_and_add_labels(df)
+    df, ncar = prepare_and_add_labels(dataframe=df)
     logger.info("Dataset successfully prepared!")
     
     logger.info("Load pretrained models...")
     model_folder_path_binary = "final_models/Binary_model"
     model_folder_path_multiclass = "final_models/Multiclass_model"
-    binary_model, vectorizer_binary, vocabulary_binary, boundingbox_features_binary = get_model(model_folder_path_binary)
-    multiclass_model, vectorizer_multiclass, vocabulary_multiclass, boundingbox_features_multiclass = get_model(model_folder_path_multiclass)       
+    model_binary, vectorizer_binary, vocabulary_binary, boundingbox_features_binary = get_model(folder_path=model_folder_path_binary)
+    model_multiclass, vectorizer_multiclass, vocabulary_multiclass, boundingbox_features_multiclass = get_model(folder_path=model_folder_path_multiclass)       
     logger.success("Pretrained models are loaded!")
 
     logger.info("Preprocess data...")
     df_preprocessed, df_for_plot = preprocess_dataset(df)
 
-    X_binary = get_X(vocabulary_binary, vectorizer_binary, boundingbox_features_binary["features_for_model"], df_preprocessed)
-    X_multiclass = get_X(vocabulary_multiclass, vectorizer_multiclass, boundingbox_features_multiclass["features_for_model"], df_preprocessed)
+    X_binary = get_X(vocab=vocabulary_binary, vectorizer=vectorizer_binary, bbox_features=boundingbox_features_binary["features_for_model"], df_preprocessed=df_preprocessed)
+    X_multiclass = get_X(vocab=vocabulary_multiclass, vectorizer=vectorizer_multiclass, bbox_features=boundingbox_features_multiclass["features_for_model"], df_preprocessed=df_preprocessed)
     logger.success("Dataset is ready for classification!")   
 
     logger.info("Identify relevant car parts and add the unique names...")
-    binary_method = get_method_from_logging(model_folder_path_binary)
-    multiclass_method = get_method_from_logging(model_folder_path_multiclass)
-    y_pred_binary, probs_binary, _  = model_predict(binary_model, X_binary, binary_method, binary_model=True)
-    y_pred_multiclass, probs_multiclass, _ = model_predict(multiclass_model, X_multiclass, multiclass_method, binary_model=False)
+    binary_method = get_method_from_logging(model_folder_path=model_folder_path_binary)
+    multiclass_method = get_method_from_logging(model_folder_path=model_folder_path_multiclass)
+    y_pred_binary, probs_binary, _  = model_predict(model=model_binary, X_test=X_binary, method=binary_method, binary_model=True)
+    y_pred_multiclass, probs_multiclass, _ = model_predict(model=model_multiclass, X_test=X_multiclass, method=multiclass_method, binary_model=False)
 
     dataset_path_binary = get_dataset_path_from_logging(model_folder_path_binary + "/logging.txt")
     dataset_path_multiclass = get_dataset_path_from_logging(model_folder_path_multiclass + "/logging.txt")
@@ -197,7 +290,7 @@ def predict_on_new_data(df):
     for index, row in df_relevant_parts.iterrows():
         for name in unique_names:
             trainset_name = trainset_relevant_parts[(trainset_relevant_parts["Einheitsname"] == name)].reset_index(drop=True)
-            corners, _, _, _ = find_valid_space(trainset_name)
+            corners, _, _, _ = find_valid_space(df=trainset_name)
             x_min = np.min(corners[:, 0])
             x_max = np.max(corners[:, 0])
             y_min = np.min(corners[:, 1])
@@ -235,42 +328,16 @@ def predict_on_new_data(df):
 
     return df_preprocessed, df_relevant_parts, einheitsname_not_found, ncar
 
-def label_data():
-    dataframes, ncars = load_data_into_df(original_prisma_data=True, label_new_data=True)
-    for df in dataframes:
-        df_with_label_columns, df_relevant_parts, einheitsname_not_found, ncar = predict_on_new_data(df)
-
-        for index, row in df_relevant_parts.iterrows():
-            sachnummer = row['Sachnummer']
-            einheitsname = row['Einheitsname']
-            
-            if sachnummer in df['Sachnummer'].values:
-                df_with_label_columns.loc[df_with_label_columns['Sachnummer'] == sachnummer, 'Relevant fuer Messung'] = "Ja"
-                df_with_label_columns.loc[df_with_label_columns['Sachnummer'] == sachnummer, 'Einheitsname'] = einheitsname
-
-        features = general_params["relevant_features"] + ['Relevant fuer Messung','Einheitsname']
-        df_with_label_columns = df_with_label_columns[features]
-        df_with_label_columns.to_csv(f"data/pre_labeled/{ncar}_labeled.csv")
-
-        logger.info(f"The following car parts are not found in your dataset: {einheitsname_not_found} If essential, please add this car parts manually!")
-        logger.success(f"The prediction is done and the result is stored here: data/pre_labeled_data/{ncar}_labeled.csv!")
-
 # %%
 def main():
     
-    label_new_data = False
-    make_prediction = True
-    data_path = 'data/raw_for_labeling/G60_G60_G60_G60_G60_G60_G60_G60_G60_G60_G60_G60_G60_G60_G60_EP_prismaexport-20230731-171755.xls'
+    data_path = 'data/raw_for_labeling/G60_prismaexport-20230731-171755.xls'
 
-    if make_prediction:
-        df = pd.read_excel(data_path, header=None, skiprows=1)
-        df.columns = df.iloc[0]
-        df = df.iloc[1:] 
-        df_preprocessed, df_relevant_parts, einheitsname_not_found, ncar = predict_on_new_data(df)
-        print(df_relevant_parts)
-
-    if label_new_data:
-        label_data()
+    df = pd.read_excel(data_path, header=None, skiprows=1)
+    df.columns = df.iloc[0]
+    df = df.iloc[1:] 
+    df_preprocessed, df_relevant_parts, einheitsname_not_found, ncar = predict_on_new_data(df)
+    print(df_relevant_parts)
 
 # %%
 if __name__ == "__main__":

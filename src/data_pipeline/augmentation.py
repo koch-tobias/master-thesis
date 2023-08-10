@@ -5,13 +5,21 @@ import numpy as np
 import math
 import random
 from loguru import logger
-from src.data_pipeline.feature_engineering import find_valid_space, random_centerpoint_in_valid_space, calculate_corners
-from src.config import gpt_settings, train_settings
+import yaml
+from yaml.loader import SafeLoader
+from feature_engineering import find_valid_space, random_centerpoint_in_valid_space, calculate_transformed_corners
+
+with open('src/config.yaml') as file:
+    config = yaml.load(file, Loader=SafeLoader)
 
 # %%
 def random_order(designation: str) -> str:
     '''
-    This function takes a sentence as input and changes the word order randomly. 
+    Takes a sentence as input and changes the word order randomly. 
+    Arg: 
+        Designation of the car part
+    Return: 
+        New designation
     '''
     # Split the designation into individual words
     words = designation.split()
@@ -27,12 +35,16 @@ def random_order(designation: str) -> str:
     return new_designation
 
 # %%
-def swap_chars(description: str) -> str:
+def swap_chars(designation: str) -> str:
     '''
-    This function takes a text as input and randomly swap two chars which are next to each other
+    Takes a text as input and randomly swap two chars which are next to each other
+    Arg: 
+        Designation of the car part
+    Return: 
+        New designation
     '''
     # Convert description to a list of chars
-    chars = list(description)
+    chars = list(designation)
 
     # Choose the chars which should be swaped 
     index1 = random.randrange(len(chars) - 1)
@@ -44,9 +56,13 @@ def swap_chars(description: str) -> str:
     return ''.join(chars)
 
 # %%
-def add_char(description: str) -> str:
+def add_char(designation: str) -> str:
     '''
-    This function takes a text as input and randomly adds a char to a random position
+    Takes a text as input and randomly adds a char to a random position
+    Arg: 
+        Designation of the car part
+    Return: 
+        New designation
     '''
     # German alphabet
     alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -55,28 +71,36 @@ def add_char(description: str) -> str:
     char = random.choice(alphabet)
 
     # Randomly select the position where to add the char
-    index = random.randrange(len(description)+1)
+    index = random.randrange(len(designation)+1)
 
     # Add the selected char
-    new_description = description[:index] + char + description[index:]
+    new_designation = designation[:index] + char + designation[index:]
 
-    return new_description 
+    return new_designation 
 
 # %%
-def delete_char(description: str) -> str:
+def delete_char(designation: str) -> str:
     '''
-    This function takes a text as input and randomly deletes a char
+    Takes a text as input and randomly deletes a char
+    Arg: 
+        Designation of the car part
+    Return: 
+        New designation
     '''
-    index = random.randrange(len(description))
-    new_description = description[:index] + description[index+1:]
+    index = random.randrange(len(designation))
+    new_designation = designation[:index] + designation[index+1:]
     
-    return new_description   
+    return new_designation  
 
 # %%
-def random_mistakes(description: str) -> str:
+def random_mistakes(designation: str) -> str:
     '''
-    This function takes a text as input and inserts a random spelling error. 
+    Takes a text as input and inserts a random spelling error. 
     This is done either by swapping chars, adding a chars, or deleting a chars.
+    Arg: 
+        Designation of the car part
+    Return: 
+        New designation
     '''
     # Generate three random probabilities between 0 and 1 
     probs = [random.uniform(0,1) for _ in range(3)]
@@ -84,26 +108,30 @@ def random_mistakes(description: str) -> str:
 
     if probs[0] > (probs[1] and probs[2]):
         # Randomly swap two chars
-        new_description = swap_chars(description)
+        new_designation = swap_chars(designation=designation)
         
-        return new_description
+        return new_designation
     
     elif probs[1] > (probs[0] and probs[2]):
         # Randomly add a char
-        new_description = add_char(description)
+        new_designation = add_char(designation=designation)
 
-        return new_description
+        return new_designation
 
     else:
         # Randomly delete one char
-        new_description = delete_char(description)
+        new_designation = delete_char(designation=designation)
         
-        return new_description
+        return new_designation
 
 # %%
 def remove_prefix(response: str) -> str:
     ''' 
     The output of GPT has always a prefix like "Answer: " or "Modified Designation: ". This prefix will be deleted that we keep only the generated text.
+    Arg: 
+        Response of GPT
+    Return: 
+        New response
     '''
     index = response.find(":")
 
@@ -116,6 +144,11 @@ def remove_prefix(response: str) -> str:
     return new_response
 
 def init_openai():
+    ''' 
+    Contains the init informations to connect with GPT
+    Arg: None
+    Return: None
+    '''
     openai.api_type = "azure"
     openai.api_base = "https://convaip-sbx-openai.openai.azure.com/"
     # openai.api_version = "2022-12-01" # For GPT3.0
@@ -123,9 +156,13 @@ def init_openai():
     openai.api_key = '9e6fa24631f54cf58866766bd31a2bff' #os.getenv("OPENAI_API_KEY")
 
 # %%
-def create_prompt(text: str) -> str:
+def create_prompt(designation: str) -> str:
     ''' 
-    This functions adds the designation to the costumized prompt    
+    Adds the designation to the costumized prompt    
+    Arg: 
+        Designation of the car part
+    Return: 
+        Prompt
     '''
     prompt = f'''
                 Task:
@@ -157,37 +194,45 @@ def create_prompt(text: str) -> str:
                 - Modified Designation: ABDECKUNG FENSTERRAHMEN TUERE VORN
 
                 """
-                {text}
+                {designation}
                 """
             '''
     return prompt
 
 # %%
-def gpt35_designation(text:str) -> str:
+def gpt35_designation(designation:str) -> str:
     ''' 
-    This functions calls the GPT API and generates the response  
+    Calls the GPT API and generates the response  
+    Arg: 
+        Designation of the car part
+    Return: 
+        New response
     '''
-    prompt= create_prompt(text)
-    new_response = text
-    while new_response == text:
+    prompt= create_prompt(designation=designation)
+    new_response = designation
+    while new_response == designation:
         response = openai.ChatCompletion.create(
             engine="chat-gpt-0301",
             messages=[{"role":"system","content":"You are an AI assistant that helps to create a car component designation."},{"role":"user","content": prompt}],
-            temperature = gpt_settings["temperature"],
-            max_tokens = gpt_settings["max_tokens"],
-            top_p = gpt_settings["top_p"],
-            n = gpt_settings["n"]
+            temperature = config["gpt_settings"]["temperature"],
+            max_tokens = config["gpt_settings"]["max_tokens"],
+            top_p = config["gpt_settings"]["top_p"],
+            n = config["gpt_settings"]["n"]
         )
         response = [choice.message.content for choice in response.choices]
-        new_response = remove_prefix(response[0])
+        new_response = remove_prefix(response=response[0])
     return new_response
 
 # %%
-def augmented_boundingbox(df_original, df_temp):
+def augmented_boundingbox(df_original: pd.DataFrame, df_temp: pd.DataFrame) -> pd.DataFrame:
     ''' 
-    This function generates a synthetic bounding box based on the car parts in the trainset
+    Generates a synthetic bounding box based on the car parts in the trainset
+    Arg: 
+        df_orignal -> origninal dataset, df_temp -> dataframe with one existing car part as starting point
+    Return: 
+        Dataframe with the new synthetic bounding box  
     '''
-    corners, valid_length, valid_width, valid_height = find_valid_space(df_original)
+    corners, valid_length, valid_width, valid_height = find_valid_space(df=df_original)
 
     list_corners = []
     list_corners.append(corners)
@@ -222,9 +267,9 @@ def augmented_boundingbox(df_original, df_temp):
         width = np.random.uniform(min_width, max_width)
         height = np.random.uniform(min_height, max_height)
         volume = length * width * height
-        
-    center_point = random_centerpoint_in_valid_space(corners, length, width, height)
-    x_min, x_max, y_min, y_max, z_min, z_max = calculate_corners(center_point, length, width, height, df_temp.loc[0, "theta_x"], df_temp.loc[0, "theta_y"], df_temp.loc[0, "theta_z"])
+    
+    center_point = random_centerpoint_in_valid_space(corners=corners, length=length, width=width, height=height)
+    x_min, x_max, y_min, y_max, z_min, z_max = calculate_transformed_corners(center_point=center_point, length=length, width=width, height=height, theta_x=df_temp.loc[0, "theta_x"], theta_y=df_temp.loc[0, "theta_y"], theta_z=df_temp.loc[0, "theta_z"])
 
     # Modify the bounding box information
     df_temp.loc[0, "X-Min_transf"] = x_min
@@ -247,11 +292,14 @@ def augmented_boundingbox(df_original, df_temp):
 # %%
 def data_augmentation(df: pd.DataFrame) -> pd.DataFrame:
     ''' 
-    This function generates synthetic data to extend the data set. 
+    Generates synthetic data to extend the data set. 
     Only the data points that are relevant for a measurement are expanded, since this class is very underrepresented. 
     A component name is expanded if it contains more than 2 words and at least one of the three data augmentation techniques is activated.
+    Arg: 
+        dataframe with the orignal data
+    Return: 
+        dataframe with added synthetic data
     '''
-    df.to_csv("df_for_data_augmentation.csv")
     init_openai()
 
     logger.info("Start adding artificial designations...")
@@ -265,35 +313,35 @@ def data_augmentation(df: pd.DataFrame) -> pd.DataFrame:
         df_temp = df_new.iloc[[0]]
 
         count_designations = df_new.shape[0]
-        target_nr_of_unique_carparts = math.ceil(2 / train_settings["train_val_split"])
+        target_nr_of_unique_carparts = math.ceil(2 / config["train_settings"]["train_val_split"])
         if count_designations < target_nr_of_unique_carparts:
             logger.info(f"Adding {target_nr_of_unique_carparts-count_designations} synthetic generated car parts of {name}..")
         while count_designations < target_nr_of_unique_carparts:
             if count_designations < target_nr_of_unique_carparts:
-                df_temp.loc[0,"Benennung (bereinigt)"] = random_order(df_new.loc[0,"Benennung (bereinigt)"])  
+                df_temp.loc[0,"Benennung (bereinigt)"] = random_order(designation=df_new.loc[0,"Benennung (bereinigt)"])  
                 count_designations = count_designations + 1
                 if df_temp.loc[0,"volume"] > 0:
-                    df_temp = augmented_boundingbox(df_new, df_temp) 
+                    df_temp = augmented_boundingbox(df_original=df_new, df_temp=df_temp) 
                 df = pd.concat([df, df_temp], ignore_index=True).reset_index(drop=True) 
 
             if count_designations < target_nr_of_unique_carparts:
-                df_temp.loc[0,"Benennung (bereinigt)"] = swap_chars(df_new.loc[0,"Benennung (bereinigt)"])
+                df_temp.loc[0,"Benennung (bereinigt)"] = swap_chars(designation=df_new.loc[0,"Benennung (bereinigt)"])
                 count_designations = count_designations + 1
                 if df_temp.loc[0,"volume"] > 0:
-                    df_temp = augmented_boundingbox(df_new, df_temp) 
+                    df_temp = augmented_boundingbox(df_original=df_new, df_temp=df_temp) 
                 df = pd.concat([df, df_temp], ignore_index=True).reset_index(drop=True) 
 
             if count_designations < target_nr_of_unique_carparts:
-                df_temp.loc[0,"Benennung (bereinigt)"] = delete_char(df_new.loc[0,"Benennung (bereinigt)"])
+                df_temp.loc[0,"Benennung (bereinigt)"] = delete_char(designation=df_new.loc[0,"Benennung (bereinigt)"])
                 count_designations = count_designations + 1
                 if df_temp.loc[0,"volume"] > 0:
-                    df_temp = augmented_boundingbox(df_new, df_temp) 
+                    df_temp = augmented_boundingbox(df_original=df_new, df_temp=df_temp) 
                 df = pd.concat([df, df_temp], ignore_index=True).reset_index(drop=True) 
 
             if count_designations < target_nr_of_unique_carparts:
-                df_temp.loc[0,"Benennung (bereinigt)"] = gpt35_designation(df_new.loc[0,"Benennung (bereinigt)"])
+                df_temp.loc[0,"Benennung (bereinigt)"] = gpt35_designation(designation=df_new.loc[0,"Benennung (bereinigt)"])
                 if len(df_temp["Benennung (bereinigt)"][0]) < 40 and df_temp.loc[0,"volume"] > 0:
-                    df_temp = augmented_boundingbox(df_new, df_temp)
+                    df_temp = augmented_boundingbox(df_original=df_new, df_temp=df_temp)
                     df = pd.concat([df, df_temp], ignore_index=True).reset_index(drop=True)
                     count_designations = count_designations + 1
             
