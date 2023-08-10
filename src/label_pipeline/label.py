@@ -8,7 +8,7 @@ from src.deployment_pipeline.prediction import predict_on_new_data
 
 import yaml
 from yaml.loader import SafeLoader
-with open('../config.yaml') as file:
+with open('src/config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
 
 def load_data_into_df() -> tuple[list, str]:
@@ -73,7 +73,7 @@ def label_data() -> None:
     Args: None
     Return: None 
     '''
-    dataframes = load_data_into_df(original_prisma_data=True, label_new_data=True)
+    dataframes = load_data_into_df()
     for df in dataframes:
         df_with_label_columns, df_relevant_parts, einheitsname_not_found, ncar = predict_on_new_data(df=df)
 

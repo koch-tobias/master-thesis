@@ -3,7 +3,8 @@ import numpy as np
 import pickle
 import os
 from loguru import logger
-from src.data_pipeline.preprocessing import prepare_and_add_labels, preprocess_dataset
+from src.data_pipeline.preprocessing import preprocess_dataset
+from src.data_pipeline.data_preparation import prepare_and_add_labels
 from src.data_pipeline.feature_engineering import find_valid_space
 
 import yaml
