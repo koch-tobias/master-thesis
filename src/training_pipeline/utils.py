@@ -9,7 +9,7 @@ from loguru import logger
 
 import yaml
 from yaml.loader import SafeLoader
-with open('../config.yaml') as file:
+with open('src/config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
 
 # %%
@@ -118,7 +118,7 @@ def store_trained_model(model, metrics: str, best_iteration: int, val_auc: float
         f.close()
 
 # %%
-def store_predictions(y_test: np.arry, y_pred: np.arry, probs: np.arry, df_preprocessed: pd.DataFrame, df_test: pd.DataFrame, model_folder_path: str, binary_model: bool) -> None:
+def store_predictions(y_test: np.array, y_pred: np.array, probs: np.array, df_preprocessed: pd.DataFrame, df_test: pd.DataFrame, model_folder_path: str, binary_model: bool) -> None:
     ''' 
     This function saves the predicted outputs and related information in a CSV file called wrong_predictions.csv at the provided model folder path.
     Args:

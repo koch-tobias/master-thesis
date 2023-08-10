@@ -11,7 +11,7 @@ from src.deployment_pipeline.prediction import model_predict
 
 import yaml
 from yaml.loader import SafeLoader
-with open('../config.yaml') as file:
+with open('src/config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
 
 #%%

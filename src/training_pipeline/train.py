@@ -27,7 +27,7 @@ warnings.filterwarnings("ignore")
 
 import yaml
 from yaml.loader import SafeLoader
-with open('../config.yaml') as file:
+with open('src/config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
 
 # %%
