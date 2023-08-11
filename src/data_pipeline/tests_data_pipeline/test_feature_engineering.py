@@ -202,46 +202,14 @@ def test_calculate_lwh():
     assert width == 9
     assert height == 9
 
-'''
-def test_calculate_orientation():
-    transformed_boundingbox = np.array([[2824.179199, -892.50354, 421.057861],
-                                        [2824.179199, -892.50354, 577.020752],
-                                        [2824.179199, -812.006165, 421.057861],
-                                        [2824.179199, -812.006165, 577.020752],
-                                        [3121.105713, -892.50354, 421.057861],
-                                        [3121.105713, -892.50354, 577.020752],
-                                        [3121.105713, -812.006165, 421.057861],
-                                        [3121.105713, -812.006165, 577.020752]])
+def test_rotation_to_orientation():
+    rotation_matrix = np.array([[0.5, -0.1464, 0.8536], [0.5, 0.8536, -0.1464], [-0.7071, 0.5, 0.5]])
+    expected_output = [45.0, 45.0, 45.0]
 
-    theta_x_expected = -0.7853981633974483
-    theta_y_expected = 0.0
-    theta_z_expected = 0.0
+    theta_x, theta_y, theta_z = fe.rotation_to_orientation(rot_mat=rotation_matrix)   
+    degrees = [round(np.degrees(theta_x),1), round(np.degrees(theta_y),1), round(np.degrees(theta_z),1)]
 
-    theta_x, theta_y, theta_z = fe.calculate_orientation(transformed_boundingbox)
-
-    assert np.isclose(theta_x, theta_x_expected)
-    assert np.isclose(theta_y, theta_y_expected)
-    assert np.isclose(theta_z, theta_z_expected)
-'''
-'''
-def test_calculate_corners(): 
-    center_point =  np.array([0, 0, 0])
-    length =  2
-    width = 1
-    height = 3
-    theta_x = np.pi/4
-    theta_y = np.pi/3
-    theta_z = np.pi/6
-
-    x_min, x_max, y_min, y_max, z_min, z_max = fe.calculate_corners(center_point, length, width, height, theta_x, theta_y, theta_z)
-
-    assert x_min == pytest.approx(-1.61077632, 0.0001) 
-    assert x_max == pytest.approx(1.61077632, 0.0001) 
-    assert y_min == pytest.approx(-1.94417508, 0.0001) 
-    assert y_max == pytest.approx(1.94417508, 0.0001) 
-    assert z_min == pytest.approx(-0.60355339, 0.0001) 
-    assert z_max == pytest.approx(2.60355339, 0.0001)
-'''
+    assert degrees == expected_output
 
 def test_prepare_text(): 
     input_text = "ZB-34232/RE LI9090/TAB HIMMEL SHD." 
@@ -254,7 +222,6 @@ def test_prepare_text():
 
 
 def test_clean_text():
-   
    # Create a test dataframe
    df = pd.DataFrame({
        'Benennung (dt)': ['This is a Test text! 5', 'ZB LL RE AF 123 MD']
