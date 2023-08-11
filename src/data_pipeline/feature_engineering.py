@@ -56,7 +56,7 @@ def transform_boundingbox(x_min, x_max, y_min, y_max, z_min, z_max, ox, oy, oz, 
     transformed_corners = rotated_corners + shift_vec
 
     # Return the transformed corner points
-    return transformed_corners
+    return transformed_corners, rotation_matrix
 
 
 # %%
@@ -261,26 +261,28 @@ def calculate_lwh(transformed_boundingbox: list) -> float:
     # Return the length, width, and height
     return length, width, height
 
-def calculate_orientation(transformed_boundingbox: np.array) -> float:
+def rotation_to_orientation(rot_mat: np.array) -> tuple[float, float, float]:
     ''' 
-    Calculates the orientation angles (in radians) of a given transformed bounding box in 3D space.
+    Calculates the orientation angles (in radians) of a given rotation matrix in 3D space.
     Args:
-        transformed_boundingbox: an array of eight corners of a transformed bounding box in 3D space
+        rotation matrix: an 3x3 matrix
     Return:
         theta_x: orientation angle of largest eigenvector with respect to x axis
         theta_y: orientation angle of largest eigenvector with respect to y axis
         theta_z: orientation angle of largest eigenvector with respect to z axis 
     '''
-    # Center the corners around the origin
-    centered_corners = transformed_boundingbox - np.mean(transformed_boundingbox, axis=0) 
-
-    # The function uses Singular Value Decomposition (SVD) to find the principal axes of the bounding box. SVD is a procedure that decomposes a matrix into three matrices: an orthogonal matrix U, a diagonal matrix S, and another orthogonal matrix V. The diagonal entries of S are the singular values of the matrix, which represent the size of the principal axes.
-    u, s, principal_axes = np.linalg.svd(centered_corners)
-
-    # Convert the principal axes to Euler angles
-    theta_x = np.arctan2(principal_axes[2, 1], principal_axes[2, 2])
-    theta_y = np.arctan2(-principal_axes[2, 0], np.sqrt(principal_axes[2, 1]**2 + principal_axes[2, 2]**2))
-    theta_z = np.arctan2(principal_axes[1, 0], principal_axes[0, 0])
+    if round(rot_mat[2,0],1) != -1.0 and round(rot_mat[2,0],1) != 1.0:
+        theta_y = -np.arcsin(rot_mat[2,0])
+        theta_x = np.arctan2(rot_mat[2,1]/np.cos(theta_y), rot_mat[2,2]/np.cos(theta_y))
+        theta_z = np.arctan2(rot_mat[1,0]/np.cos(theta_y), rot_mat[0,0]/np.cos(theta_y))
+    else:
+        theta_z = 0
+        if round(rot_mat[2,0],1) == -1.0:
+            theta_y = math.pi/2
+            theta_x = np.arctan2(rot_mat[0,1], rot_mat[0,2])
+        else:
+            theta_y = -math.pi/2
+            theta_x = np.arctan2(-rot_mat[0,1], -rot_mat[0,2])
 
     return theta_x, theta_y, theta_z
 
@@ -441,112 +443,15 @@ def get_vocabulary(column) -> list:
     # Return the vocabulary
     return vocabulary
 
-import matplotlib.pyplot as plt
-def plot_box(transformed_box):
-   fig = plt.figure()
-   ax = fig.add_subplot(111, projection='3d')
-
-   # Unpack the coordinates from the transformed box
-   x = [point[0] for point in transformed_box]
-   y = [point[1] for point in transformed_box]
-   z = [point[2] for point in transformed_box]
-
-   # Plot the box
-   ax.scatter(x, y, z)
-   ax.set_xlabel('X Label')
-   ax.set_ylabel('Y Label')
-   ax.set_zlabel('Z Label')
-   # Set axis limits
-   ax.set_xlim(-2000, 5000)
-   ax.set_ylim(-1500, 1500)
-   ax.set_zlim(-100, 1500)
-   
-   plt.show()
-
-# %%
-def calculate_theta(transformed_boundingbox: np.array) -> float:
-    ''' 
-    Calculates the orientation angles (in radians) of a given transformed bounding box in 3D space.
-    Args:
-        transformed_boundingbox: an array of eight corners of a transformed bounding box in 3D space
-    Return:
-        theta_x: orientation angle of largest eigenvector with respect to x axis
-        theta_y: orientation angle of largest eigenvector with respect to y axis
-        theta_z: orientation angle of largest eigenvector with respect to z axis 
-    '''
-
-    # Calculate the center point of the bounding box
-    center = np.mean(transformed_boundingbox, axis=0)
-    plot_box(transformed_boundingbox)
-    plot_box(center)
-
-    # Calculate the differences between each corner and the centroid
-    differences = transformed_boundingbox - center
-
-    # Calculate the covariance matrix of the differences
-    covariance_matrix = np.cov(differences, rowvar=False)
-
-    # Perform eigenvalue decomposition on the covariance matrix
-    eigenvalues, eigenvectors = np.linalg.eig(covariance_matrix)
-
-    # Sort the eigenvalues and eigenvectors in descending order
-    sorted_indices = np.argsort(eigenvalues)[::-1]
-    eigenvalues = eigenvalues[sorted_indices]
-    eigenvectors = eigenvectors[:, sorted_indices]
-
-    # Extract the eigenvector corresponding to the largest eigenvalue
-    largest_eigenvector = eigenvectors[:, 0]
-
-    # Calculate the orientation angles
-    theta_x = np.arctan2(largest_eigenvector[2], largest_eigenvector[1])
-    theta_y = np.arctan2(largest_eigenvector[0], largest_eigenvector[2])
-    theta_z = np.arctan2(largest_eigenvector[1], largest_eigenvector[0])
-
-    return theta_x, theta_y, theta_z
-
 
 
 # %%
 def main():
-    # Define input DataFrame    
-    transformed_boundingbox = np.array([[3187.35199114, -102.46603984,  333.48725461],
-                                        [3169.54398131, -102.46604762,  363.38566237],
-                                        [3187.35199114,  102.53396016,  333.48730043],
-                                        [3169.54398131,  102.53395238,  363.38570818],
-                                        [3267.95969216, -102.46603984,  381.49859835],
-                                        [3250.15168233, -102.46604762,  411.39700611],
-                                        [3267.95969216,  102.53396016,  381.49864417],
-                                        [3250.15168233,  102.53395238,  411.39705192]])
-    
-    Xmin = 0  # example values
-    Xmax = 1
-    Ymin = 0
-    Ymax = 2
-    Zmin = 0
-    Zmax = 3
-    ox = 1
-    oy = 2
-    oz = 3
-    xx = 1
-    xy = 0
-    xz = 0
-    yx = 0
-    yy = 1
-    yz = 0
-    zx = 0
-    zy = 0
-    zz = 1
-    tb = transform_boundingbox(Xmin, Xmax, Ymin, Ymax, Zmin, Zmax, ox, oy, oz, xx, xy, xz, yx, yy, yz, zx, zy, zz)
-    logger.info(tb)
-    #plot_box(transformed_boundingbox)
-    # Call the function
-    #result = calculate_orientation2(transformed_boundingbox)
-    #result2 = calculate_orientation(transformed_boundingbox)
-
-    #print(result)
-    #print(result2)
 
     #calculate_transformed_corners(np.array[(3,4,5)], 5.0,4.5,3.5,0.11,0.22,0.33)
+    rotation_matrix = np.array([[0.5, -0.1464, 0.8536], [0.5, 0.8536, -0.1464], [-0.7071, 0.5, 0.5]])
+    theta_x, theta_y, theta_z = rotation_to_orientation(rot_mat=rotation_matrix)
+
     
 # %%
 if __name__ == "__main__":

@@ -9,7 +9,8 @@ from loguru import logger
 from sklearn.model_selection import train_test_split
 from sklearn import preprocessing
 
-from src.data_pipeline.feature_engineering import transform_boundingbox, calculate_center_point, calculate_lwh, calculate_orientation, clean_text, nchar_text_to_vec, calculate_theta
+from src.data_pipeline.feature_engineering import transform_boundingbox, calculate_center_point, calculate_lwh, clean_text, nchar_text_to_vec
+from feature_engineering import rotation_to_orientation
 
 import yaml
 from yaml.loader import SafeLoader
@@ -123,9 +124,8 @@ def add_new_features(df: pd.DataFrame) -> pd.DataFrame:
         transformed_boundingbox = transform_boundingbox(row['X-Min'], row['X-Max'], row['Y-Min'], row['Y-Max'], row['Z-Min'], row['Z-Max'],row['ox'],row['oy'],row['oz'],row['xx'],row['xy'],row['xz'],row['yx'],row['yy'],row['yz'],row['zx'],row['zy'],row['zz'])
         center_x, center_y, center_z = calculate_center_point(transformed_boundingbox)
         length, width, height = calculate_lwh(transformed_boundingbox=transformed_boundingbox)
-        theta_x, theta_y, theta_z = calculate_orientation(transformed_boundingbox=transformed_boundingbox)
-        if row["Sachnummer"] == "5A67AD8":
-            theta_x, theta_y, theta_z = calculate_theta(transformed_boundingbox=transformed_boundingbox)
+        rotation_matrix = np.array([[row['xx'],row['xy'],row['xz']], [row['yx'],row['yy'],row['yz']], [row['zx'],row['zy'],row['zz']]])
+        theta_x, theta_y, theta_z = rotation_to_orientation(rotation_matrix)
         x_coords = transformed_boundingbox[:, 0]
         y_coords = transformed_boundingbox[:, 1]
         z_coords = transformed_boundingbox[:, 2]
@@ -304,9 +304,7 @@ def train_test_val(df: pd.DataFrame, model_folder_path: str, binary_model: bool)
     else:
         logger.info("Split the dataset into train validation and test sets for the multiclass task and store the sets in dictionaries......")
     
-    X = nchar_text_to_vec(data=df, model_folder_path=model_folder_path) # Using ngram vectorizer
-    #X = doc2vec_text_to_vec(df, model_folder_path)
-    #X = bert_text_to_vec(df, model_folder_path)
+    X = nchar_text_to_vec(data=df, model_folder_path=model_folder_path)
 
     # Combine text features with other features
     features = config["general_params"]["features_for_model"]
