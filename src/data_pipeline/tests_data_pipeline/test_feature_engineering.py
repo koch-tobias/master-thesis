@@ -121,22 +121,6 @@ def test_random_centerpoint_in_valid_space():
 
 import pytest
 
-def test_calculate_center_point(transf_bbox):
-    sum_X = 0
-    sum_Y = 0
-    sum_Z = 0
-    num_corners = len(transf_bbox)
-    for xyz in transf_bbox:
-        sum_X = sum_X + xyz[0]
-        sum_Y = sum_Y + xyz[1]
-        sum_Z = sum_Z + xyz[2]
-    
-    center_x = sum_X/num_corners
-    center_y = sum_Y/num_corners
-    center_z = sum_Z/num_corners
-
-    return center_x, center_y, center_z
-
 def test_calculate_center_point():
     # Test case 1: Bounding box with eight corners
     transf_bbox = [(1, 2, 3), (4, 5, 6), (7, 8, 9), (10, 11, 12), (13, 14, 15), (16, 17, 18), (19, 20, 21), (22, 23, 24)]
@@ -219,7 +203,6 @@ def test_prepare_text():
     input_text = "This is a test A.F.-51232/AF designation." 
     expected_output = "THIS IS TEST DESIGNATION" 
     assert fe.prepare_text(input_text) == expected_output
-
 
 def test_clean_text():
    # Create a test dataframe
