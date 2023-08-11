@@ -1,14 +1,17 @@
 # %%
-import openai
 import pandas as pd
 import numpy as np
+
+import openai
+
 import math
 import random
 from loguru import logger
-import yaml
-from yaml.loader import SafeLoader
+
 from feature_engineering import find_valid_space, random_centerpoint_in_valid_space, calculate_transformed_corners
 
+import yaml
+from yaml.loader import SafeLoader
 with open('src/config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
 

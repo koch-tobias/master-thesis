@@ -1,12 +1,14 @@
 import pandas as pd
-import matplotlib.pyplot as plt
 import numpy as np
-from src.data_pipeline.feature_engineering import transform_boundingbox, find_valid_space
-from sklearn.metrics import ConfusionMatrixDisplay
+import matplotlib.pyplot as plt
+
 import lightgbm as lgb
+from sklearn.metrics import ConfusionMatrixDisplay
+
 import pickle
 from loguru import logger
 
+from src.data_pipeline.feature_engineering import transform_boundingbox, find_valid_space
 
 import yaml
 from yaml.loader import SafeLoader

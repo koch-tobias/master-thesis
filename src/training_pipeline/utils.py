@@ -90,9 +90,10 @@ def store_trained_model(model, metrics: str, best_iteration: int, val_auc: float
 
     logging_file_path = model_folder_path + "logging.txt"
     if os.path.isfile(logging_file_path):
-        log_text = "\nValidation AUC (final model): {}\n".format(val_auc)
+        log_text = "Validation AUC (final model): {}\n".format(val_auc)
         f= open(model_folder_path + "logging.txt","a")
         f.write("\n_________________________________________________\n")
+        f.write("Final model:\n")
         f.write(log_text)
         f.write("Trained Iterations: {}\n".format(best_iteration))
         f.close()

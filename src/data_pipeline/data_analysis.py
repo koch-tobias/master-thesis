@@ -1,8 +1,11 @@
 import pandas as pd
-import matplotlib.pyplot as plt
 import numpy as np
-from src.data_pipeline.feature_engineering import transform_boundingbox, find_valid_space
+import matplotlib.pyplot as plt
+
 from loguru import logger
+
+from src.data_pipeline.feature_engineering import transform_boundingbox, find_valid_space
+
 
 # %%
 def plot_bounding_box(ax, transformed_boundingbox: np.array, designation: str, label_relevant: str) -> int:

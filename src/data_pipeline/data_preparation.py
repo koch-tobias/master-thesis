@@ -6,6 +6,7 @@ import yaml
 from yaml.loader import SafeLoader
 with open('../config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
+    
 # %%
 def check_if_columns_available(dataframe: pd.DataFrame, relevant_features: list) -> list:
     '''

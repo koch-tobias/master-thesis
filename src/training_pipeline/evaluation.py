@@ -2,10 +2,9 @@
 import pandas as pd
 import numpy as np
 
-import pickle
+from sklearn.metrics import accuracy_score, recall_score, f1_score
 
-from sklearn.metrics import accuracy_score
-from sklearn.metrics import recall_score
+import pickle
 
 from src.deployment_pipeline.prediction import model_predict
 
@@ -156,6 +155,7 @@ def evaluate_model(model, X_test: np.array, y_test: np.array, evals: dict, hp_in
 
     accuracy = accuracy_score(y_test, y_pred)
     sensitivity = recall_score(y_test, y_pred, average='macro')
+    f1score = f1_score(y_test, y_pred, average='macro')
 
     df_new = pd.DataFrame(columns=df_columns)
 
@@ -170,6 +170,7 @@ def evaluate_model(model, X_test: np.array, y_test: np.array, evals: dict, hp_in
     df_new.loc[num_models_trained, "validation loss"] = val_loss
     df_new.loc[num_models_trained, "test accuracy"] = accuracy
     df_new.loc[num_models_trained, "test sensitivity"] = sensitivity
+    df_new.loc[num_models_trained, "test f1_score"] = f1score
     df_new.loc[num_models_trained, "early stopping (iterations)"] = int(config["train_settings"]["early_stopping"])
     df_new.loc[num_models_trained, "Training Time (s)"] = training_time 
 

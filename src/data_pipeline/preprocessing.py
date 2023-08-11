@@ -2,13 +2,12 @@
 import pandas as pd
 import numpy as np
 
-from sklearn.model_selection import train_test_split
-from sklearn import preprocessing
-
 import os
 import pickle
-import shutil
 from loguru import logger
+
+from sklearn.model_selection import train_test_split
+from sklearn import preprocessing
 
 from src.data_pipeline.feature_engineering import transform_boundingbox, calculate_center_point, calculate_lwh, calculate_orientation, clean_text, nchar_text_to_vec
 
