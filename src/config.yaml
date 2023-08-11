@@ -1,5 +1,6 @@
 paths:
  folder_processed_dataset: data/processed/31072023_1319/    # Folder path to the proprocessed data set which will be used to train the model
+ modelpath: final_models/Binary_model
 
 general_params:
  seed: 42
@@ -94,7 +95,7 @@ general_params:
  use_only_text: False                   # True = Train model only on the text data
 
 prediction_settings:
-  prediction_threshold: 0.65       # The probality of the prediction must be higer than X*100 percent that a car part will be classified as relevant
+  prediction_threshold: 0.60       # The probality of the prediction must be higer than X*100 percent that a car part will be classified as relevant (1=relevant, 0=not relevant)
 
 train_settings:
  train_binary_model: True          # True = Training a binary model
@@ -114,10 +115,10 @@ gpt_settings:
  n: 1
 
 lgbm_params_binary:
- boosting_type: gbdt
+ boosting_type: dart              # I tried gbdt and dart -> gbdt performed better due to slight overfitting
  metrics:
    - auc
-   - binary_logloss
+   - binary_logloss         # I have tested binary_logloss and the cross_entropy_lambda, cross_entropy kein unterschied
 
 lgbm_params_multiclass:
  boosting_type: gbdt
