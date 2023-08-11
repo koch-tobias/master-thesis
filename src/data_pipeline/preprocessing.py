@@ -9,7 +9,7 @@ from loguru import logger
 from sklearn.model_selection import train_test_split
 from sklearn import preprocessing
 
-from src.data_pipeline.feature_engineering import transform_boundingbox, calculate_center_point, calculate_lwh, calculate_orientation, clean_text, nchar_text_to_vec
+from src.data_pipeline.feature_engineering import transform_boundingbox, calculate_center_point, calculate_lwh, calculate_orientation, clean_text, nchar_text_to_vec, calculate_theta
 
 import yaml
 from yaml.loader import SafeLoader
@@ -124,7 +124,8 @@ def add_new_features(df: pd.DataFrame) -> pd.DataFrame:
         center_x, center_y, center_z = calculate_center_point(transformed_boundingbox)
         length, width, height = calculate_lwh(transformed_boundingbox=transformed_boundingbox)
         theta_x, theta_y, theta_z = calculate_orientation(transformed_boundingbox=transformed_boundingbox)
-
+        if row["Sachnummer"] == "5A67AD8":
+            theta_x, theta_y, theta_z = calculate_theta(transformed_boundingbox=transformed_boundingbox)
         x_coords = transformed_boundingbox[:, 0]
         y_coords = transformed_boundingbox[:, 1]
         z_coords = transformed_boundingbox[:, 2]
