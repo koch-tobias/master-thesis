@@ -121,7 +121,7 @@ def test_random_centerpoint_in_valid_space():
 
 import pytest
 
-def calculate_center_point(transf_bbox):
+def test_calculate_center_point(transf_bbox):
     sum_X = 0
     sum_Y = 0
     sum_Z = 0
@@ -141,47 +141,47 @@ def test_calculate_center_point():
     # Test case 1: Bounding box with eight corners
     transf_bbox = [(1, 2, 3), (4, 5, 6), (7, 8, 9), (10, 11, 12), (13, 14, 15), (16, 17, 18), (19, 20, 21), (22, 23, 24)]
     expected_center = (11.5, 12.5, 13.5)
-    assert calculate_center_point(transf_bbox) == expected_center
+    assert fe.calculate_center_point(transf_bbox) == expected_center
 
     # Test case 2: Bounding box with four corners
     transf_bbox = [(1, 2, 3), (4, 5, 6), (7, 8, 9), (10, 11, 12)]
     expected_center = (5.5, 6.5, 7.5)
-    assert calculate_center_point(transf_bbox) == expected_center
+    assert fe.calculate_center_point(transf_bbox) == expected_center
 
     # Test case 3: Bounding box with no corners
     transf_bbox = []
     with pytest.raises(ZeroDivisionError):
-        calculate_center_point(transf_bbox)
+        fe.calculate_center_point(transf_bbox)
 
     # Test case 4: Bounding box with one corner
     transf_bbox = [(1, 2, 3)]
     expected_center = (1, 2, 3)
-    assert calculate_center_point(transf_bbox) == expected_center
+    assert fe.calculate_center_point(transf_bbox) == expected_center
 
     # Test case 5: Bounding box with negative coordinates
     transf_bbox = [(-1, -2, -3), (-4, -5, -6), (-7, -8, -9), (-10, -11, -12)]
     expected_center = (-5.5, -6.5, -7.5)
-    assert calculate_center_point(transf_bbox) == expected_center
+    assert fe.calculate_center_point(transf_bbox) == expected_center
 
     # Test case 6: Bounding box with non-integer coordinates
     transf_bbox = [(1.5, 2.5, 3.5), (4.5, 2.5, 6.5), (1.5, 8.5, 9.5), (4.5, 8.5, 12.5)]
     expected_center = (3.0, 5.5, 8.0)
-    assert calculate_center_point(transf_bbox) == expected_center
+    assert fe.calculate_center_point(transf_bbox) == expected_center
 
     # Test case 7: Bounding box with repeated corners
     transf_bbox = [(1, 2, 3), (1, 2, 3), (1, 2, 3), (1, 2, 3)]
     expected_center = (1, 2, 3)
-    assert calculate_center_point(transf_bbox) == expected_center
+    assert fe.calculate_center_point(transf_bbox) == expected_center
 
     # Test case 8: Bounding box with non-numeric coordinates
     transf_bbox = [('a', 'b', 'c'), ('d', 'e', 'f'), ('g', 'h', 'i'), ('j', 'k', 'l')]
     with pytest.raises(TypeError):
-        calculate_center_point(transf_bbox)
+        fe.calculate_center_point(transf_bbox)
 
     # Test case 9: Bounding box with missing coordinates
     transf_bbox = [(1, 2), (3, 4), (5, 6), (7, 8)]
     with pytest.raises(IndexError):
-        calculate_center_point(transf_bbox)
+        fe.calculate_center_point(transf_bbox)
 
 def test_calculate_lwh():
     transformed_boundingbox = [(1, 2, 3), (4, 5, 6), (7, 8, 9)]
