@@ -9,6 +9,11 @@ from preprocessing import preprocess_dataset, load_data_into_df, combine_datafra
 from data_analysis import store_class_distribution, analyse_data_split
 from augmentation import data_augmentation
 
+import yaml
+from yaml.loader import SafeLoader
+with open('src/config.yaml') as file:
+    config = yaml.load(file, Loader=SafeLoader)
+
 def generate_dataset_dict(df: pd.DataFrame, storage_path: str, binary_model: bool) -> None:
     '''
     This function takes a pandas DataFrame containing the dataset, path of the folder where the train, validation and test splits will be stored, and a boolean value indicating whether the model is binary or not. 
@@ -66,7 +71,7 @@ def generate_dataset() -> None:
 
     dataframes_list, ncars = load_data_into_df()
 
-    df_combined = combine_dataframes(dataframes_list, ncars)
+    df_combined = combine_dataframes(dataframes_list, relevant_features=config["general_params"]["check_features_for_nan_values"], ncars=ncars)
     df_preprocessed, df_for_plot = preprocess_dataset(df_combined)
 
     # Generate the new dataset
