@@ -1,44 +1,9 @@
 import numpy as np
 import pandas as pd
+import math
+
 import pytest
 import src.data_pipeline.feature_engineering as fe
-
-def test_transform_boundingbox():
-    # Define input parameters
-    x_min = 0
-    x_max = 1
-    y_min = 0
-    y_max = 1
-    z_min = 0
-    z_max = 1
-    ox = 1
-    oy = 2
-    oz = 3
-    xx = 1
-    xy = 0
-    xz = 0
-    yx = 0
-    yy = 1
-    yz = 0
-    zx = 0
-    zy = 0
-    zz = 1
-
-    # Call the function
-    result = fe.transform_boundingbox(x_min, x_max, y_min, y_max, z_min, z_max, ox, oy, oz, xx, xy, xz, yx, yy, yz, zx, zy, zz)
-
-    # Define the expected output
-    expected_result = np.array([[1, 2, 3],
-                                [1, 2, 4],
-                                [1, 3, 3],
-                                [1, 3, 4],
-                                [2, 2, 3],
-                                [2, 2, 4],
-                                [2, 3, 3],
-                                [2, 3, 4]])
-
-    # Compare the result with the expected output
-    assert np.array_equal(result, expected_result)
 
 def test_get_minmax():
     # Define input list of transformed bounding boxes
@@ -55,6 +20,20 @@ def test_get_minmax():
 
     # Compare the result with the expected output
     assert result == expected_result
+
+def test_transform_boundingbox(): 
+    x_min, x_max, y_min, y_max, z_min, z_max = 0, 1, 0, 1, 0, 1 
+    ox, oy, oz = 1, 1, 1
+    xx, xy, xz = 1, 0, 0
+    yx, yy, yz = 0, 1, 0
+    zx, zy, zz = 0, 0, 1 
+    transformed_corners, rotation_matrix = fe.transform_boundingbox(x_min, x_max, y_min, y_max, z_min, z_max, ox, oy, oz, xx, xy, xz, yx, yy, yz, zx, zy, zz)
+
+    expected_corners = np.array([[1., 1., 1.], [1., 1., 2.], [1., 2., 1.], [1., 2., 2.], [2., 1., 1.], [2., 1., 2.], [2., 2., 1.], [2., 2., 2.]])
+    expected_rotation_matrix = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+
+    assert np.array_equal(transformed_corners, expected_corners)
+    assert np.array_equal(rotation_matrix, expected_rotation_matrix)
 
 def test_find_valid_space():
     # Create a sample DataFrame
@@ -119,7 +98,17 @@ def test_random_centerpoint_in_valid_space():
         assert z >= z_min
         assert z <= z_max
 
-import pytest
+def test_calculate_transformed_corners(): 
+    center_point = [1, 1, 1] 
+    length, width, height = 1, 1, 1 
+    theta_x, theta_y, theta_z = 0, 0, 0
+
+    x_min, x_max, y_min, y_max, z_min, z_max = fe.calculate_transformed_corners(center_point, length, width, height, theta_x, theta_y, theta_z)
+
+    expected_corners = np.array([0.5, 1.5, 0.5, 1.5, 0.5, 1.5])
+
+    assert np.array_equal([x_min, x_max, y_min, y_max, z_min, z_max], expected_corners)
+
 
 def test_calculate_center_point():
     # Test case 1: Bounding box with eight corners
@@ -207,8 +196,8 @@ def test_prepare_text():
 def test_clean_text():
    # Create a test dataframe
    df = pd.DataFrame({
-       'Benennung (dt)': ['This is a Test text! 5', 'ZB LL RE AF 123 MD']
-   })
+                        'Benennung (dt)': ['This is a Test text! 5', 'ZB LL RE AF 123 MD']
+                    })
    
    # Apply the clean_text function
    df_cleaned = fe.clean_text(df)
