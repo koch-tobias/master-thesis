@@ -10,7 +10,7 @@ from sklearn.model_selection import train_test_split
 from sklearn import preprocessing
 
 from src.data_pipeline.feature_engineering import transform_boundingbox, calculate_center_point, calculate_lwh, clean_text, nchar_text_to_vec
-from feature_engineering import rotation_to_orientation
+from src.data_pipeline.feature_engineering import rotation_to_orientation
 
 import yaml
 from yaml.loader import SafeLoader
@@ -66,7 +66,7 @@ def load_data_into_df() -> tuple[list, str]:
         return dataframes, ncars
 
 # %%
-def check_nan_values(df: pd.DataFrame, ncar: str) -> list:
+def check_nan_values(df: pd.DataFrame, relevant_features: list, ncar: str) -> list:
     '''
     The function takes a pandas DataFrame as input and checks for the existence of any NaN values. It returns a list of columns that contain NaN values. 
     Args: 
@@ -74,14 +74,14 @@ def check_nan_values(df: pd.DataFrame, ncar: str) -> list:
     Return: 
         columns_with_nan: A list of columns that contain NaN values in the input DataFrame. If no NaN values are present, an empty list is returned.
     '''
-    df = df[config["general_params"]["check_features_for_nan_values"]]
+    df = df[relevant_features]
     columns_with_nan = df.columns[df.isna().any()].tolist()
     if len(columns_with_nan) > 0:
         logger.error(f"{ncar}: There are car parts in the dataset with NaN values in the following columns: {columns_with_nan}")
     return columns_with_nan
 
 # %%
-def combine_dataframes(dataframes: list, ncars: list) -> pd.DataFrame:
+def combine_dataframes(dataframes: list, relevant_features: list, ncars: list) -> pd.DataFrame:
     '''
     The function takes a list of pandas DataFrames and combines them into a single data frame. Before merging, it checks if all dataframes have the same columns and returns an error if there are discrepancies. 
     If any NaN values exist in the input data frames, it uses the check_nan_values function to obtain the list of columns with the NaN values. 
@@ -96,7 +96,7 @@ def combine_dataframes(dataframes: list, ncars: list) -> pd.DataFrame:
     columns_set = set(dataframes[0].columns)
     # Check if all dataframes have the same columns 
     for df, ncar in zip(dataframes, ncars):
-        cols_with_nan_values = check_nan_values(df, ncar)
+        cols_with_nan_values = check_nan_values(df=df, relevant_features=relevant_features, ncar=ncar)
         if set(df.columns) != columns_set:
             logger.info(df.columns)
             logger.info(columns_set)

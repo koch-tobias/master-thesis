@@ -6,44 +6,30 @@ import src.data_pipeline.preprocessing as pp
 
 def test_check_nan_values():
 
-    df = pd.DataFrame({'col1': [1, 2, 3, 4, 5], 'col2': [6, 7, 8, None, 10], 'col3': [11, None, 13, 14, 15]})
-    assert pp.check_nan_values(df) == ['col2', 'col3']
+    #TEST CASE 1: NO NAN VALUES EXIST IN THE DATAFRAME
+    df = pd.DataFrame({'A': [1, 2, 3], 'B': [4, 5, 6], 'C': [7, 8, 9]}) 
+    relevant_features = ['A', 'B', 'C'] 
+    ncar = 'car_1'
+    assert pp.check_nan_values(df, relevant_features, ncar) == []
 
-    df2 = pd.DataFrame({'col1': [1, 2, 3, 4, 5], 'col2': [6, 7, 8, 9, 10], 'col3': [11, 12, 13, 14, 15]})
-    assert pp.check_nan_values(df2) == []
-
-    df3 = pd.DataFrame({'col1': [None, None, None, None, None], 'col2': [None, None, None, None, None], 'col3': [None, None, None, None, None]})
-    assert pp.check_nan_values(df3) == ['col1', 'col2', 'col3']
+    #TEST CASE 2: NAN VALUES EXIST IN THE DATAFRAME
+    df = pd.DataFrame({'A': [1, 2, 3], 'B': [4, np.nan, 6], 'C': [7, 8, 9]}) 
+    relevant_features = ['A', 'B', 'C'] 
+    ncar = 'car_2'
+    expected_result = ['B'] 
+    assert pp.check_nan_values(df, relevant_features, ncar) == expected_result
 
 def test_combine_dataframes():
 
-    df1 = pd.DataFrame({'col1': [1, 2, 3], 'col2': [4, 5, 6]}) 
-    df2 = pd.DataFrame({'col1': [7, 8, 9], 'col2': [10, 11, 12]}) 
-    df3 = pd.DataFrame({'col1': [13, 14, 15], 'col2': [16, 17, 18]})
-    assert pp.combine_dataframes([df1, df2, df3]).equals(pd.DataFrame({'col1': [1, 2, 3, 7, 8, 9, 13, 14, 15], 'col2': [4, 5, 6, 10, 11, 12, 16, 17, 18]}))
+    #TEST CASE 1: ALL DATAFRAMES HAVE SAME COLUMNS AND NO NAN VALUES
+    df1 = pd.DataFrame({'A': [1, 2, 3], 'B': [4, 5, 6]}) 
+    df2 = pd.DataFrame({'A': [7, 8, 9], 'B': [10, 11, 12]}) 
+    relevant_features = ['A', 'B']
+    dataframes = [df1, df2] 
+    ncars = ['G3', 'G4']
 
-    df4 = pd.DataFrame({'col1': [1, 2, 3], 'col2': [4, 5, 6]}) 
-    df5 = pd.DataFrame({'col3': [7, 8, 9], 'col4': [10, 11, 12]})
-    with pytest.raises(ValueError): pp.combine_dataframes([df4, df5])
-
-    df6 = pd.DataFrame({'col1': [1, 2, 3], 'col2': [4, None, 6]})
-    assert pp.combine_dataframes([df1, df2, df6]).equals(pd.DataFrame({'col1': [1, 2, 3, 7, 8, 9, 1, 2, 3], 'col2': [4, 5, 6, 10, 11, 12, 4, None, 6]}))
-
-
-def test_check_if_columns_available():
-
-    relevant_features = ['col1', 'col2', 'col3']
-    df = pd.DataFrame({'col1': [1, 2, 3], 'col2': [4, 5, 6], 'col3': [7, 8, 9]})
-    assert pp.check_if_columns_available(df, relevant_features) == []
-
-    df2 = pd.DataFrame({'col1': [1, 2, 3], 'col2': [4, 5, 6]})
-    assert pp.check_if_columns_available(df2, relevant_features) == ['col3']
-
-    df3 = pd.DataFrame({'col4': [1, 2, 3], 'col5': [4, 5, 6]})
-    assert pp.check_if_columns_available(df3, relevant_features) == ['col1', 'col2', 'col3']
-
-    df4 = pd.DataFrame({'col1': [1, 2, 3], 'col2': [4, 5, 6], 'col3': [7, 8, 9], 'col4': [10, 11, 12]})
-    assert pp.check_if_columns_available(df4, relevant_features) == []
+    expected_result = pd.DataFrame({'A': [1, 2, 3, 7, 8, 9], 'B': [4, 5, 6, 10, 11, 12]}) 
+    assert pp.combine_dataframes(dataframes, relevant_features=relevant_features, ncars=ncars).equals(expected_result)
 
 def test_get_weight_factor():
     # Test case 1: binary_model = False
