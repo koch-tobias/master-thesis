@@ -31,7 +31,7 @@ def transform_boundingbox(x_min, x_max, y_min, y_max, z_min, z_max, ox, oy, oz, 
         zy: a float which corresponds to the (2,3) element of the rotation matrix
         zz: a float which corresponds to the (2,3) element of the rotation matrix
     Return:
-        transformed corners
+        transformed corners, rotation matrix
     '''
     # Create an array of corner points of the bounding box
     corners = np.array([[x_min, y_min, z_min],
@@ -55,7 +55,7 @@ def transform_boundingbox(x_min, x_max, y_min, y_max, z_min, z_max, ox, oy, oz, 
     # Apply translation to the rotated corner points
     transformed_corners = rotated_corners + shift_vec
 
-    # Return the transformed corner points
+    # Return the transformed corner points and the rotation matrix
     return transformed_corners, rotation_matrix
 
 
