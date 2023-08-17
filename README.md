@@ -201,7 +201,7 @@ Example Output:
 ### Tests
 In order to test functions individually and independently for proper operation, unit tests were developed using the pyTest library. These can be executed in the command line by using the following command in the root folder:
 ``` 
-pyTest 
+pytest 
 ``` 
 
 
