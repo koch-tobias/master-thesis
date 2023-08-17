@@ -283,6 +283,7 @@ def store_metrics(evals: dict, best_iteration: int, model_folder_path: str, bina
         plt.yticks(fontsize=12)
         plt.legend(['Training', 'Validation'], fontsize=12)
         plt.axvline(best_iteration, color='b', label = 'early stopping')
+        plt.ylim([-0.5, 1.2])
         plt.savefig(model_folder_path + add_to_path + 'auc_plot.png')
         plt.close()
 
