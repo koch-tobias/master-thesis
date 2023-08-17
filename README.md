@@ -199,4 +199,5 @@ Example Output:
 
 ## 🚀 Updates
 
-**2023.05.01**
+**2023.08.03**
+Update models -> Now trained on 33 vehicles instead of 8
