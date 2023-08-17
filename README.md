@@ -154,7 +154,12 @@ master-thesis/ </br>
 ### Explainability pipeline
 ![Explainability pipeline](images/pipelines/xai_pipeline.svg)
 
-This pipeline is used to generate insight about the predictions of the final models. </br>
+This pipeline is used to generate insight about the predictions of the final models and can be executed with ***xAi.py***. </br>
+master-thesis/ </br>
+├─ src/ </br>
+│  ├─ explainability/ </br>
+│  │  ├─ xAi.py </br>
+
 It uses the folder "final_models" folder to generate insights in the following way:
 
 First, an Excel file is created with all the features that the model has trained on and their importance to the model output. </br>
