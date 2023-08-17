@@ -89,7 +89,6 @@ After that, run the **label.py** file which you can find here: </br>
 master-thesis/  </br>
 ├─ src/ </br>
 │  ├─ labeling_pipeline/ </br>
-│  │  ├─ ___init___.py </br>
 │  │  ├─ label.py </br>
 
 This file will apply the following steps:
