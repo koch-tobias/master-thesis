@@ -15,7 +15,7 @@ import math
 from statistics import mean
 
 from model_architectures import binary_classifier, multiclass_classifier
-from evaluation import evaluate_model, add_feature_importance, get_best_metric_results, get_features
+from evaluation import evaluate_model, get_best_metric_results
 from plot_functions import store_metrics, plot_metric_custom, store_confusion_matrix
 from utils import store_trained_model, load_dataset
 from src.deployment_pipeline.prediction import model_predict, store_predictions, get_best_iteration 
@@ -275,37 +275,20 @@ def k_fold_crossvalidation(X: np.array, y: np.array, X_test: np.array, y_test: n
     total_cv_models = number_of_folds * top_x_models
     count_trained_models = 0
 
-    #logger.info("Store the features with importance score...")
-    #df_features = add_feature_importance(model, model_folder_path)
-    #feature_list, topx_important_features = get_features(model_results_dict["models_list"][0], model_folder_path, folder_path)
-    #logger.success("Storing the features was successfull!")
-
     logger.info(f"Start to validate the top {top_x_models} models by using {number_of_folds}-fold cross-validation... ")
     for i in range(top_x_models):
         cv_results_dict = {"models_list": [], "evals_list": [], "test_sensitivity_results": [], "test_accuracy_results": [], "val_auc_results": [], "val_loss_results": [], "train_auc_results": [], "train_loss_results": [], "y_pred_list": [], "probs_list": []}
-        #list_shap_values = []
-        #list_val_sets = []
 
         logger.info(f"Start {number_of_folds}-fold cross-validation for model {i+1}:")
         for train_index, val_index in kfold.split(X, y):
             
-            X_train_fold, X_val_fold, y_train_fold, y_val_fold = get_fold_data(X=X, y=y, train_index=train_index, val_index=val_index)
-
-            #X_train_df = pd.DataFrame(X_train_fold, columns=features)
-            #X_val_df = pd.DataFrame(X_val_fold, columns=features)           
+            X_train_fold, X_val_fold, y_train_fold, y_val_fold = get_fold_data(X=X, y=y, train_index=train_index, val_index=val_index)        
 
             hp_dict = {hp_columns[0]: df[hp_columns[0]].iloc[i], hp_columns[1]: df[hp_columns[1]].iloc[i], hp_columns[2]: df[hp_columns[2]].iloc[i], hp_columns[3]: df[hp_columns[3]].iloc[i]}
 
             cv_results_dict, df_temp, metrics = fit_eval_model(X_train=X_train_fold, y_train=y_train_fold, X_val=X_val_fold, y_val=y_val_fold, X_test=X_test, y_test=y_test, weight_factor=weight_factor, hp_in_iteration=hp_dict, df=df, model_results_dict=cv_results_dict, num_models_trained=count_trained_models, total_models=total_cv_models, binary_model=binary_model, method=method)
             count_trained_models = count_trained_models + 1
 
-            '''
-            if binary_model:
-                explainer = shap.TreeExplainer(gbm)
-                shap_values = explainer.shap_values(X_val_df)
-                list_shap_values.append(shap_values)
-                list_val_sets.append(val_index)
-            '''
         avg_val_auc = round(mean(cv_results_dict["val_auc_results"]), 6)
         avg_val_loss = round(mean(cv_results_dict["val_loss_results"]), 6)
         avg_train_auc = round(mean(cv_results_dict["train_auc_results"]), 6)
@@ -324,23 +307,6 @@ def k_fold_crossvalidation(X: np.array, y: np.array, X_test: np.array, y_test: n
         df_cv.loc[i, "early stopping (iterations)"] = int(config["train_settings"]["early_stopping"])
         df_cv.loc[i, "index"] = int(df.index[i])
 
-        '''
-        if binary_model:
-            #combining results from all iterations
-            val_set = list_val_sets[0]
-            shap_values = np.array(list_shap_values[0])[:, :, topx_important_features]
-            
-            for i in range(0,len(list_val_sets)):
-                val_set = np.concatenate((val_set, list_val_sets[i]),axis=0)
-                shap_values = np.concatenate((shap_values,np.array(list_shap_values[i])[:, :, topx_important_features]),axis=1)
-        
-            #bringing back variable names    
-            X_val_df = pd.DataFrame(X[val_set], columns=features)
-            #creating explanation plot for the whole experiment
-            plt.clf()
-            shap.summary_plot(shap_values[1], X_val_df.iloc[:, topx_important_features], show=False)
-            plt.savefig(model_folder_path + "shap_top10_features.png")
-    '''
     logger.success("Cross-Validation was successfull!")
 
     return df_cv
@@ -417,8 +383,6 @@ def train_model(folder_path: str, binary_model: bool, method: str):
     store_trained_model(model=gbm_final, metrics=metrics, best_iteration=best_iteration, val_auc=val_auc, hp=best_hp, index_best_model=index_best_model, model_folder_path=model_folder_path, finalmodel=True)
     if method == 'lgbm':
         store_metrics(evals=evals_final, best_iteration=best_iteration, model_folder_path=model_folder_path, binary_model=binary_model, finalmodel=True)
-        df_feature_importance_final_model = add_feature_importance(model=gbm_final, model_folder_path=config["paths"]["folder_processed_dataset"])
-        df_feature_importance_final_model.to_csv(model_folder_path + "final_model_feature_importance.csv")
     else:
         plot_metric_custom(evals=evals_final, best_iteration=best_iteration, model_folder_path=model_folder_path, method=method, binary=binary_model, finalmodel=True)
 
