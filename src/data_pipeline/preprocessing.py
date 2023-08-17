@@ -171,22 +171,24 @@ def outlier_detection(df_new_features: pd.DataFrame) -> pd.DataFrame:
     Return: 
         df_new_features: A pandas DataFrame object with the outlier bounding box features set to zero.
     '''
-    # Calculate the upper and lower limits
-    Q1 = df_new_features['X-Max_transf'].quantile(0.25)
-    Q3 = df_new_features['X-Max_transf'].quantile(0.75)
-    IQR = Q3 - Q1
-    lower = Q1 - 1.5*IQR
-    upper = Q3 + 1.5*IQR
-    
-    # Create arrays of Boolean values indicating the outlier rows
-    upper_array = np.where(df_new_features['X-Max_transf']>=upper)[0]
-    lower_array = np.where(df_new_features['X-Max_transf']<=lower)[0]
-    
-    # Set the bounding box features to zero if detected as outlier
-    df_new_features.loc[upper_array, config["general_params"]["bounding_box_features_original"]] = 0
-    df_new_features.loc[lower_array, config["general_params"]["bounding_box_features_original"]] = 0
+    if not df_new_features.empty:
+        # Calculate the upper and lower limits
+        Q1 = df_new_features['X-Max_transf'].quantile(0.25)
+        Q3 = df_new_features['X-Max_transf'].quantile(0.75)
+        IQR = Q3 - Q1
+        lower = Q1 - 1.5*IQR
+        upper = Q3 + 1.5*IQR
+        
+        # Create arrays of Boolean values indicating the outlier rows
+        upper_array = np.where(df_new_features['X-Max_transf']>=upper)[0]
+        lower_array = np.where(df_new_features['X-Max_transf']<=lower)[0]
+        
+        # Set the bounding box features to zero if detected as outlier
+        df_new_features.loc[upper_array, config["general_params"]["bounding_box_features_original"]] = 0
+        df_new_features.loc[lower_array, config["general_params"]["bounding_box_features_original"]] = 0
 
     return df_new_features
+
 # %%
 def preprocess_dataset(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     '''
