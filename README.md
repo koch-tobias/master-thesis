@@ -172,7 +172,7 @@ master-thesis/ </br>
 
 The current options to test and/or deploy the models are a streamlit website which ist hosted on github and a Rest-API which is hosted on an AWS server. </br>
 The streamlit website is only used for testing, debugging, and getting feedback of the specialty department (internal customer and users). </br>   
-The Rest-API developed with FastAPI is used for production and is addressed via a Catia macro. </br>
+The Rest-API developed with FastAPI and virtualized with Docker is used for production and is addressed via a Catia macro. </br>
 At the moment, the input for the models is an excel file with all relevant metadata and the structure tree of a vehicle. The output is a json file which contains only the identified car parts with the id, the original designation and an uniform name which is used in Catia for further steps.
 
 Example Output:
