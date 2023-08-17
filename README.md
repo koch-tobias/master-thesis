@@ -135,6 +135,10 @@ This pipeline is used to train and evaluate new models. Currently, the machine l
 
 The input of the pipeline is the training, validation and test split created with the data pipeline. Set the paths to that dataset folder in the config file.
 
+The first step after loading the data sets is the tuning of the hyperparameters via grid search. Here, 81 models are trained iteratively by varying over 4 hyperparameters. </br>
+After that, the top x % [default = 10] of the models are selected by the best area under the curve (auc) score and then validated using k-fold crossvalidation [default = 4]. </br>
+The model with the highest auc score after crossvalidation is then selected as the "best" model and trained on a larger trainset that combines the previous trainset and the testtest to use the entire available data. Only the validation set is retained for validation of the final model.
+
 After setting the desired training parameters, the training process can be started by executing the main.py file. </br>
 master-thesis/  </br>
 ├─ src/ </br>
