@@ -1,7 +1,7 @@
+import pandas as pd
+
 from fastapi import FastAPI, File, UploadFile, Request
 from fastapi.responses import JSONResponse
-
-import pandas as pd
 
 from pyxlsb import open_workbook as open_xlsb
 from io import BytesIO

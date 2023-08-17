@@ -1,21 +1,22 @@
+import pandas as pd
+
 import streamlit as st
 import streamlit_authenticator as stauth
 
-import pandas as pd
-
 from io import BytesIO
-import yaml
-from yaml.loader import SafeLoader
 from pyxlsb import open_workbook as open_xlsb
 
 from src.deployment_pipeline.prediction import predict_on_new_data
-from loguru import logger
+
+import yaml
+from yaml.loader import SafeLoader
+with open('config.yaml') as file:
+    config = yaml.load(file, Loader=SafeLoader)
 
 # create sidebar to upload the csv file and display the possible labels
 st.set_page_config(page_title="Car Part Identification", page_icon="images/logos/Download.png")
 
-with open('config.yaml') as file:
-    config = yaml.load(file, Loader=SafeLoader)
+
 
 authenticator = stauth.Authenticate(
     config['credentials'],

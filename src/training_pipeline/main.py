@@ -2,14 +2,18 @@ from loguru import logger
 from datetime import datetime
 
 from train import train_model
-from src.config import train_settings
+
+import yaml
+from yaml.loader import SafeLoader
+with open('src/config.yaml') as file:
+    config = yaml.load(file, Loader=SafeLoader)
 
 # %%
 def main():
-    train_binary_model = False
-    train_multiclass_model = True
+    train_binary_model = config["train_settings"]["train_binary_model"]
+    train_multiclass_model = config["train_settings"]["train_multiclass_model"]
 
-    method = train_settings["ml-method"]
+    method = config["train_settings"]["ml-method"]
 
     dateTimeObj = datetime.now()
     timestamp = dateTimeObj.strftime("%d%m%Y_%H%M")

@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generiert durch Microsoft Visio, SVG Export training_pipeline.svg Zeichenblatt-1 -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:ev="http://www.w3.org/2001/xml-events"
+		xmlns:v="http://schemas.microsoft.com/visio/2003/SVGExtensions/" width="16.1476in" height="5.00577in"
+		viewBox="0 0 1162.62 360.415" xml:space="preserve" color-interpolation-filters="sRGB" class="st14">
+	<v:documentProperties v:langID="1031" v:metric="true" v:viewMarkup="false"/>
+
+	<style type="text/css">
+	<![CDATA[
+		.st1 {fill:#c5e0b3;fill-opacity:0.098;stroke:#a5a5a5;stroke-width:3}
+		.st2 {fill:#007f7f;stroke:#a5a5a5;stroke-width:0.25}
+		.st3 {fill:#feffff;font-family:Calibri;font-size:1.5em;font-weight:bold}
+		.st4 {font-size:1em}
+		.st5 {fill:#a8d08d;stroke:#a5a5a5;stroke-width:0.25}
+		.st6 {marker-end:url(#mrkr4-17);stroke:#000000;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:0.98;stroke-width:2.25}
+		.st7 {fill:#000000;fill-opacity:0.98;stroke:#000000;stroke-opacity:0.98;stroke-width:0.47169811320755}
+		.st8 {fill:none;stroke:none;stroke-width:0.25}
+		.st9 {fill:#000000;font-family:Calibri;font-size:1.33333em;font-weight:bold}
+		.st10 {fill:#7b7b7b;stroke:#c7c8c8;stroke-width:0.25}
+		.st11 {fill:#feffff;font-family:Calibri;font-size:1.33333em}
+		.st12 {stroke:#000000;stroke-linecap:round;stroke-linejoin:round;stroke-width:1}
+		.st13 {fill:#c9c9c9;stroke:#a5a5a5;stroke-width:0.25}
+		.st14 {fill:none;fill-rule:evenodd;font-size:12px;overflow:visible;stroke-linecap:square;stroke-miterlimit:3}
+	]]>
+	</style>
+
+	<defs id="Markers">
+		<g id="lend4">
+			<path d="M 2 1 L 0 0 L 2 -1 L 2 1 " style="stroke:none"/>
+		</g>
+		<marker id="mrkr4-17" class="st7" v:arrowType="4" v:arrowSize="2" v:setback="4.24" refX="-4.24" orient="auto"
+				markerUnits="strokeWidth" overflow="visible">
+			<use xlink:href="#lend4" transform="scale(-2.12,-2.12) "/>
+		</marker>
+	</defs>
+	<g v:mID="0" v:index="1" v:groupContext="foregroundPage">
+		<title>Zeichenblatt-1</title>
+		<v:pageProperties v:drawingScale="0.0393701" v:pageScale="0.0393701" v:drawingUnits="24" v:shadowOffsetX="8.50394"
+				v:shadowOffsetY="-8.50394"/>
+		<v:layer v:name="Verbinder" v:index="0"/>
+		<g id="shape1285-1" v:mID="1285" v:groupContext="shape" transform="translate(3,-3)">
+			<title>Tabelle.1285</title>
+			<rect x="0" y="133.644" width="1156.62" height="226.772" rx="11.3386" ry="11.3386" class="st1"/>
+		</g>
+		<g id="shape1286-3" v:mID="1286" v:groupContext="shape" transform="translate(122.871,-41.276)">
+			<title>Tabelle.1286</title>
+			<desc>Load Training, Validation and Testsplit</desc>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="71.0259" cy="294.514" width="142.06" height="131.803"/>
+			<rect x="0" y="228.613" width="142.052" height="131.803" rx="11.3386" ry="11.3386" class="st2"/>
+			<text x="53.11" y="267.51" class="st3" v:langID="1031"><v:paragraph v:horizAlign="1"/><v:tabList/>Load <v:lf/><tspan
+						x="38.26" dy="1.2em" class="st4">Training, </tspan><tspan x="16.43" dy="1.2em" class="st4">Validation and </tspan><tspan
+						x="39.37" dy="1.2em" class="st4">Testsplit</tspan></text>		</g>
+		<g id="shape1288-9" v:mID="1288" v:groupContext="shape" transform="translate(1462.44,187.337) rotate(90)">
+			<title>Tabelle.1288</title>
+			<desc>Trained Model</desc>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="65.9014" cy="335.913" width="131.81" height="49.0048"/>
+			<rect x="0" y="311.41" width="131.803" height="49.0048" rx="11.3386" ry="11.3386" class="st5"/>
+			<text x="11.09" y="341.31" class="st3" v:langID="1031"><v:paragraph v:horizAlign="1"/><v:tabList/>Trained Model</text>		</g>
+		<g id="shape1290-12" v:mID="1290" v:groupContext="shape" v:layerMember="0" transform="translate(1045.33,-100.091)">
+			<title>Dynamischer Verbinder.1290</title>
+			<path d="M0 353.33 L47.15 353.33" class="st6"/>
+		</g>
+		<g id="shape1291-18" v:mID="1291" v:groupContext="shape" transform="translate(3,-205.598)">
+			<title>Tabelle.1291</title>
+			<desc>Training Pipeline</desc>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="67.1811" cy="350.415" width="134.37" height="20"/>
+			<rect x="0" y="340.415" width="134.362" height="20" class="st8"/>
+			<text x="11.52" y="355.22" class="st9" v:langID="1031"><v:paragraph v:horizAlign="1"/><v:tabList/>Training Pipeline</text>		</g>
+		<g id="shape1292-21" v:mID="1292" v:groupContext="shape" transform="translate(506.432,-41.276)">
+			<title>Tabelle.1292</title>
+			<desc>4-Stratifiedfold Crossvalidation (Training and Validationset)</desc>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="71.0259" cy="294.514" width="142.06" height="131.803"/>
+			<rect x="0" y="228.613" width="142.052" height="131.803" rx="11.3386" ry="11.3386" class="st2"/>
+			<text x="14.22" y="267.51" class="st3" v:langID="1031"><v:paragraph v:horizAlign="1"/><v:tabList/>4-Stratifiedfold <tspan
+						x="13.65" dy="1.2em" class="st4">Crossvalidation<v:newlineChar/></tspan><tspan x="21.64" dy="1.2em"
+						class="st4">(Training and </tspan><tspan x="18.52" dy="1.2em" class="st4">Validationset)</tspan></text>		</g>
+		<g id="shape1293-27" v:mID="1293" v:groupContext="shape" v:layerMember="0" transform="translate(264.923,-98.6789)">
+			<title>Dynamischer Verbinder.1293</title>
+			<path d="M0 353.33 L40.35 353.33" class="st6"/>
+		</g>
+		<g id="shape1294-32" v:mID="1294" v:groupContext="shape" transform="translate(704.537,-41.276)">
+			<title>Tabelle.1294</title>
+			<desc>Store the best model with metric plots, confusion matrix, ...</desc>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="71.0259" cy="294.514" width="142.06" height="131.803"/>
+			<rect x="0" y="228.613" width="142.052" height="131.803" rx="11.3386" ry="11.3386" class="st2"/>
+			<text x="18.46" y="256.71" class="st3" v:langID="1031"><v:paragraph v:horizAlign="1"/><v:tabList/>Store the best <tspan
+						x="28.39" dy="1.2em" class="st4">model with </tspan><tspan x="23.93" dy="1.2em" class="st4">metric plots, </tspan><tspan
+						x="5.66" dy="1.2em" class="st4">confusion matrix, </tspan><tspan x="63.81" dy="1.2em" class="st4">...</tspan></text>		</g>
+		<g id="shape1295-39" v:mID="1295" v:groupContext="shape" v:layerMember="0" transform="translate(648.483,-100.091)">
+			<title>Dynamischer Verbinder.1295</title>
+			<path d="M0 353.33 L46.51 353.33" class="st6"/>
+		</g>
+		<g id="shape1296-44" v:mID="1296" v:groupContext="shape" transform="translate(903.282,-41.276)">
+			<title>Tabelle.1296</title>
+			<desc>Train the final model and store the metric plots, …</desc>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="71.0259" cy="294.514" width="142.06" height="131.803"/>
+			<rect x="0" y="228.613" width="142.052" height="131.803" rx="11.3386" ry="11.3386" class="st2"/>
+			<text x="18.8" y="267.51" class="st3" v:langID="1031"><v:paragraph v:horizAlign="1"/><v:tabList/>Train the final <tspan
+						x="9.85" dy="1.2em" class="st4">model and store </tspan><tspan x="9.42" dy="1.2em" class="st4">the metric plots, </tspan><tspan
+						x="64.62" dy="1.2em" class="st4">…</tspan></text>		</g>
+		<g id="shape1297-50" v:mID="1297" v:groupContext="shape" v:layerMember="0" transform="translate(846.589,-100.091)">
+			<title>Dynamischer Verbinder.1297</title>
+			<path d="M0 353.33 L47.15 353.33" class="st6"/>
+		</g>
+		<g id="shape1306-55" v:mID="1306" v:groupContext="shape" transform="translate(314.811,-38.4523)">
+			<title>Tabelle.1306</title>
+			<desc>Grid Search Hyperparameter tuning</desc>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="71.0259" cy="294.514" width="142.06" height="131.803"/>
+			<rect x="0" y="228.613" width="142.052" height="131.803" rx="11.3386" ry="11.3386" class="st2"/>
+			<text x="27.99" y="278.31" class="st3" v:langID="1031"><v:paragraph v:horizAlign="1"/><v:tabList/>Grid Search <tspan
+						x="8.91" dy="1.2em" class="st4">Hyperparameter </tspan><tspan x="46.94" dy="1.2em" class="st4">tuning</tspan></text>		</g>
+		<g id="shape1307-60" v:mID="1307" v:groupContext="shape" transform="translate(408.283,-249.468)">
+			<title>Tabelle.1307</title>
+			<desc>Select the best 10% based on the Sensitivity gained on the va...</desc>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="71.0259" cy="306.013" width="142.06" height="108.804"/>
+			<rect x="0" y="251.611" width="142.052" height="108.804" class="st10"/>
+			<text x="7.38" y="282.01" class="st11" v:langID="1031"><v:paragraph v:horizAlign="1"/><v:tabList/>Select the best 10% <tspan
+						x="28.78" dy="1.2em" class="st4">based on the </tspan><tspan x="4.08" dy="1.2em" class="st4">Sensitivity gained on </tspan><tspan
+						x="14.67" dy="1.2em" class="st4">the validation set</tspan></text>		</g>
+		<g id="shape1308-66" v:mID="1308" v:groupContext="shape" v:layerMember="0" transform="translate(472.382,-106.476)">
+			<title>Dynamischer Verbinder.1308</title>
+			<path d="M7.09 360.42 L7.09 217.42" class="st12"/>
+		</g>
+		<g id="shape1309-69" v:mID="1309" v:groupContext="shape" v:layerMember="0" transform="translate(456.863,-98.6789)">
+			<title>Dynamischer Verbinder.1309</title>
+			<path d="M0 353.33 L40.03 353.33" class="st6"/>
+		</g>
+		<g id="shape1310-74" v:mID="1310" v:groupContext="shape" transform="translate(384.393,187.337) rotate(90)">
+			<title>Tabelle.1310</title>
+			<desc>Preprocessed Datasets</desc>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="65.9014" cy="335.913" width="131.81" height="49.0048"/>
+			<rect x="0" y="311.41" width="131.803" height="49.0048" rx="11.3386" ry="11.3386" class="st13"/>
+			<text x="15.68" y="330.51" class="st3" v:langID="1031"><v:paragraph v:horizAlign="1"/><v:tabList/>Preprocessed <tspan
+						x="33.39" dy="1.2em" class="st4">Datasets</tspan></text>		</g>
+		<g id="shape1311-78" v:mID="1311" v:groupContext="shape" v:layerMember="0" transform="translate(72.9827,-96.6378)">
+			<title>Dynamischer Verbinder.1311</title>
+			<path d="M0 353.33 L40.35 353.33" class="st6"/>
+		</g>
+		<g id="shape1312-83" v:mID="1312" v:groupContext="shape" transform="translate(601.039,-251.361)">
+			<title>Tabelle.1312</title>
+			<desc>Select the best model based on the sensitivity gained on the ...</desc>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="71.0259" cy="306.013" width="142.06" height="108.804"/>
+			<rect x="0" y="251.611" width="142.052" height="108.804" class="st10"/>
+			<text x="23.02" y="282.01" class="st11" v:langID="1031"><v:paragraph v:horizAlign="1"/><v:tabList/>Select the best <tspan
+						x="6.34" dy="1.2em" class="st4">model based on the </tspan><tspan x="4.62" dy="1.2em" class="st4">sensitivity gained on </tspan><tspan
+						x="14.67" dy="1.2em" class="st4">the validation set</tspan></text>		</g>
+		<g id="shape1313-89" v:mID="1313" v:groupContext="shape" v:layerMember="0" transform="translate(665.138,-108.369)">
+			<title>Dynamischer Verbinder.1313</title>
+			<path d="M7.09 360.42 L7.09 217.42" class="st12"/>
+		</g>
+		<g id="shape1314-92" v:mID="1314" v:groupContext="shape" transform="translate(805.293,-248.526)">
+			<title>Tabelle.1314</title>
+			<desc>Combine the training and test set</desc>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="71.0259" cy="306.013" width="142.06" height="108.804"/>
+			<rect x="0" y="251.611" width="142.052" height="108.804" class="st10"/>
+			<text x="29.26" y="301.21" class="st11" v:langID="1031"><v:paragraph v:horizAlign="1"/><v:tabList/>Combine the <tspan
+						x="5.96" dy="1.2em" class="st4">training and test set</tspan></text>		</g>
+		<g id="shape1315-96" v:mID="1315" v:groupContext="shape" v:layerMember="0" transform="translate(869.392,-105.534)">
+			<title>Dynamischer Verbinder.1315</title>
+			<path d="M7.09 360.42 L7.09 217.42" class="st12"/>
+		</g>
+	</g>
+</svg>
