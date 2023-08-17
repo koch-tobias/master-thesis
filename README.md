@@ -168,7 +168,7 @@ In the last step, a tree index can be selected to draw this tree. Looking at the
 The results of this pipeline are stored in the folder "final_models" for each case (binary and multiclass): </br>
 master-thesis/ </br>
 ├─ final_models/ </br>
-│  ├─ Binary_model
+│  ├─ Binary_model </br>
 │  │  ├─ xAi </br>
 
 ### Deployment pipeline
