@@ -161,3 +161,20 @@ def test_get_weight_factor():
     expected_result = {1: 2, 2: 2, 3: 1}
     assert pp.get_weight_factor(y, df, binary_model) == expected_result
 
+def test_outlier_detection():
+    #TEST IF THE FUNCTION WORKS CORRECTLY FOR A DATAFRAME WITH MULTIPLE ROWS AND MULTIPLE RELEVANT FEATURES
+    df = pd.DataFrame({"X-Max_transf": [1, 2, 3, 4, 100], "X-Min_transf": [2, 3, 4, 5, -100]}) 
+    assert df.shape[0] == pp.outlier_detection(df).shape[0]
+    assert pp.outlier_detection(df).iloc[4]["X-Max"] == 0 
+
+    #TEST IF THE FUNCTION WORKS CORRECTLY FOR A DATAFRAME WITH ONE ROW
+    df = pd.DataFrame({"X-Max_transf": [1], "X-Min_transf": [2]}) 
+    assert df.shape[0] == pp.outlier_detection(df).shape[0]
+
+    #TEST IF THE FUNCTION RETURNS A PANDAS DATAFRAME
+    assert isinstance(pp.outlier_detection(pd.DataFrame()), pd.DataFrame)
+
+    #TEST IF THE FUNCTION WORKS CORRECTLY FOR AN EMPTY DATAFRAME
+    df = pd.DataFrame() 
+    assert pp.outlier_detection(df).empty
+
