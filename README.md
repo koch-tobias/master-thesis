@@ -139,17 +139,63 @@ The first step after loading the data sets is the tuning of the hyperparameters 
 After that, the top x % [default = 10] of the models are selected by the best area under the curve (auc) score and then validated using k-fold crossvalidation [default = 4]. </br>
 The model with the highest auc score after crossvalidation is then selected as the "best" model and trained on a larger trainset that combines the previous trainset and the testtest to use the entire available data. Only the validation set is retained for validation of the final model.
 
-After setting the desired training parameters, the training process can be started by executing the main.py file. </br>
+After setting the desired training parameters, the training process can be started by executing the ***main.py*** file. </br>
 master-thesis/  </br>
 ├─ src/ </br>
 │  ├─ training_pipeline/ </br>
 │  │  ├─ main.py </br>
 
+The trained models and its files to validate and compare models are stored in following folder: </br>
+master-thesis/ </br>
+├─ src/ </br>
+│  ├─ training_pipeline/ </br>
+│  │  ├─ trained_models/ </br>
+
+After comparing the new trained model(s), update the models in the following folder with the new models if they have a better performance: </br>
+master-thesis/ </br>
+├─ final_models/ </br>
 
 ### Explainability pipeline
 ![Explainability pipeline](images/pipelines/xai_pipeline.svg)
 
+This pipeline is used to generate insight about the predictions of the final models. </br>
+It uses the folder "final_models" folder to generate insights in the following way:
+
+First, an Excel file is created with all the features that the model has trained on and their importance to the model output. </br>
+Then the SHAP library is used to create swarm diagrams, which also help to understand which features affect the model forprediction. </br>
+In the last step, a tree index can be selected to draw this tree. Looking at these trees can help to understand misclassifications, but it is time consuming, because a model contains about 300 - 600 trees.
+
+The results of this pipeline are stored in the folder "final_models" for each case (binary and multiclass): </br>
+master-thesis/ </br>
+├─ final_models/ </br>
+│  ├─ Binary_model
+│  │  ├─ xAi </br>
+
 ### Deployment pipeline
+![Deployment pipeline](images/pipelines/deployment_pipeline.svg)
+
+The current options to test and/or deploy the models are a streamlit website which ist hosted on github and a Rest-API which is hosted on an AWS server. </br>
+The streamlit website is only used for testing, debugging, and getting feedback of the specialty department (internal customer and users). </br>   
+The Rest-API developed with FastAPI is used for production and is addressed via a Catia macro. </br>
+At the moment, the input for the models is an excel file with all relevant metadata and the structure tree of a vehicle. The output is a json file which contains only the identified car parts with the id, the original designation and an uniform name which is used in Catia for further steps.
+
+Example Output:
+```
+{
+  "1234567": [
+    "RESTDACH",
+    "DACHAUSSENHAUT"
+  ],
+  "23456789": [
+    "AUSSENHAUT HKL OBEN",
+    "HECKKLAPPE AUSSENHAUT"
+  ],
+  "98765432": [
+    "ZB SKYROOF DACHMODUL",
+    "GLASDACH (SA)"
+  ]
+}
+```
 
 ## 🚀 Updates
 
