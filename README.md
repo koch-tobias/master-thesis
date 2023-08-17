@@ -39,10 +39,7 @@ The project contains 5 different pipelines.
 - Explainability pipeline: Create shap plots, tree plots, and store the feature importantance for the final models 
 - Deployment pipeline: Deploy the model using FastAPI and Docker or using a Streamlit website
 
-### Labeling pipeline
-![Labeling pipeline](images/pipelines/labeling_pipeline.svg)
-
-This pipeline is used for the preparation and prelabeling of the raw data. 
+Since there is no data given in this repository, please add the following folder structure to the root:
 The following folder structure is required for this: </br>
 master-thesis/ </br>
 ├─ data/ </br>
@@ -52,6 +49,11 @@ master-thesis/ </br>
 │  ├─ preprocessed/ </br>
 │  ├─ raw/ </br> 
 │  ├─ raw_for_labeling/ </br>
+
+### Labeling pipeline
+![Labeling pipeline](images/pipelines/labeling_pipeline.svg)
+
+This pipeline is used for preparing and prelabeling the raw data. 
 
 The first step in using this pipeline is to add all raw datasets (excel files), which you want to add for training new models, to the raw_for_labeling folder. Each excel file contains the structure tree of one vehicle and have to include at least all relevant attributes, which are:
 - Sachnummer
@@ -102,7 +104,11 @@ This is a critical part, because incorrectly labeled data can lead to a signific
 
 After reviewing the pre-labeled datasets, move them to the labeled folder.
 
+DONE!
+
 ### Data pipeline
+![Labeling pipeline](images/pipelines/data_pipeline.svg)
+
 ### Training pipeline
 ### Explainability pipeline
 ### Deployment pipeline
