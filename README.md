@@ -31,7 +31,7 @@ or
 python setup.py install
 ``` 
 
-## 🐍 Usage
+## 🐍 Usage in Python
 The project contains 5 different pipelines. 
 - Labeling pipeline: Preparation of raw data, feature selection, add label columns, and prelabeling with the trained models
 - Data pipeline: Combine all datasets to one, feature engineering, data preprocessing, data augmentation, and splitting the dataset into train, validation, and testset
