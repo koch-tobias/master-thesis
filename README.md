@@ -83,12 +83,12 @@ The first step in using this pipeline is to add all raw datasets (excel files), 
 - zy
 - zz
 
-After that, run the **label.py** file which you can find here:
-master-thesis/
-├─ src/
-│  ├─ labeling_pipeline/
-│  │  ├─ ___init___.py
-│  │  ├─ label.py
+After that, run the **label.py** file which you can find here: </br>
+master-thesis/  </br>
+├─ src/ </br>
+│  ├─ labeling_pipeline/ </br>
+│  │  ├─ ___init___.py </br>
+│  │  ├─ label.py </br>
 
 This file will apply the following steps:
 - **Data Preparation**: Keeps only vehicle parts from relevant modules. All parent folders are removed
