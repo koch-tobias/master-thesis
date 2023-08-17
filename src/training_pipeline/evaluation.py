@@ -5,6 +5,8 @@ import numpy as np
 from sklearn.metrics import accuracy_score, recall_score, f1_score
 
 import pickle
+import os
+from loguru import logger
 
 from src.deployment_pipeline.prediction import model_predict
 
@@ -12,64 +14,6 @@ import yaml
 from yaml.loader import SafeLoader
 with open('src/config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
-
-#%%
-def add_feature_importance(model, model_folder_path: str) -> pd.DataFrame:
-    ''' 
-    This function is used to extract the most important features from a given model. 
-    It takes in a trained model and the path of the folder where the model vocabulary is stored. The output of the function is a pandas DataFrame containing the column names, corresponding features, and their importance scores.
-    Args:
-        model: a trained model object
-        model_folder_path: a string representing the path to the folder where the model vocabulary is stored
-    Return: 
-        df_features: a pandas DataFrame containing the column names, corresponding features, and their importance scores.
-    '''
-    vocabulary_path = model_folder_path + "vocabulary.pkl"
-    # Get the vocabulary of the training data
-    with open(vocabulary_path, 'rb') as f:
-        vocabulary = pickle.load(f)
-
-    # Extrahieren der wichtigsten Features
-    boost = model.booster_
-    importance = boost.feature_importance()
-    column = boost.feature_name()
-    feature_dict = {vocabulary.shape[0]+index: key for index, key in enumerate(config["general_params"]["features_for_model"])}
-
-    path_store_features = model_folder_path + "features.xlsx"
-
-    df_features = pd.DataFrame(columns=['Column','Feature','Importance Score'])
-    df_features["Column"] = column
-    df_features["Importance Score"] = importance
-    for j in range(len(column)):
-        if j < vocabulary.shape[0]:
-            df_features.loc[j,"Feature"] = vocabulary[j]
-        else:
-            df_features.loc[j,"Feature"] = feature_dict[j]
-
-    #df_features.to_excel(path_store_features)
-    return df_features
-
-# %%
-def get_features(model_folder_path: str) -> tuple[list, list]:
-    ''' 
-    This function is used to retrieve the list of features and their importance scores from a given path of a folder where the features are stored in an Excel file. 
-    The function returns two lists - a complete list of feature names and a list of top 20 most important features.
-    Args:
-        model_folder_path: a string representing the path of the folder where the features are stored
-    Return:
-        feature_list: a list of strings representing all features stored in the Excel file
-        topx_important_features: a list of integers representing the indices of the 20 most important features in the feature_list. If the Excel file does not exist, a message indicating the error is printed and the function returns None.
-    '''
-    path_store_features = model_folder_path + "features.xlsx"
-    try:
-        df_features = pd.read_excel(path_store_features) 
-        topx_important_features = df_features.sort_values(by=["Importance Score"], ascending=False).head(20)
-        topx_important_features = topx_important_features.index.tolist()
-        feature_list = df_features["Feature"].values.tolist()
-
-        return feature_list, topx_important_features
-    except:
-        print(f"Error: File {path_store_features} does not exist!")
     
 def get_best_metric_results(evals: dict, best_iteration: int, method: str, binary_model: bool) -> tuple[float]:
     ''' 
