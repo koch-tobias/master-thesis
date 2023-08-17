@@ -107,7 +107,11 @@ After reviewing the pre-labeled datasets, move them to the labeled folder.
 ### Data pipeline
 ![Data pipeline](images/pipelines/data_pipeline.svg)
 
-This pipeline is used to generate a new training, validation, and testsplit for training the models.
+This pipeline is used to generate a new training, validation, and testsplit for training the models and can be executed with the file ***generate_dataset.py***. </br>
+master-thesis/  </br>
+├─ src/ </br>
+│  ├─ data_pipeline/ </br>
+│  │  ├─ generate_dataset.py </br>
 
 In the first step, all datasets which are in the data folder "labeled" will combined to one.  
 
@@ -126,6 +130,17 @@ The last step splits the dataset at first into 1-x training and x validation set
 
 ### Training pipeline
 ![Training pipeline](images/pipelines/training_pipeline.svg)
+
+This pipeline is used to train and evaluate new models. Currently, the machine learning methods LightGBM, XGBoost, and CatBoost are available for this purpose. All settings, such as metrics, loss functions, hyperparameters, etc. can be set in the config.yaml file.
+
+The input of the pipeline is the training, validation and test split created with the data pipeline. Set the paths to that dataset folder in the config file.
+
+After setting the desired training parameters, the training process can be started by executing the main.py file. </br>
+master-thesis/  </br>
+├─ src/ </br>
+│  ├─ training_pipeline/ </br>
+│  │  ├─ main.py </br>
+
 
 ### Explainability pipeline
 ### Deployment pipeline
