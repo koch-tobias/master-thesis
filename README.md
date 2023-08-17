@@ -43,15 +43,15 @@ The project contains 5 different pipelines.
 ![Labeling pipeline](images/pipelines/labeling_pipeline.svg)
 
 This pipeline is used for the preparation and prelabeling of the raw data. 
-The following folder structure is required for this: 
+The following folder structure is required for this: </br>
 master-thesis/
-├─ data/
-│  ├─ labeled/
-│  ├─ pre_labeled/
-│  ├─ processed/
-│  ├─ preprocessed/
-│  ├─ raw/
-│  ├─ raw_for_labeling/
+├─ data/ </br>
+│  ├─ labeled/ </br>
+│  ├─ pre_labeled/ </br>
+│  ├─ processed/ </br>
+│  ├─ preprocessed/ </br>
+│  ├─ raw/ </br>
+│  ├─ raw_for_labeling/ </br>
 
 The first step in using this pipeline is to add all raw datasets (excel files), which you want to add for training new models, to the raw_for_labeling folder. Each excel file contains the structure tree of one vehicle and have to include at least all relevant attributes, which are:
 - Sachnummer
