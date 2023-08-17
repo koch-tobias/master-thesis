@@ -96,38 +96,6 @@ def delete_char(designation: str) -> str:
     return new_designation  
 
 # %%
-def random_mistakes(designation: str) -> str:
-    '''
-    Takes a text as input and inserts a random spelling error. 
-    This is done either by swapping chars, adding a chars, or deleting a chars.
-    Arg: 
-        Designation of the car part
-    Return: 
-        New designation
-    '''
-    # Generate three random probabilities between 0 and 1 
-    probs = [random.uniform(0,1) for _ in range(3)]
-    probs = [p/sum(probs) for p in probs]
-
-    if probs[0] > (probs[1] and probs[2]):
-        # Randomly swap two chars
-        new_designation = swap_chars(designation=designation)
-        
-        return new_designation
-    
-    elif probs[1] > (probs[0] and probs[2]):
-        # Randomly add a char
-        new_designation = add_char(designation=designation)
-
-        return new_designation
-
-    else:
-        # Randomly delete one char
-        new_designation = delete_char(designation=designation)
-        
-        return new_designation
-
-# %%
 def remove_prefix(response: str) -> str:
     ''' 
     The output of GPT has always a prefix like "Answer: " or "Modified Designation: ". This prefix will be deleted that we keep only the generated text.
