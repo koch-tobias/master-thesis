@@ -147,6 +147,8 @@ master-thesis/  </br>
 
 
 ### Explainability pipeline
+![Explainability pipeline](images/pipelines/xai_pipeline.svg)
+
 ### Deployment pipeline
 
 ## 🚀 Updates
