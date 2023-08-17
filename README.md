@@ -9,27 +9,27 @@
 ## 💻 Installation
 1. Clone or download the repository
 2. (optional) Create a virtuel environment: 
-'''bash
+```bash
 conda create -n envMesstool python=3.10
-'''
+```
 3. (optional) Activate the created environment 
-'''bash 
+```bash 
 conda activate envMesstool 
-'''
+```
 4. Go to the root directory
 5. Installation of the requirements: 
-'''bash 
+```bash 
 pip install -r requirements.txt
-''' 
+``` 
 6. Add the data folder to the root directory
 7. Perfect, the messtool is ready to use! If not, run 
-'''bash 
+```bash 
 pip install -e .
-''' 
+``` 
 or 
-'''bash 
+```bash
 python setup.py install
-'''
+``` 
 
 ## 🐍 Usage
 The project contains 5 different pipelines. 
