@@ -68,7 +68,7 @@ def get_model(folder_path: str):
 
     return model, vectorizer, vocabulary, bbox_features
 
-def get_X(vocab, vectorizer, bbox_features: list, df_preprocessed: pd.DataFrame) -> np.array:
+def get_X(vocab, vectorizer, bbox_features: list, df_preprocessed: pd.DataFrame, model_folder_path: str) -> np.array:
     '''
     Prepare the text data and combine with additional features to generate the dataset to train the model 
     Args:
@@ -76,6 +76,7 @@ def get_X(vocab, vectorizer, bbox_features: list, df_preprocessed: pd.DataFrame)
         vectorizer = vectorizer trained on the dataset
         bbox_features = list of bounding box features which should be used additionally to the designation 
         df_preprocessed = dataframe with the preprocessed data
+        model_folder_path = Path to the folder of the final model
     Return:
         X = dataset prepared to train the model
     '''
@@ -86,6 +87,7 @@ def get_X(vocab, vectorizer, bbox_features: list, df_preprocessed: pd.DataFrame)
     vectorizer.vocabulary_ = vocabulary_dict
     X = vectorizer.transform(df_preprocessed['Benennung (bereinigt)']).toarray()
 
+    use_only_text = search_in_logging(text="use_only_text:", model_folder_path=model_folder_path)
     # Combine text features with other features
     if config["general_params"]["use_only_text"] == False:      
         X = np.concatenate((X, df_preprocessed[bbox_features].values), axis=1)
@@ -202,19 +204,20 @@ def store_predictions(y_test: np.array, y_pred: np.array, probs: np.array, df_pr
     # Serialize data into file:
     df_wrong_predictions.to_csv(model_folder_path + "wrong_predictions.csv")
 
-def get_method_from_logging(model_folder_path: str) -> str or None:
+def search_in_logging(text:str, model_folder_path: str) -> str or None:
     ''' 
-    Description: Returns the method used for training the model by reading the 'logging.txt' file of the given model path.
+    Description: Returns the value after a searched text by reading the 'logging.txt' file of the given model path.
     Args:
+        text: string which should be searched in the logging file
         model_folder_path: path of folder containing the model
     Return:
-        method used for training the model
-        None if 'Method:' not found in the 'logging.txt' file 
+        value after the searched string
+        None if the string is not found in the 'logging.txt' file 
     '''
     logging_path = model_folder_path + "/logging.txt"
     with open(logging_path, 'r') as file:
         for line in file:
-            if "Method:" in line:
+            if text in line:
                 return line.split(":")[1].strip()
     return None
 
@@ -246,13 +249,13 @@ def predict_on_new_data(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, l
     logger.info("Preprocess data...")
     df_preprocessed, df_for_plot = preprocess_dataset(df)
 
-    X_binary = get_X(vocab=vocabulary_binary, vectorizer=vectorizer_binary, bbox_features=boundingbox_features_binary["features_for_model"], df_preprocessed=df_preprocessed)
-    X_multiclass = get_X(vocab=vocabulary_multiclass, vectorizer=vectorizer_multiclass, bbox_features=boundingbox_features_multiclass["features_for_model"], df_preprocessed=df_preprocessed)
+    X_binary = get_X(vocab=vocabulary_binary, vectorizer=vectorizer_binary, bbox_features=boundingbox_features_binary["features_for_model"], df_preprocessed=df_preprocessed, model_folder_path=model_folder_path_binary)
+    X_multiclass = get_X(vocab=vocabulary_multiclass, vectorizer=vectorizer_multiclass, bbox_features=boundingbox_features_multiclass["features_for_model"], df_preprocessed=df_preprocessed, model_folder_path=model_folder_path_multiclass)
     logger.success("Dataset is ready for classification!")   
 
     logger.info("Identify relevant car parts and add the unique names...")
-    binary_method = get_method_from_logging(model_folder_path=model_folder_path_binary)
-    multiclass_method = get_method_from_logging(model_folder_path=model_folder_path_multiclass)
+    binary_method = search_in_logging(text="Method:", model_folder_path=model_folder_path_binary)
+    multiclass_method = search_in_logging(text="Method:", model_folder_path=model_folder_path_multiclass)
     y_pred_binary, probs_binary, _  = model_predict(model=model_binary, X_test=X_binary, method=binary_method, binary_model=True)
     y_pred_multiclass, probs_multiclass, _ = model_predict(model=model_multiclass, X_test=X_multiclass, method=multiclass_method, binary_model=False)
 
