@@ -50,11 +50,11 @@ python setup.py install
 
 ## 🐍 Usage in Python
 The project contains 5 different pipelines. 
-- Labeling pipeline: Preparation of raw data, feature selection, add label columns, and prelabeling with the trained models
-- Data pipeline: Combine all datasets to one, feature engineering, data preprocessing, data augmentation, and splitting the dataset into train, validation, and testset
-- Training pipeline: Training of the binary and/or multiclass models using grid search hyperparametertuning and k-fold-crossvalidation 
-- Explainability pipeline: Create shap plots, tree plots, and store the feature importantance for the final models 
-- Deployment pipeline: Deploy the model using FastAPI and Docker or using a Streamlit website
+- **Labeling pipeline**: Preparation of raw data, feature selection, add label columns, and prelabeling with the trained models
+- **Data pipeline**: Combine all datasets to one, feature engineering, data preprocessing, data augmentation, and splitting the dataset into train, validation, and testset
+- **Training pipeline**: Training of the binary and/or multiclass models using grid search hyperparametertuning and k-fold-crossvalidation 
+- **Explainability pipeline**: Create shap plots, tree plots, and store the feature importantance for the final models 
+- **Deployment pipeline**: Deploy the model using FastAPI and Docker or using a Streamlit website
 
 Since there is no data provided in this repository, please add your data by using the following folder structure:</br>
 master-thesis/ </br>
