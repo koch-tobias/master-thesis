@@ -56,7 +56,7 @@ The project contains 5 different pipelines.
 - Explainability pipeline: Create shap plots, tree plots, and store the feature importantance for the final models 
 - Deployment pipeline: Deploy the model using FastAPI and Docker or using a Streamlit website
 
-Since there is no data given in this repository, please add the following folder structure to the root folder:</br>
+Since there is no data provided in this repository, please add your data by using the following folder structure:</br>
 master-thesis/ </br>
 ├─ data/ </br>
 │  ├─ labeled/ </br>
