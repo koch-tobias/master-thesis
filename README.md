@@ -2,7 +2,10 @@
 
 ## 🚘🔍 Capi 
 Capi (CAr-Part-Identifier) is a service developed as part of my master thesis and is based on two machine learning models. Capi identifies car parts that are relevant for geometric measurements during the vehicle development process. </br>
-The input of the model needs to be a list of car parts (structure tree) including their metadata. The output of the model is a list of all relevant car parts in the following format: </br>
+The input of the model needs to be a excel file which contains a list of car parts (structure tree) including their metadata. Sample excerpt:
+![Sample excerpt input](images/sample_input.png)
+
+The output of the model is a list of all relevant car parts in the following format: </br>
 ```
   {
     "Part number": ["Original part designation", "Uniform name"]
