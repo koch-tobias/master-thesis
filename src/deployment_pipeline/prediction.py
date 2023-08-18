@@ -11,7 +11,7 @@ from src.data_pipeline.feature_engineering import find_valid_space
 
 import yaml
 from yaml.loader import SafeLoader
-with open('../config.yaml') as file:
+with open('src/config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
 
 def get_dataset_path_from_logging(file_path: str) -> str or None:
