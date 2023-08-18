@@ -113,6 +113,7 @@ This file will apply the following steps:
 After these steps, the prepared and prelabeled datasets are stored in the folder "pre_labeled". 
 Now please check carefully if the records are labeled correctly. If not, you will have to correct this manually.
 This is a critical part, because incorrectly labeled data can lead to a significant drop in performance!
+*As an assistance to correctly label the datasets and to quickly detect possible errors, a checklist with all vehicles and the determined relevant components is available in the data folder.*
 
 After reviewing the pre-labeled datasets, move them to the labeled folder.
 
