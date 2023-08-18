@@ -49,9 +49,9 @@ python setup.py install
 The project contains 5 different pipelines. 
 - **Labeling pipeline**: Preparation of raw data, feature selection, add label columns, and prelabeling with the trained models
 - **Data pipeline**: Combine all datasets to one, feature engineering, data preprocessing, data augmentation, and splitting the dataset into train, validation, and testset
-- **Training pipeline**: Training of the binary and/or multiclass models using grid search hyperparametertuning and k-fold-crossvalidation 
+- **Training pipeline**: Training of the binary and/or the multiclass models using grid search hyperparametertuning and k-fold-crossvalidation 
 - **Explainability pipeline**: Create shap plots, tree plots, and store the feature importantance for the final models 
-- **Deployment pipeline**: Deploy the model using FastAPI and Docker or using a Streamlit website
+- **Deployment pipeline**: Deploy the model using FastAPI and docker or using a streamlit website
 
 Since there is no data provided in this repository, please add your data by using the following folder structure:</br>
 master-thesis/ </br>
@@ -105,10 +105,10 @@ master-thesis/  </br>
 │  │  ├─ label.py </br>
 
 This file will apply the following steps:
-- **Data Preparation**: Keeps only vehicle parts from relevant modules. All parent folders are removed
+- **Data Preparation**: Keeps only vehicle parts from relevant modules. All parent folders and not needed modules are removed
 - **Feature Selection**: Keeps only the features which are used for training the models
-- **Add label columns**: Adding and initializing the label columns ("Relevant fuer Messung" with 0 and "Einheitsname" with "Dummy")
-- **Prelabeling**: Using the trained model to identify the relevant car parts and classify a uniform name ("Einheitsname") for each relevant car part
+- **Add label columns**: Adding and initializing the label columns ("Relevant fuer Messung" with "Nein" and "Einheitsname" with "Dummy")
+- **Prelabeling**: Using the trained models to identify the relevant car parts and classify a uniform name ("Einheitsname") for each relevant car part
 
 After these steps, the prepared and prelabeled datasets are stored in the folder "pre_labeled". 
 Now please check carefully if the records are labeled correctly. If not, you will have to correct this manually.
@@ -119,24 +119,24 @@ After reviewing the pre-labeled datasets, move them to the labeled folder.
 ### Data pipeline
 ![Data pipeline](images/pipelines/data_pipeline.svg)
 
-This pipeline is used to generate a new training, validation, and testsplit for training the models and can be executed with the file ***generate_dataset.py***. </br>
+This pipeline is used to generate a new training, validation, and testsplit for training the models and can be executed with the file ***generate_dataset.py*** which can be find here: </br>
 master-thesis/  </br>
 ├─ src/ </br>
 │  ├─ data_pipeline/ </br>
 │  │  ├─ generate_dataset.py </br>
 
-In the first step, all datasets which are in the data folder "labeled" will combined to one.  
+In the first step, all datasets which are in the data folder "labeled" will combined to one dataframe.  
 
-Then, in the feature engineering step, the bounding box information is converted so that the number of features is reduced. </br>
+Then, in the feature engineering step, the bounding box information are converted so that the number of features will be reduced. </br>
 In the original data set, a bounding box is represented by the minimum and maximum values in x,y,z, a shift vector and a rotation matrix. </br>
-Here, this information is used to convert it into the length, width, height, the center point and an orientation vector of the bounding box. This reduces the number of features for the representation of the bounding box from 18 to 6 features. In addition, two more features (volume and density) are calculate.
+Here, this information is used to convert it into length, width, height, the center point and an orientation vector of the bounding box. This reduces the number of features for representing the bounding box from 18 to 6. In addition, two more features (volume and density) are calculate.
 
-The next step is the preprocessing of the data set. This involves a pre-selection of irrelevant car components based on the bounding box features (volume and position) and a cleaning of the component designations and their conversion into numerical vectors.
+The next step is the preprocessing of the data set. This involves a pre-selection of irrelevant car components based on the bounding box features (volume and position). In addition, component designations are cleaned by removing any punctuation marks and frequently occurring words without information, and then converted to numeric vectors.
 
-Since a stratified training/validation/test split is used to ensure that the datasets are balanced across classes, some data augmentation techniques are used as needed to create synthetic car parts. The goal here is to have at least 2 / (1 - percentage trainset/100) car parts, so that each split has at least one car part for each uniform name. </br> 
-The synthetic designations are generated by adding random mistakes, switching words or generating new designations using GPT3.5. The synthetic bounding box information is randomly generated, however, it must be within a validated range in terms of position, length, width, height and volume to the original components of the same class. The other features are copied from the original car parts. 
+Since a stratified training/validation/test split is used to ensure that the datasets are balanced across classes, some data augmentation techniques are used to create synthetic car parts. The goal here is to have at least 2 / (1 - percentage trainset/100) car parts, so that each split has at least one car part for each class (uniform name). </br> 
+The synthetic designations are generated by adding random mistakes, switching words or generating new designations using GPT3.5. The synthetic bounding box information are randomly generated, however, it must be within a validated range in terms of position, length, width, height and volume to the original components of the same class. The other features are copied from original car parts. 
 
-The last step splits the dataset at first into 1-x training and x validation set. Then, the validationset is splitted into 1-x validationset and x testset. (x can be defined in the config.yaml file)
+The last step splits the dataset at first into (1-x)*100 % training and x*100 % validation set. Then, the validationset is splitted into (1-x)*100 % validationset and x*100 % testset. (x=[0,1] can be defined in the config.yaml file)
 
 ### Training pipeline
 ![Training pipeline](images/pipelines/training_pipeline.svg)
