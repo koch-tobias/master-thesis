@@ -145,7 +145,7 @@ def model_predict(model, X_test: np.array, method: str, binary_model: bool) -> t
         probs: probability values
         best_iteration: the best iteration number based on the chosen method 
     '''
-    best_iteration = get_best_iteration(method=model, method=method)
+    best_iteration = get_best_iteration(model=model, method=method)
     probs = get_probabilities(model=model, X_test=X_test, best_iteration=best_iteration, method=method)
 
     if binary_model:
