@@ -14,17 +14,20 @@ from yaml.loader import SafeLoader
 with open('src/config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
 
-def get_dataset_path_from_logging(file_path: str) -> str or None:
-    '''
-    This function takes the path of the logging file as input and returns the path of the dataset that was used for model training from the logging file.
+def search_in_logging(text:str, model_folder_path: str) -> str or None:
+    ''' 
+    Description: Returns the value after a searched text by reading the 'logging.txt' file of the given model path.
     Args:
-        file_path: String: The path of the logging file.
+        text: string which should be searched in the logging file
+        model_folder_path: path of folder containing the model
     Return:
-        String: The path of the dataset used for model training. If the "Dataset:" keyword is not present in the logging file, it returns None.
+        value after the searched string
+        None if the string is not found in the 'logging.txt' file 
     '''
-    with open(file_path, 'r') as file:
+    logging_path = model_folder_path + "/logging.txt"
+    with open(logging_path, 'r') as file:
         for line in file:
-            if "Dataset:" in line:
+            if text in line:
                 return line.split(":")[1].strip()
     return None
 
@@ -50,7 +53,7 @@ def get_model(folder_path: str):
     with open(model_path, "rb") as fid:
         model = pickle.load(fid)
 
-    dataset_path = get_dataset_path_from_logging(folder_path + "/logging.txt")
+    dataset_path = search_in_logging(text="Dataset:", model_folder_path=folder_path)
 
     # Load the vectorizer from the file
     vectorizer_path = dataset_path + "vectorizer.pkl"
@@ -204,23 +207,6 @@ def store_predictions(y_test: np.array, y_pred: np.array, probs: np.array, df_pr
     # Serialize data into file:
     df_wrong_predictions.to_csv(model_folder_path + "wrong_predictions.csv")
 
-def search_in_logging(text:str, model_folder_path: str) -> str or None:
-    ''' 
-    Description: Returns the value after a searched text by reading the 'logging.txt' file of the given model path.
-    Args:
-        text: string which should be searched in the logging file
-        model_folder_path: path of folder containing the model
-    Return:
-        value after the searched string
-        None if the string is not found in the 'logging.txt' file 
-    '''
-    logging_path = model_folder_path + "/logging.txt"
-    with open(logging_path, 'r') as file:
-        for line in file:
-            if text in line:
-                return line.split(":")[1].strip()
-    return None
-
 def predict_on_new_data(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, list, str]:
     ''' 
     Predicts relevant car parts and unique names on a new dataset by using a binary model and a multiclass model. 
@@ -259,8 +245,8 @@ def predict_on_new_data(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, l
     y_pred_binary, probs_binary, _  = model_predict(model=model_binary, X_test=X_binary, method=binary_method, binary_model=True)
     y_pred_multiclass, probs_multiclass, _ = model_predict(model=model_multiclass, X_test=X_multiclass, method=multiclass_method, binary_model=False)
 
-    dataset_path_binary = get_dataset_path_from_logging(model_folder_path_binary + "/logging.txt")
-    dataset_path_multiclass = get_dataset_path_from_logging(model_folder_path_multiclass + "/logging.txt")
+    dataset_path_binary = search_in_logging(text="Dataset:", model_folder_path=model_folder_path_binary)
+    dataset_path_multiclass = search_in_logging(text="Dataset:", model_folder_path=model_folder_path_multiclass)
 
     # Load the LabelEncoder
     with open(dataset_path_multiclass + 'label_encoder.pkl', 'rb') as f:
