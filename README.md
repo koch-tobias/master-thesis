@@ -1,5 +1,17 @@
 # Component Identification for Geometric Measurements in the Vehicle Development Process Using Machine Learning
 
+🚘🔍 Capi 
+Capi (CAr-Part-Identifier) is a service developed as part of my master thesis and is based on two machine learning models. Capi identifies car parts of a structure tree that are relevant for geometric measurements during the vehicle development process. </br>
+The input is a list of car parts including their metadata and the output are all relevant car parts in the following format: </br>
+```
+  {
+    "Part number": ["Original part designation", "Uniform name"]
+  }
+```
+This list is then used to load the corresponding vehicle parts into a CATIA parametric model based on the part number. This parametric model then uses the uniform name to assign the parts to the respective measurement and automatically perform the measurements.
+
+Capi is available as a REST api and on a website. The REST api is used for production to integrate with the measurement tool and the website is used only for development to test the models and to get quick feedback from customers.
+
 ## 📖 Quick Index
 
 * [💻 Installation](#-installation)
