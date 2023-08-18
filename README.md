@@ -185,8 +185,8 @@ In the last step, a tree index can be selected to draw this tree. Looking at mul
 The results of this pipeline are stored in the folder "final_models" for each case (binary and multiclass), for example: </br>
 master-thesis/ </br>
 ├─ final_models/ </br>
-│  ├─ Binary_model </br>
-│  │  ├─ xAi </br>
+│  ├─ Binary_model/ </br>
+│  │  ├─ xAi/ </br>
 
 ### Deployment pipeline
 ![Deployment pipeline](images/pipelines/deployment_pipeline.svg)
@@ -213,6 +213,14 @@ Example Output:
   ]
 }
 ```
+
+If you want to test your models locally, you can use the ***prediction.py*** file in the following folder: </br>
+master-thesis/ </br>
+├─ src/ </br>
+│  ├─ deployment_pipeline </br>
+│  │  ├─ prediction.py </br>
+
+Here you can add, in the main function, the path to your input which you want to use for testing. The models needs to be stored in the folder "final_models".
 
 ### Tests
 In order to test functions individually and independently for proper operation, unit tests were developed using the pyTest library. These can be executed in the root folder by using the following command:
