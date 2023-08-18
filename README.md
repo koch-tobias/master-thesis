@@ -38,12 +38,9 @@ conda activate envMesstool
 ```bash 
 pip install -r requirements.txt
 ``` 
-6. Add the data folder to the root directory
-7. Perfect, the messtool is ready to use! If not, run 
-```bash 
-pip install -e .
-``` 
-or 
+6. DONE! The code is ready to use! 
+___________________
+7. If functions from other files are not found try using the following command in the root directory:
 ```bash
 python setup.py install
 ``` 
