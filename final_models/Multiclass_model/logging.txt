@@ -1,5 +1,6 @@
 Dataset: data/processed/31072023_1319/
 Method: lgbm
+use_only_text: False
 Validation AUC: 0.99998
 Trained Iterations: 133
 Model index in GridSearch Hyperparametertuning: 20

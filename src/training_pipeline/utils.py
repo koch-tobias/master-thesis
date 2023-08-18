@@ -103,6 +103,7 @@ def store_trained_model(model, metrics: str, best_iteration: int, val_auc: float
         f= open(model_folder_path + "logging.txt","w+")
         f.write(dataset_path)
         f.write(model_folder)
+        f.write("use_only_text: {}".format(config["general_params"]["use_only_text"]))
         f.write("\n_________________________________________________\n")
         f.write("Best model after hyperparameter tuning:\n")
         f.write("Validation AUC: {}\n".format(val_auc))
