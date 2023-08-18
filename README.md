@@ -15,7 +15,7 @@ This output is used by a CATIA makro to load the car parts into a CATIA parametr
 
 The part number is used to load the parts from the database, the unit name is used to assign the parts to the various measurements, and the original part designation can be used to manually check whether the uniform name was correctly assigned by the ML-model.
 
-Capi is accessible via a REST-API or a website. The REST-API is used for production to integrate with the measurement tool and the website is used only for development to test the models and to get quick feedback from customers.
+Capi is accessible via a REST-API ([link](http://10.3.13.137:7070/docs#/default/post_relevant_parts_api_get_relevant_parts__post)) or a website. The REST-API is used for production to integrate with the measurement tool and the website is used only for development to test the models and to get quick feedback from customers.
 
 ## 📖 Quick Index
 
