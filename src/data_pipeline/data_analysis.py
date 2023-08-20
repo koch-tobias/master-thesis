@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 from loguru import logger
 
-from src.data_pipeline.feature_engineering import transform_boundingbox, find_valid_space
+from feature_engineering import transform_boundingbox, find_valid_space
 
 
 # %%
