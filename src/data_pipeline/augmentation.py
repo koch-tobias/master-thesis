@@ -8,7 +8,7 @@ import math
 import random
 from loguru import logger
 
-from src.data_pipeline.feature_engineering import find_valid_space, random_centerpoint_in_valid_space, calculate_transformed_corners
+from feature_engineering import find_valid_space, random_centerpoint_in_valid_space, calculate_transformed_corners
 
 import yaml
 from yaml.loader import SafeLoader
