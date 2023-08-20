@@ -9,8 +9,7 @@ from loguru import logger
 from sklearn.model_selection import train_test_split
 from sklearn import preprocessing
 
-from src.data_pipeline.feature_engineering import transform_boundingbox, calculate_center_point, calculate_lwh, clean_text, nchar_text_to_vec
-from src.data_pipeline.feature_engineering import rotation_to_orientation
+from feature_engineering import transform_boundingbox, calculate_center_point, calculate_lwh, clean_text, nchar_text_to_vec, rotation_to_orientation
 
 import yaml
 from yaml.loader import SafeLoader
@@ -51,7 +50,6 @@ def load_data_into_df() -> tuple[list, str]:
                     # Add the created dataframe to the list of dataframes
                     dataframes.append(df)
                     ncars.append(ncar)
-
                 except:
                     logger.info(f"Error reading file {file}. Skipping...")
                     continue
@@ -78,6 +76,9 @@ def check_nan_values(df: pd.DataFrame, relevant_features: list, ncar: str) -> li
     columns_with_nan = df.columns[df.isna().any()].tolist()
     if len(columns_with_nan) > 0:
         logger.error(f"{ncar}: There are car parts in the dataset with NaN values in the following columns: {columns_with_nan}")
+        df.to_excel("check_df.xlsx")
+        exit()
+    
     return columns_with_nan
 
 # %%
@@ -121,10 +122,9 @@ def add_new_features(df: pd.DataFrame) -> pd.DataFrame:
     '''
     for index, row in df.iterrows():  
         # Calculate and add new features to represent the bounding boxes
-        transformed_boundingbox = transform_boundingbox(row['X-Min'], row['X-Max'], row['Y-Min'], row['Y-Max'], row['Z-Min'], row['Z-Max'],row['ox'],row['oy'],row['oz'],row['xx'],row['xy'],row['xz'],row['yx'],row['yy'],row['yz'],row['zx'],row['zy'],row['zz'])
+        transformed_boundingbox, rotation_matrix = transform_boundingbox(row['X-Min'], row['X-Max'], row['Y-Min'], row['Y-Max'], row['Z-Min'], row['Z-Max'],row['ox'],row['oy'],row['oz'],row['xx'],row['xy'],row['xz'],row['yx'],row['yy'],row['yz'],row['zx'],row['zy'],row['zz'])
         center_x, center_y, center_z = calculate_center_point(transformed_boundingbox)
         length, width, height = calculate_lwh(transformed_boundingbox=transformed_boundingbox)
-        rotation_matrix = np.array([[row['xx'],row['xy'],row['xz']], [row['yx'],row['yy'],row['yz']], [row['zx'],row['zy'],row['zz']]])
         theta_x, theta_y, theta_z = rotation_to_orientation(rotation_matrix)
         x_coords = transformed_boundingbox[:, 0]
         y_coords = transformed_boundingbox[:, 1]
