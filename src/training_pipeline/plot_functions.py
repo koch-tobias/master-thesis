@@ -7,6 +7,8 @@ from sklearn.metrics import ConfusionMatrixDisplay
 
 import pickle
 from loguru import logger
+import sys
+sys.path.append('C:/Users/q617269/Desktop/Masterarbeit_Tobias/master-thesis')
 
 from src.data_pipeline.feature_engineering import transform_boundingbox, find_valid_space
 

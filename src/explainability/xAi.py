@@ -11,6 +11,8 @@ import catboost as cbo
 import os
 import pickle
 
+import sys
+sys.path.append('C:/Users/q617269/Desktop/Masterarbeit_Tobias/master-thesis')
 from src.deployment_pipeline.prediction import get_model
 from src.training_pipeline.utils import load_dataset
 

@@ -14,6 +14,9 @@ import time
 import math
 from statistics import mean
 
+import sys
+sys.path.append('C:/Users/q617269/Desktop/Masterarbeit_Tobias/master-thesis')
+
 from model_architectures import binary_classifier, multiclass_classifier
 from evaluation import evaluate_model, get_best_metric_results
 from plot_functions import store_metrics, plot_metric_custom, store_confusion_matrix
