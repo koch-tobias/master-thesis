@@ -13,6 +13,29 @@ from yaml.loader import SafeLoader
 with open('src/config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
 
+def prepare_columns(df):
+    ''' 
+    This function prepares the columns of a DataFrame by removing double quotes and replacing commas with dots in values that start with a double quote.
+    This is important that the labeled data can stored as .csv later
+    Args:
+        df: A pandas DataFrame object.
+    Return:
+        df: The modified DataFrame with the desired modifications.
+    '''
+    # Iterate over the columns in the DataFrame
+    for column in df.columns:
+        # Iterate over the values in the specified column
+        for i, value in enumerate(df[column]):
+            # Check if the value starts with a double quote
+            if str(value).startswith('"'):
+                # Remove the double quotes and replace commas with dots
+                modified_value = str(value).replace('"', '').replace(',', '.')
+                # Update the value in the DataFrame
+                df.at[i, column] = modified_value
+    
+    return df
+
+
 def load_data_into_df() -> tuple[list, str]:
     ''' 
     This function loads data from the specified folder path. It reads data from all files in the folder, converts them to pandas dataframes and stores the dataframes in a list. 
@@ -47,6 +70,7 @@ def load_data_into_df() -> tuple[list, str]:
                     # Store the ncar abbreviation for file paths
                     ncar = dataframe['Code'].iloc[0]
 
+                    df = prepare_columns(df)
                     # Add the created dataframe to the list of dataframes
                     dataframes.append(df)
                     ncars.append(ncar)

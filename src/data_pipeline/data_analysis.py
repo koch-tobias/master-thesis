@@ -8,7 +8,6 @@ import sys
 sys.path.append('C:/Users/q617269/Desktop/Masterarbeit_Tobias/master-thesis')
 from src.data_pipeline.feature_engineering import transform_boundingbox, find_valid_space
 
-
 # %%
 def plot_bounding_box(ax, transformed_boundingbox: np.array, designation: str, label_relevant: str) -> int:
     '''
