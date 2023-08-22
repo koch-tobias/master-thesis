@@ -11,15 +11,15 @@ import catboost as cbo
 import os
 import pickle
 
-import sys
-sys.path.append('C:/Users/q617269/Desktop/Masterarbeit_Tobias/master-thesis')
-from src.deployment_pipeline.prediction import get_model
-from src.training_pipeline.utils import load_dataset
-
 import yaml
 from yaml.loader import SafeLoader
 with open('src/config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
+
+import sys
+sys.path.append(config['paths']['project_path'])
+from src.deployment_pipeline.prediction import get_model
+from src.training_pipeline.utils import load_dataset
 
 #%%
 def add_feature_importance(model, vocabulary, model_folder_path) -> pd.DataFrame:

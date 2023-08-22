@@ -9,14 +9,15 @@ from loguru import logger
 from sklearn.model_selection import train_test_split
 from sklearn import preprocessing
 
-import sys
-sys.path.append('C:/Users/q617269/Desktop/Masterarbeit_Tobias/master-thesis')
-from src.data_pipeline.feature_engineering import transform_boundingbox, calculate_center_point, calculate_lwh, clean_text, nchar_text_to_vec, rotation_to_orientation
-
 import yaml
 from yaml.loader import SafeLoader
 with open('src/config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
+
+import sys
+sys.path.append(config['paths']['project_path'])
+
+from src.data_pipeline.feature_engineering import transform_boundingbox, calculate_center_point, calculate_lwh, clean_text, nchar_text_to_vec, rotation_to_orientation
 
 # %%
 def load_data_into_df() -> tuple[list, str]:

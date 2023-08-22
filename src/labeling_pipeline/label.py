@@ -4,14 +4,14 @@ import os
 import shutil
 from loguru import logger
 
-import sys
-sys.path.append('C:/Users/q617269/Desktop/Masterarbeit_Tobias/master-thesis')
-from src.deployment_pipeline.prediction import predict_on_new_data
-
 import yaml
 from yaml.loader import SafeLoader
 with open('src/config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
+
+import sys
+sys.path.append(config['paths']['project_path'])
+from src.deployment_pipeline.prediction import predict_on_new_data
 
 def prepare_columns(df):
     ''' 

@@ -14,8 +14,13 @@ import time
 import math
 from statistics import mean
 
+import yaml
+from yaml.loader import SafeLoader
+with open('src/config.yaml') as file:
+    config = yaml.load(file, Loader=SafeLoader)
+
 import sys
-sys.path.append('C:/Users/q617269/Desktop/Masterarbeit_Tobias/master-thesis')
+sys.path.append(config['paths']['project_path'])
 
 from model_architectures import binary_classifier, multiclass_classifier
 from evaluation import evaluate_model, get_best_metric_results
@@ -27,11 +32,6 @@ warnings.filterwarnings("ignore", message=".*The 'nopython' keyword.*")
 import shap
 
 warnings.filterwarnings("ignore")
-
-import yaml
-from yaml.loader import SafeLoader
-with open('src/config.yaml') as file:
-    config = yaml.load(file, Loader=SafeLoader)
 
 # %%
 def model_fit(X_train: np.array, y_train: np.array, X_val: np.array, y_val: np.array, weight_factor: float, hp_in_iteration: dict, binary_model: bool, method: str):

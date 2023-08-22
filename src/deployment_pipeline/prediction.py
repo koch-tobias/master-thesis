@@ -5,16 +5,17 @@ import pickle
 import os
 from loguru import logger
 
-import sys
-sys.path.append('C:/Users/q617269/Desktop/Masterarbeit_Tobias/master-thesis')
-from src.data_pipeline.preprocessing import preprocess_dataset
-from src.data_pipeline.data_preparation import prepare_and_add_labels
-from src.data_pipeline.feature_engineering import find_valid_space
-
 import yaml
 from yaml.loader import SafeLoader
 with open('src/config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
+
+import sys
+sys.path.append(config['paths']['project_path'])
+from src.data_pipeline.preprocessing import preprocess_dataset
+from src.data_pipeline.data_preparation import prepare_and_add_labels
+from src.data_pipeline.feature_engineering import find_valid_space
+
 
 def search_in_logging(text:str, model_folder_path: str) -> str or None:
     ''' 

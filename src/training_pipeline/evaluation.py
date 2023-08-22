@@ -9,15 +9,15 @@ from sklearn.metrics import accuracy_score, recall_score, f1_score
 import pickle
 import os
 
-import sys
-sys.path.append('C:/Users/q617269/Desktop/Masterarbeit_Tobias/master-thesis')
-
-from src.deployment_pipeline.prediction import model_predict
-
 import yaml
 from yaml.loader import SafeLoader
 with open('src/config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
+
+import sys
+sys.path.append(config['paths']['project_path'])
+
+from src.deployment_pipeline.prediction import model_predict
     
 def get_best_metric_results(evals: dict, best_iteration: int, method: str, binary_model: bool) -> tuple[float]:
     ''' 
