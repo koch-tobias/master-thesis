@@ -34,7 +34,7 @@ conda create -n envMesstool python=3.10
 conda activate envMesstool 
 ```
 4. Go to the root directory
-5. Installation of the requirements: 
+5. Install the requirements: 
 ```bash 
 pip install -r requirements.txt
 ``` 
