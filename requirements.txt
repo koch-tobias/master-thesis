@@ -35,6 +35,10 @@ loguru==0.7.0
 nbformat==5.8.0
 
 openai==0.27.4
-#gensim==4.3.1
-#transformers==4.31.0
+
+# Deep Learning
+# Install Pytorch from: https://pytorch.org/
+# pip install pytorch_tabular[all]
+
+
 
