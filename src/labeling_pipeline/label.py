@@ -4,6 +4,8 @@ import os
 import shutil
 from loguru import logger
 
+import sys
+sys.path.append('C:/Users/q617269/Desktop/Masterarbeit_Tobias/master-thesis')
 from src.deployment_pipeline.prediction import predict_on_new_data
 
 import yaml

@@ -39,11 +39,6 @@ conda activate envMesstool
 pip install -r requirements.txt
 ``` 
 6. DONE! The code is ready to use! 
-___________________
-7. If functions from other files are not found try using the following command in the root directory:
-```bash
-python setup.py install
-``` 
 
 ## 🐍 Usage in Python
 The project contains 5 different pipelines. 

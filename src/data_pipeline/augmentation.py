@@ -8,7 +8,9 @@ import math
 import random
 from loguru import logger
 
-from feature_engineering import find_valid_space, random_centerpoint_in_valid_space, calculate_transformed_corners
+import sys
+sys.path.append('C:/Users/q617269/Desktop/Masterarbeit_Tobias/master-thesis')
+from src.data_pipeline.feature_engineering import find_valid_space, random_centerpoint_in_valid_space, calculate_transformed_corners
 
 import yaml
 from yaml.loader import SafeLoader

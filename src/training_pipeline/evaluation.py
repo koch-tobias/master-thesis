@@ -1,4 +1,6 @@
 # %%
+from loguru import logger
+
 import pandas as pd
 import numpy as np
 
@@ -6,7 +8,9 @@ from sklearn.metrics import accuracy_score, recall_score, f1_score
 
 import pickle
 import os
-from loguru import logger
+
+import sys
+sys.path.append('C:/Users/q617269/Desktop/Masterarbeit_Tobias/master-thesis')
 
 from src.deployment_pipeline.prediction import model_predict
 
