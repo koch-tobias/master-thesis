@@ -95,7 +95,7 @@ def plot_shap_summary(model, vocabulary, model_folder_path):
    explainer = shap.TreeExplainer(model)
 
    #Load dataset
-   X_train, y_train, X_val, y_val, X_test, y_test, df_preprocessed, df_test, weight_factor = load_dataset(binary_model=True)
+   X_train, y_train, X_val, y_val, X_test, y_test, df_preprocessed, df_train, df_val, df_test, weight_factor = load_dataset(binary_model=True)
 
    X = np.concatenate((X_train, X_val), axis=0)
    y = np.concatenate((y_train, y_val), axis=0)

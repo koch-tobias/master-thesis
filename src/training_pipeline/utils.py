@@ -60,9 +60,11 @@ def load_dataset(binary_model: bool):
     y_test = train_val_test_dict["y_test"]
     weight_factor = train_val_test_dict["weight_factor"]
 
+    df_train = train_val_test_df_dict["df_test"].reset_index(drop=True)
+    df_val = train_val_test_df_dict["df_test"].reset_index(drop=True)
     df_test = train_val_test_df_dict["df_test"].reset_index(drop=True)
 
-    return X_train, y_train, X_val, y_val, X_test, y_test, df_preprocessed, df_test, weight_factor
+    return X_train, y_train, X_val, y_val, X_test, y_test, df_preprocessed, df_train, df_val, df_test, weight_factor
 
 # %%
 def store_trained_model(model, metrics: str, best_iteration: int, val_auc: float, hp: dict, index_best_model: int, model_folder_path: str, finalmodel: bool) -> None:
