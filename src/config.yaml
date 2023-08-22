@@ -1,5 +1,5 @@
 paths:
- folder_processed_dataset: data/processed/31072023_1319/    # Folder path to the proprocessed data set which will be used to train the model
+ folder_processed_dataset: data/processed/20082023_1553/    # Folder path to the proprocessed data set which will be used to train the model
  modelpath: final_models/Binary_model/
 
 general_params:
@@ -115,7 +115,7 @@ gpt_settings:
  n: 1
 
 lgbm_params_binary:
- boosting_type: dart              # I tried gbdt and dart -> gbdt performed better due to slight overfitting
+ boosting_type: gbdt              # I tried gbdt and dart -> gbdt performed better due to slight overfitting
  metrics:
    - auc
    - binary_logloss         # I have tested binary_logloss and the cross_entropy_lambda, cross_entropy kein unterschied
