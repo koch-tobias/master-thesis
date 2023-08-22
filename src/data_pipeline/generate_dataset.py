@@ -5,16 +5,17 @@ import pickle
 from datetime import datetime
 from loguru import logger
 
-import sys
-sys.path.append('C:/Users/q617269/Desktop/Masterarbeit_Tobias/master-thesis')
-from src.data_pipeline.preprocessing import preprocess_dataset, load_data_into_df, combine_dataframes, train_test_val
-from src.data_pipeline.data_analysis import store_class_distribution, analyse_data_split
-from src.data_pipeline.augmentation import data_augmentation
-
 import yaml
 from yaml.loader import SafeLoader
 with open('src/config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
+
+import sys
+sys.path.append(config['paths']['project_path'])
+
+from src.data_pipeline.preprocessing import preprocess_dataset, load_data_into_df, combine_dataframes, train_test_val
+from src.data_pipeline.data_analysis import store_class_distribution, analyse_data_split
+from src.data_pipeline.augmentation import data_augmentation
 
 def generate_dataset_dict(df: pd.DataFrame, storage_path: str, binary_model: bool) -> None:
     '''

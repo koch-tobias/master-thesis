@@ -5,21 +5,32 @@ import numpy as np
 import pandas as pd
 from loguru import logger
 
+from sklearn.metrics import accuracy_score, f1_score
+
 import torch
 from pytorch_tabular import TabularModel
 from pytorch_tabular.models import CategoryEmbeddingModelConfig, TabNetModelConfig, FTTransformerConfig 
 from pytorch_tabular.config import DataConfig, OptimizerConfig, TrainerConfig
 from pytorch_tabular.categorical_encoders import CategoricalEmbeddingTransformer
 
-import sys
-sys.path.append('C:/Users/q617269/Desktop/Masterarbeit_Tobias/master-thesis')
-
-from src.training_pipeline.utils import load_dataset
-
 import yaml
 from yaml.loader import SafeLoader
 with open('src/config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
+
+import sys
+sys.path.append(config['paths']['project_path'])
+
+from src.training_pipeline.utils import load_dataset
+
+def print_metrics(y_true, y_pred):
+    if isinstance(y_true, pd.DataFrame) or isinstance(y_true, pd.Series):
+        y_true = y_true.values
+    if isinstance(y_pred, pd.DataFrame) or isinstance(y_pred, pd.Series):
+        y_pred = y_pred.values
+    val_acc = accuracy_score(y_true, y_pred)
+    val_f1 = f1_score(y_true, y_pred)
+    print(f"Acc: {val_acc} | F1: {val_f1}")
 
 def main():
     # Load data
@@ -52,6 +63,7 @@ def main():
                                     auto_lr_find=True, # Runs the LRFinder to automatically derive a learning rate
                                     batch_size=32,
                                     max_epochs=100,
+                                    early_stopping_patience=20,
                                     gpus=1, #index of the GPU to use. 0, means CPU
                                 )
 
@@ -75,17 +87,31 @@ def main():
                                     trainer_config=trainer_config
                                 )
 
+    '''
+    Hyperparameter for grid search hyperparameter tuning: 
+        - dropout
+        - learning rate
+        - epochs 
+        - batch size
+        - weight initialization
+        - activaten function
+    '''
+
     tabular_model.fit(train=df_train, test=df_val)
 
-    tabular_model.evaluate(df_val)
+    #tabular_model.evaluate(df_val)
+    logger.info("Results on test data: \n")
     result = tabular_model.evaluate(df_test)
+    
     pred_df = tabular_model.predict(df_test)
     wrong_predictions = pd.DataFrame(columns=pred_df.columns)
     for index, row in pred_df.iterrows():
         if row["Relevant fuer Messung"] != row["prediction"]:
             wrong_predictions = pd.concat([wrong_predictions, pd.DataFrame([row])], ignore_index=True)
 
-    tabular_model.summary()
+    print_metrics(y_true=pred_df["Relevant fuer Messung"], y_pred=pred_df["prediction"])
+
+    #tabular_model.summary()
     wrong_predictions.to_excel('saved_models/wrong_predictions.xlsx')
     pred_df.to_excel('saved_models/pred_df.xlsx')
     tabular_model.save_model('saved_models/binary_model')

@@ -1,6 +1,7 @@
 paths:
  folder_processed_dataset: data/processed/20082023_1553/    # Folder path to the proprocessed data set which will be used to train the model
  modelpath: final_models/Binary_model/
+ project_path: C:/Users/q617269/Desktop/Masterarbeit_Tobias/master-thesis
 
 general_params:
  seed: 42
