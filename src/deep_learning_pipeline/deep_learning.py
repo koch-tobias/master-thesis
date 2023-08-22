@@ -24,7 +24,7 @@ with open('src/config.yaml') as file:
 def main():
     # Load data
     X_train, y_train, X_val, y_val, X_test, y_test, df_preprocessed, df_train, df_val, df_test, weight_factor = load_dataset(binary_model=True)
-    
+
     relevant_columns = config["general_params"]["features_for_model"] + ["Benennung (bereinigt)", "Relevant fuer Messung"]
     df_train = df_train[relevant_columns]
     df_val = df_val[relevant_columns]
@@ -54,7 +54,7 @@ def main():
                                     max_epochs=100,
                                     gpus=1, #index of the GPU to use. 0, means CPU
                                 )
-    
+
     # Setting up optimizer configs
     optimizer_config = OptimizerConfig()
 
@@ -66,6 +66,7 @@ def main():
                                                     learning_rate = 1e-3,
                                                     metrics=["f1_score"]
                                                 )
+
     # Initialize model
     tabular_model = TabularModel(
                                     data_config=data_config,
@@ -73,7 +74,7 @@ def main():
                                     optimizer_config=optimizer_config,
                                     trainer_config=trainer_config
                                 )
-    
+
     tabular_model.fit(train=df_train, test=df_val)
 
     tabular_model.evaluate(df_val)

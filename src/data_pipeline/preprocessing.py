@@ -79,7 +79,6 @@ def check_nan_values(df: pd.DataFrame, relevant_features: list, ncar: str) -> li
     if len(columns_with_nan) > 0:
         logger.error(f"{ncar}: There are car parts in the dataset with NaN values in the following columns: {columns_with_nan}")
         df.to_excel("check_df.xlsx")
-        exit()
     
     return columns_with_nan
 

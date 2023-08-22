@@ -5,14 +5,13 @@ import os
 import src.data_pipeline.preprocessing as pp
 
 def test_check_nan_values():
-
-    #TEST CASE 1: NO NAN VALUES EXIST IN THE DATAFRAME
+    #TEST CASE: WHEN THERE ARE NAN VALUES IN THE INPUT DATAFRAME
     df = pd.DataFrame({'A': [1, 2, 3], 'B': [4, 5, 6], 'C': [7, 8, 9]}) 
     relevant_features = ['A', 'B', 'C'] 
     ncar = 'car_1'
     assert pp.check_nan_values(df, relevant_features, ncar) == []
 
-    #TEST CASE 2: NAN VALUES EXIST IN THE DATAFRAME
+    #TEST CASE: WHEN THERE ARE NO NAN VALUES IN THE INPUT DATAFRAME
     df = pd.DataFrame({'A': [1, 2, 3], 'B': [4, np.nan, 6], 'C': [7, 8, 9]}) 
     relevant_features = ['A', 'B', 'C'] 
     ncar = 'car_2'
