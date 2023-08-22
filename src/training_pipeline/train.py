@@ -336,7 +336,7 @@ def train_model(folder_path: str, binary_model: bool, method: str):
         hp_dict = config["cb_hyperparameter"]
    
     # Training with the hold out method and grid search hyperparameter tuning
-    X_train, y_train, X_val, y_val, X_test, y_test, df_preprocessed, df_test, weight_factor = load_dataset(binary_model=binary_model)
+    X_train, y_train, X_val, y_val, X_test, y_test, df_preprocessed, df_train, df_val, df_test, weight_factor = load_dataset(binary_model=binary_model)
 
     df, model_results_dict, metrics = grid_search(X_train=X_train, y_train=y_train, X_val=X_val, y_val=y_val, X_test=X_test, y_test=y_test, weight_factor=weight_factor, hp_dict=hp_dict, binary_model=binary_model, method=method)
 
