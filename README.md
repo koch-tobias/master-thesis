@@ -38,7 +38,8 @@ conda activate envMesstool
 ```bash 
 pip install -r requirements.txt
 ``` 
-6. DONE! The code is ready to use! 
+6. Go to the src/config.yaml file and change the ***project_path*** with your directory path.
+7. DONE! The code is ready to use! 
 
 ## 🐍 Usage in Python
 The project contains 5 different pipelines. 
