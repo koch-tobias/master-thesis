@@ -13,7 +13,7 @@ The output of the model is a list of all relevant car parts in the following for
 ```
 This output is used by a CATIA makro to load the car parts into a CATIA parametric model which then automatically performs the measurements. 
 
-The part number is used to load the parts from the database, the unit name is used to assign the parts to the various measurements, and the original part designation can be used to manually check whether the uniform name was correctly assigned by the ML-model.
+The part number is used to load the parts from the database, the uniform name is used to assign the parts to the various measurements, and the original part designation can be used to manually check whether the uniform name was correctly assigned by the ML-model.
 
 Capi is accessible via a ([REST-API](http://10.3.13.137:7070/docs#/default/post_relevant_parts_api_get_relevant_parts__post)) or a ([website](https://car-part-identification.streamlit.app/)). The REST-API is used for production to integrate with the measurement tool and the website is used in the development process to test the models and to get quick feedback from customers.
 
@@ -33,7 +33,7 @@ conda create -n envMesstool python=3.10
 ```bash 
 conda activate envMesstool 
 ```
-4. Go to the root directory
+4. Go to the root directory of the project
 5. Install the requirements: 
 ```bash 
 pip install -r requirements.txt
