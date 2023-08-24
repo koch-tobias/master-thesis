@@ -67,29 +67,7 @@ def load_dataset(binary_model: bool):
     return X_train, y_train, X_val, y_val, X_test, y_test, df_preprocessed, df_train, df_val, df_test, weight_factor
 
 # %%
-def store_trained_model(model, metrics: str, best_iteration: int, val_auc: float, hp: dict, index_best_model: int, model_folder_path: str, finalmodel: bool) -> None:
-    ''' 
-    This function stores the trained model, hyperparameters, metrics and best iteration information in a pickled file at the provided model folder path and logs the validation AUC and training information in a txt file.
-    Args:
-        model: The trained model.
-        metrics: A dictionary containing the evaluation metrics and their values for the model.
-        best_iteration: An integer indicating the number of iterations the model took to converge to the best solution.
-        val_auc: A float representing the AUC score of the validation set.
-        hp: A dictionary containing the hyperparameters used to train the model.
-        index_best_model: An integer indicating the index of the best model in the hyperparameter tuning process.
-        model_folder_path: A string indicating the path where the trained model and logs will be saved.
-        finalmodel: A boolean value indicating whether the model to be saved is the final model.
-    Return: None
-    '''
-    # save model
-    if finalmodel:
-            model_path = model_folder_path + f"final_model.pkl"
-    else:
-            model_path = model_folder_path + f"model.pkl"
-
-    with open(model_path, "wb") as filestore:
-        pickle.dump(model, filestore)
-
+def create_logfile(model_folder_path, val_auc, best_iteration, index_best_model, metrics, hp):
     logging_file_path = model_folder_path + "logging.txt"
     if os.path.isfile(logging_file_path):
         log_text = "Validation AUC (final model): {}\n".format(val_auc)
@@ -119,4 +97,30 @@ def store_trained_model(model, metrics: str, best_iteration: int, val_auc: float
         f.write("\n")
         f.write(json.dumps(config["prediction_settings"]))
         f.write("\n")
-        f.close()
+        f.close()   
+         
+# %%
+def store_trained_model(model, metrics: str, best_iteration: int, val_auc: float, hp: dict, index_best_model: int, model_folder_path: str, finalmodel: bool) -> None:
+    ''' 
+    This function stores the trained model, hyperparameters, metrics and best iteration information in a pickled file at the provided model folder path and logs the validation AUC and training information in a txt file.
+    Args:
+        model: The trained model.
+        metrics: A dictionary containing the evaluation metrics and their values for the model.
+        best_iteration: An integer indicating the number of iterations the model took to converge to the best solution.
+        val_auc: A float representing the AUC score of the validation set.
+        hp: A dictionary containing the hyperparameters used to train the model.
+        index_best_model: An integer indicating the index of the best model in the hyperparameter tuning process.
+        model_folder_path: A string indicating the path where the trained model and logs will be saved.
+        finalmodel: A boolean value indicating whether the model to be saved is the final model.
+    Return: None
+    '''
+    # save model
+    if finalmodel:
+            model_path = model_folder_path + f"final_model.pkl"
+    else:
+            model_path = model_folder_path + f"model.pkl"
+
+    with open(model_path, "wb") as filestore:
+        pickle.dump(model, filestore)
+
+    create_logfile(model_folder_path, val_auc, best_iteration, index_best_model, metrics, hp)
