@@ -103,12 +103,12 @@ This pipeline is used for preparing the raw data, which means to remove irreleva
 ### Data Preprocessing Pipeline
 ![data_preprocessing_pipeline](images/pipelines/data_preprocessing_pipeline.svg)
 
-This pipeline enables preprocessing of labeled data by merging labeled datasets, performing feature engineering, cleaning the data, augmenting the data, analyzing the data, and splitting the dataset into train, validation, and test set.
+This pipeline enables preprocessing of labeled data by merging labeled datasets, performing feature engineering, cleaning the data, augmenting the data, analyzing the data, and splitting the dataset into train, validation, and test set, more in detail:
 
 In the first step, all datasets which are in the data folder "data/labeled" will be combined to one dataframe.  
 
-Then, in the feature engineering step, the bounding box information are converted so that the number of features will be reduced. </br>
-In the original data set, a bounding box is represented by the minimum and maximum values in x,y,z, a shift vector and a rotation matrix. </br>
+Then, in the feature engineering step, the bounding box information is transformed so that the number of features is reduced. 
+In the original data set, a bounding box is represented by the minimum and maximum values in x,y,z, a shift vector and a rotation matrix.
 Here, this information are used to convert them into length, width, height, the center point of x, y, and z and an orientation vector of the bounding box. This reduces the number of features for representing the bounding box from 18 to 9. In addition, two more features (volume and density) are calculated.
 
 The next step is the preprocessing of the data set. This involves a preselection of irrelevant car components based on the bounding box features (volume and position). In addition, component designations are cleaned by removing punctuation and frequently occurring words without information, and then converted to numeric vectors.
