@@ -39,7 +39,6 @@ Out of the follwing list the relevant car parts are identified and output in for
 - SPOILER
 - VERKLEIDUNG STOSSFAENGER
 
-</br>
 ```
   {
     "Part number": ["Original part designation", "Uniform name"]
