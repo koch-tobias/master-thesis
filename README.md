@@ -103,7 +103,7 @@ This pipeline is used for preparing the raw data, which means to remove irreleva
 ### Data Preprocessing Pipeline
 ![data_preprocessing_pipeline](images/pipelines/data_preprocessing_pipeline.svg)
 
-This pipeline is used for preprocessing the labeled data, which means merging the labeled datasets, feature engineering, data cleaning, data augmentation, data analysis, and splitting the dataset into train, validation, and testset
+This pipeline enables preprocessing of labeled data by merging labeled datasets, performing feature engineering, cleaning the data, augmenting the data, analyzing the data, and splitting the dataset into train, validation, and test set.
 
 In the first step, all datasets which are in the data folder "data/labeled" will be combined to one dataframe.  
 
