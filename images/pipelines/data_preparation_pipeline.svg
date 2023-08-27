@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generiert durch Microsoft Visio, SVG Export data_preparation_pipeline.svg Zeichenblatt-1 -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:ev="http://www.w3.org/2001/xml-events"
+		xmlns:v="http://schemas.microsoft.com/visio/2003/SVGExtensions/" width="12.4062in" height="4.99254in"
+		viewBox="0 0 893.244 359.463" xml:space="preserve" color-interpolation-filters="sRGB" class="st12">
+	<v:documentProperties v:langID="1031" v:metric="true" v:viewMarkup="false"/>
+
+	<style type="text/css">
+	<![CDATA[
+		.st1 {fill:#007f7f;stroke:#a5a5a5;stroke-width:0.25}
+		.st2 {fill:#feffff;font-family:Calibri;font-size:1.5em;font-weight:bold}
+		.st3 {fill:#c9c9c9;stroke:#a5a5a5;stroke-width:0.25}
+		.st4 {font-size:1em}
+		.st5 {marker-end:url(#mrkr4-19);stroke:#000000;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:0.98;stroke-width:2.25}
+		.st6 {fill:#000000;fill-opacity:0.98;stroke:#000000;stroke-opacity:0.98;stroke-width:0.47169811320755}
+		.st7 {fill:#a8d08d;stroke:#a5a5a5;stroke-width:0.25}
+		.st8 {fill:#7b7b7b;stroke:#c7c8c8;stroke-width:0.25}
+		.st9 {fill:#feffff;font-family:Calibri;font-size:1.33333em}
+		.st10 {stroke:#000000;stroke-linecap:round;stroke-linejoin:round;stroke-width:1}
+		.st11 {fill:#c5e0b3;fill-opacity:0.098;stroke:#a5a5a5;stroke-width:3}
+		.st12 {fill:none;fill-rule:evenodd;font-size:12px;overflow:visible;stroke-linecap:square;stroke-miterlimit:3}
+	]]>
+	</style>
+
+	<defs id="Markers">
+		<g id="lend4">
+			<path d="M 2 1 L 0 0 L 2 -1 L 2 1 " style="stroke:none"/>
+		</g>
+		<marker id="mrkr4-19" class="st6" v:arrowType="4" v:arrowSize="2" v:setback="4.24" refX="-4.24" orient="auto"
+				markerUnits="strokeWidth" overflow="visible">
+			<use xlink:href="#lend4" transform="scale(-2.12,-2.12) "/>
+		</marker>
+	</defs>
+	<g v:mID="0" v:index="1" v:groupContext="foregroundPage">
+		<title>Zeichenblatt-1</title>
+		<v:pageProperties v:drawingScale="0.0393701" v:pageScale="0.0393701" v:drawingUnits="24" v:shadowOffsetX="8.50394"
+				v:shadowOffsetY="-8.50394"/>
+		<v:layer v:name="Verbinder" v:index="0"/>
+		<g id="shape1222-1" v:mID="1222" v:groupContext="shape" transform="translate(153.236,-41.2759)">
+			<title>Tabelle.1222</title>
+			<desc>Car Part Selection</desc>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="71.0259" cy="293.562" width="142.06" height="131.803"/>
+			<rect x="0" y="227.66" width="142.052" height="131.803" rx="11.3386" ry="11.3386" class="st1"/>
+			<text x="4.71" y="298.96" class="st2" v:langID="1031"><v:paragraph v:horizAlign="1"/><v:tabList/>Car Part Selection</text>		</g>
+		<g id="shape1223-4" v:mID="1223" v:groupContext="shape" transform="translate(413.487,186.384) rotate(90)">
+			<title>Tabelle.1223</title>
+			<desc>Original Data</desc>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="65.9014" cy="334.961" width="131.81" height="49.0048"/>
+			<rect x="0" y="310.458" width="131.803" height="49.0048" rx="11.3386" ry="11.3386" class="st3"/>
+			<text x="16.73" y="340.36" class="st2" v:langID="1031"><v:paragraph v:horizAlign="1"/><v:tabList/>Original Data</text>		</g>
+		<g id="shape1224-7" v:mID="1224" v:groupContext="shape" transform="translate(359.669,-41.2759)">
+			<title>Tabelle.1224</title>
+			<desc>Feature Selection</desc>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="71.0259" cy="293.562" width="142.06" height="131.803"/>
+			<rect x="0" y="227.66" width="142.052" height="131.803" rx="11.3386" ry="11.3386" class="st1"/>
+			<text x="5.92" y="298.96" class="st2" v:langID="1031"><v:paragraph v:horizAlign="1"/><v:tabList/>Feature Selection</text>		</g>
+		<g id="shape1226-10" v:mID="1226" v:groupContext="shape" transform="translate(566.102,-41.2759)">
+			<title>Tabelle.1226</title>
+			<desc>Add Label Columns</desc>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="71.0259" cy="293.562" width="142.06" height="131.803"/>
+			<rect x="0" y="227.66" width="142.052" height="131.803" rx="11.3386" ry="11.3386" class="st1"/>
+			<text x="34.06" y="288.16" class="st2" v:langID="1031"><v:paragraph v:horizAlign="1"/><v:tabList/>Add Label <tspan
+						x="38.64" dy="1.2em" class="st4">Columns</tspan></text>		</g>
+		<g id="shape1228-14" v:mID="1228" v:groupContext="shape" v:layerMember="0" transform="translate(103.028,-100.091)">
+			<title>Dynamischer Verbinder.1228</title>
+			<path d="M0 352.38 L40.67 352.38" class="st5"/>
+		</g>
+		<g id="shape1229-20" v:mID="1229" v:groupContext="shape" v:layerMember="0" transform="translate(295.288,-100.512)">
+			<title>Dynamischer Verbinder.1229</title>
+			<path d="M0 352.38 L54.84 352.38" class="st5"/>
+		</g>
+		<g id="shape1233-25" v:mID="1233" v:groupContext="shape" transform="translate(772.535,-41.2759)">
+			<title>Tabelle.1233</title>
+			<desc>Prepared Dataset</desc>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="40.4296" cy="293.562" width="80.86" height="131.803"/>
+			<rect x="0" y="227.66" width="80.8592" height="131.803" rx="11.3386" ry="11.3386" class="st7"/>
+			<text x="6.08" y="288.16" class="st2" v:langID="1031"><v:paragraph v:horizAlign="1"/><v:tabList/>Prepared <tspan
+						x="11.51" dy="1.2em" class="st4">Dataset</tspan></text>		</g>
+		<g id="shape1234-29" v:mID="1234" v:groupContext="shape" v:layerMember="0" transform="translate(708.154,-100.091)">
+			<title>Dynamischer Verbinder.1234</title>
+			<path d="M0 352.38 L54.84 352.38" class="st5"/>
+		</g>
+		<g id="shape1255-34" v:mID="1255" v:groupContext="shape" transform="translate(153.236,-250.409)">
+			<title>Tabelle.1255</title>
+			<desc>Keep only car parts and relevant modules</desc>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="71.0259" cy="305.061" width="142.06" height="108.804"/>
+			<rect x="0" y="250.659" width="142.052" height="108.804" class="st8"/>
+			<text x="8.76" y="290.66" class="st9" v:langID="1031"><v:paragraph v:horizAlign="1"/><v:tabList/>Keep only car parts <tspan
+						x="30.07" dy="1.2em" class="st4">and relevant </tspan><tspan x="43.07" dy="1.2em" class="st4">modules</tspan></text>		</g>
+		<g id="shape1256-39" v:mID="1256" v:groupContext="shape" v:layerMember="0" transform="translate(217.175,-173.079)">
+			<title>Dynamischer Verbinder.1256</title>
+			<path d="M7.09 359.46 L7.09 282.13" class="st10"/>
+		</g>
+		<g id="shape1257-42" v:mID="1257" v:groupContext="shape" transform="translate(358.748,-248.526)">
+			<title>Tabelle.1257</title>
+			<desc>Keep only features which will be used by the model</desc>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="71.0259" cy="305.061" width="142.06" height="108.804"/>
+			<rect x="0" y="250.659" width="142.052" height="108.804" class="st8"/>
+			<text x="10.17" y="290.66" class="st9" v:langID="1031"><v:paragraph v:horizAlign="1"/><v:tabList/>Keep only features <tspan
+						x="11.33" dy="1.2em" class="st4">which will be used </tspan><tspan x="28.09" dy="1.2em" class="st4">by the model</tspan></text>		</g>
+		<g id="shape1258-47" v:mID="1258" v:groupContext="shape" v:layerMember="0" transform="translate(422.687,-171.196)">
+			<title>Dynamischer Verbinder.1258</title>
+			<path d="M7.09 359.46 L7.09 282.13" class="st10"/>
+		</g>
+		<g id="shape1259-50" v:mID="1259" v:groupContext="shape" transform="translate(566.935,-248.526)">
+			<title>Tabelle.1259</title>
+			<desc>Add columns „Relevant fuer Messung“ and „Einheitsname“</desc>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="71.0259" cy="305.061" width="142.06" height="108.804"/>
+			<rect x="0" y="250.659" width="142.052" height="108.804" class="st8"/>
+			<text x="28.82" y="281.06" class="st9" v:langID="1031"><v:paragraph v:horizAlign="1"/><v:tabList/>Add columns <tspan
+						x="23.99" dy="1.2em" class="st4">„</tspan>Relevant fuer <tspan x="24.38" dy="1.2em" class="st4">Messung</tspan>“ and <tspan
+						x="20.15" dy="1.2em" class="st4">„</tspan>Einheitsname“</text>		</g>
+		<g id="shape1260-56" v:mID="1260" v:groupContext="shape" v:layerMember="0" transform="translate(630.874,-171.196)">
+			<title>Dynamischer Verbinder.1260</title>
+			<path d="M7.09 359.46 L7.09 282.13" class="st10"/>
+		</g>
+		<g id="shape1262-59" v:mID="1262" v:groupContext="shape" v:layerMember="0" transform="translate(501.721,-100.091)">
+			<title>Dynamischer Verbinder.1262</title>
+			<path d="M0 352.38 L54.84 352.38" class="st5"/>
+		</g>
+		<g id="shape1263-64" v:mID="1263" v:groupContext="shape" transform="translate(3,-3)">
+			<title>Tabelle.1263</title>
+			<rect x="0" y="132.692" width="887.244" height="226.772" rx="11.3386" ry="11.3386" class="st11"/>
+		</g>
+	</g>
+</svg>

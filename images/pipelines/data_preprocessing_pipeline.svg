@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generiert durch Microsoft Visio, SVG Export data_preprocessing_pipeline.svg Zeichenblatt-1 -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:ev="http://www.w3.org/2001/xml-events"
+		xmlns:v="http://schemas.microsoft.com/visio/2003/SVGExtensions/" width="19.6503in" height="5.00562in"
+		viewBox="0 0 1414.82 360.404" xml:space="preserve" color-interpolation-filters="sRGB" class="st12">
+	<v:documentProperties v:langID="1031" v:metric="true" v:viewMarkup="false"/>
+
+	<style type="text/css">
+	<![CDATA[
+		.st1 {fill:#c5e0b3;fill-opacity:0.098;stroke:#a5a5a5;stroke-width:3}
+		.st2 {fill:#007f7f;stroke:#a5a5a5;stroke-width:0.25}
+		.st3 {fill:#feffff;font-family:Calibri;font-size:1.5em;font-weight:bold}
+		.st4 {font-size:1em}
+		.st5 {fill:#c9c9c9;stroke:#a5a5a5;stroke-width:0.25}
+		.st6 {fill:#a8d08d;stroke:#a5a5a5;stroke-width:0.25}
+		.st7 {marker-end:url(#mrkr4-19);stroke:#000000;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:0.98;stroke-width:2.25}
+		.st8 {fill:#000000;fill-opacity:0.98;stroke:#000000;stroke-opacity:0.98;stroke-width:0.47169811320755}
+		.st9 {fill:#7b7b7b;stroke:#c7c8c8;stroke-width:0.25}
+		.st10 {fill:#feffff;font-family:Calibri;font-size:1.33333em}
+		.st11 {stroke:#000000;stroke-linecap:round;stroke-linejoin:round;stroke-width:1}
+		.st12 {fill:none;fill-rule:evenodd;font-size:12px;overflow:visible;stroke-linecap:square;stroke-miterlimit:3}
+	]]>
+	</style>
+
+	<defs id="Markers">
+		<g id="lend4">
+			<path d="M 2 1 L 0 0 L 2 -1 L 2 1 " style="stroke:none"/>
+		</g>
+		<marker id="mrkr4-19" class="st8" v:arrowType="4" v:arrowSize="2" v:setback="4.24" refX="-4.24" orient="auto"
+				markerUnits="strokeWidth" overflow="visible">
+			<use xlink:href="#lend4" transform="scale(-2.12,-2.12) "/>
+		</marker>
+	</defs>
+	<g v:mID="0" v:index="1" v:groupContext="foregroundPage">
+		<title>Zeichenblatt-1</title>
+		<v:pageProperties v:drawingScale="0.0393701" v:pageScale="0.0393701" v:drawingUnits="24" v:shadowOffsetX="8.50394"
+				v:shadowOffsetY="-8.50394"/>
+		<v:layer v:name="Verbinder" v:index="0"/>
+		<g id="shape1254-1" v:mID="1254" v:groupContext="shape" transform="translate(3,-3)">
+			<title>Tabelle.1254</title>
+			<rect x="0" y="133.633" width="1408.82" height="226.772" rx="11.3386" ry="11.3386" class="st1"/>
+		</g>
+		<g id="shape1240-3" v:mID="1240" v:groupContext="shape" transform="translate(122.871,-41.276)">
+			<title>Tabelle.1240</title>
+			<desc>Combine Datasets</desc>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="71.0259" cy="294.503" width="142.06" height="131.803"/>
+			<rect x="0" y="228.602" width="142.052" height="131.803" rx="11.3386" ry="11.3386" class="st2"/>
+			<text x="37.7" y="289.1" class="st3" v:langID="1031"><v:paragraph v:horizAlign="1"/><v:tabList/>Combine <tspan
+						x="38.52" dy="1.2em" class="st4">Datasets</tspan></text>		</g>
+		<g id="shape1241-7" v:mID="1241" v:groupContext="shape" transform="translate(377.578,187.326) rotate(90)">
+			<title>Tabelle.1241</title>
+			<desc>Labeled Data</desc>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="65.9014" cy="335.902" width="131.81" height="49.0048"/>
+			<rect x="0" y="311.4" width="131.803" height="49.0048" rx="11.3386" ry="11.3386" class="st5"/>
+			<text x="17.01" y="341.3" class="st3" v:langID="1031"><v:paragraph v:horizAlign="1"/><v:tabList/>Labeled Data</text>		</g>
+		<g id="shape1243-10" v:mID="1243" v:groupContext="shape" transform="translate(1661.18,187.326) rotate(90)">
+			<title>Tabelle.1243</title>
+			<desc>Preprocessed Datasets</desc>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="65.9014" cy="335.902" width="131.81" height="49.0048"/>
+			<rect x="0" y="311.4" width="131.803" height="49.0048" rx="11.3386" ry="11.3386" class="st6"/>
+			<text x="15.68" y="330.5" class="st3" v:langID="1031"><v:paragraph v:horizAlign="1"/><v:tabList/>Preprocessed <tspan
+						x="33.39" dy="1.2em" class="st4">Datasets</tspan></text>		</g>
+		<g id="shape1246-14" v:mID="1246" v:groupContext="shape" v:layerMember="0" transform="translate(66.178,-100.091)">
+			<title>Dynamischer Verbinder.1246</title>
+			<path d="M0 353.32 L47.15 353.32" class="st7"/>
+		</g>
+		<g id="shape1247-20" v:mID="1247" v:groupContext="shape" v:layerMember="0" transform="translate(1045.33,-95.126)">
+			<title>Dynamischer Verbinder.1247</title>
+			<path d="M0 353.32 L47.15 353.32" class="st7"/>
+		</g>
+		<g id="shape1264-25" v:mID="1264" v:groupContext="shape" transform="translate(506.432,-41.276)">
+			<title>Tabelle.1264</title>
+			<desc>Data Cleaning</desc>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="71.0259" cy="294.503" width="142.06" height="131.803"/>
+			<rect x="0" y="228.602" width="142.052" height="131.803" rx="11.3386" ry="11.3386" class="st2"/>
+			<text x="19.23" y="299.9" class="st3" v:langID="1031"><v:paragraph v:horizAlign="1"/><v:tabList/>Data Cleaning</text>		</g>
+		<g id="shape1265-28" v:mID="1265" v:groupContext="shape" v:layerMember="0" transform="translate(264.923,-98.6789)">
+			<title>Dynamischer Verbinder.1265</title>
+			<path d="M0 353.32 L40.35 353.32" class="st7"/>
+		</g>
+		<g id="shape1266-33" v:mID="1266" v:groupContext="shape" transform="translate(704.537,-41.276)">
+			<title>Tabelle.1266</title>
+			<desc>Data Augmentation</desc>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="71.0259" cy="294.503" width="142.06" height="131.803"/>
+			<rect x="0" y="228.602" width="142.052" height="131.803" rx="11.3386" ry="11.3386" class="st2"/>
+			<text x="53.35" y="289.1" class="st3" v:langID="1031"><v:paragraph v:horizAlign="1"/><v:tabList/>Data <tspan x="17.23"
+						dy="1.2em" class="st4">Augmentation</tspan></text>		</g>
+		<g id="shape1267-37" v:mID="1267" v:groupContext="shape" v:layerMember="0" transform="translate(648.483,-100.091)">
+			<title>Dynamischer Verbinder.1267</title>
+			<path d="M0 353.32 L46.51 353.32" class="st7"/>
+		</g>
+		<g id="shape1268-42" v:mID="1268" v:groupContext="shape" transform="translate(903.282,-41.276)">
+			<title>Tabelle.1268</title>
+			<desc>Training, Validation, and Testsplit</desc>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="71.0259" cy="294.503" width="142.06" height="131.803"/>
+			<rect x="0" y="228.602" width="142.052" height="131.803" rx="11.3386" ry="11.3386" class="st2"/>
+			<text x="38.26" y="278.3" class="st3" v:langID="1031"><v:paragraph v:horizAlign="1"/><v:tabList/>Training, <tspan
+						x="14.11" dy="1.2em" class="st4">Validation, and </tspan><tspan x="39.37" dy="1.2em" class="st4">Testsplit</tspan></text>		</g>
+		<g id="shape1269-47" v:mID="1269" v:groupContext="shape" v:layerMember="0" transform="translate(846.589,-100.091)">
+			<title>Dynamischer Verbinder.1269</title>
+			<path d="M0 353.32 L47.15 353.32" class="st7"/>
+		</g>
+		<g id="shape1271-52" v:mID="1271" v:groupContext="shape" transform="translate(122.871,-251.35)">
+			<title>Tabelle.1271</title>
+			<desc>Combine all labeled datasets to one dataset</desc>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="71.0259" cy="306.002" width="142.06" height="108.804"/>
+			<rect x="0" y="251.6" width="142.052" height="108.804" class="st9"/>
+			<text x="6.94" y="291.6" class="st10" v:langID="1031"><v:paragraph v:horizAlign="1"/><v:tabList/>Combine all labeled <tspan
+						x="20.64" dy="1.2em" class="st4">datasets to one </tspan><tspan x="46.69" dy="1.2em" class="st4">dataset</tspan></text>		</g>
+		<g id="shape1272-57" v:mID="1272" v:groupContext="shape" v:layerMember="0" transform="translate(186.81,-173.079)">
+			<title>Dynamischer Verbinder.1272</title>
+			<path d="M7.09 360.4 L7.09 282.13" class="st11"/>
+		</g>
+		<g id="shape1273-60" v:mID="1273" v:groupContext="shape" transform="translate(506.751,-249.468)">
+			<title>Tabelle.1273</title>
+			<desc>Outlier detection, text cleaning, and rulebased preselection</desc>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="71.0259" cy="306.002" width="142.06" height="108.804"/>
+			<rect x="0" y="251.6" width="142.052" height="108.804" class="st9"/>
+			<text x="13.44" y="282" class="st10" v:langID="1031"><v:paragraph v:horizAlign="1"/><v:tabList/>Outlier detection,  <tspan
+						x="13.33" dy="1.2em" class="st4">text cleaning, and  </tspan><tspan x="38.87" dy="1.2em" class="st4">rulebased </tspan><tspan
+						x="30.81" dy="1.2em" class="st4">preselection</tspan></text>		</g>
+		<g id="shape1274-66" v:mID="1274" v:groupContext="shape" v:layerMember="0" transform="translate(570.531,-173.079)">
+			<title>Dynamischer Verbinder.1274</title>
+			<path d="M7.09 360.4 L7.09 284.02" class="st11"/>
+		</g>
+		<g id="shape1275-69" v:mID="1275" v:groupContext="shape" transform="translate(705.017,-249.468)">
+			<title>Tabelle.1275</title>
+			<desc>Generate synthetic car parts using rule based methods and GPT...</desc>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="71.0259" cy="306.002" width="142.06" height="108.804"/>
+			<rect x="0" y="251.6" width="142.052" height="108.804" class="st9"/>
+			<text x="9.01" y="282" class="st10" v:langID="1031"><v:paragraph v:horizAlign="1"/><v:tabList/>Generate synthetic <tspan
+						x="9.02" dy="1.2em" class="st4">car parts using rule </tspan><tspan x="7.02" dy="1.2em" class="st4">based methods and </tspan><tspan
+						x="47.82" dy="1.2em" class="st4">GPT3.5</tspan></text>		</g>
+		<g id="shape1276-75" v:mID="1276" v:groupContext="shape" v:layerMember="0" transform="translate(768.716,-173.079)">
+			<title>Dynamischer Verbinder.1276</title>
+			<path d="M7.09 360.4 L7.09 284.02" class="st11"/>
+		</g>
+		<g id="shape1277-78" v:mID="1277" v:groupContext="shape" transform="translate(903.601,-248.526)">
+			<title>Tabelle.1277</title>
+			<desc>Vektorize text data Split in 70/15/15</desc>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="71.0259" cy="306.002" width="142.06" height="108.804"/>
+			<rect x="0" y="251.6" width="142.052" height="108.804" class="st9"/>
+			<text x="9.24" y="301.2" class="st10" v:langID="1031"><v:paragraph v:horizAlign="1"/><v:tabList/>Vektorize text data <tspan
+						x="16.63" dy="1.2em" class="st4">Split in 70/15/15</tspan></text>		</g>
+		<g id="shape1278-82" v:mID="1278" v:groupContext="shape" v:layerMember="0" transform="translate(973.866,-173.079)">
+			<title>Dynamischer Verbinder.1278</title>
+			<path d="M7.09 360.4 L7.09 284.96" class="st11"/>
+		</g>
+		<g id="shape1279-85" v:mID="1279" v:groupContext="shape" transform="translate(314.811,-38.4523)">
+			<title>Tabelle.1279</title>
+			<desc>Feature Engineering</desc>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="71.0259" cy="294.503" width="142.06" height="131.803"/>
+			<rect x="0" y="228.602" width="142.052" height="131.803" rx="11.3386" ry="11.3386" class="st2"/>
+			<text x="42.24" y="289.1" class="st3" v:langID="1031"><v:paragraph v:horizAlign="1"/><v:tabList/>Feature <tspan
+						x="26.93" dy="1.2em" class="st4">Engineering</tspan></text>		</g>
+		<g id="shape1280-89" v:mID="1280" v:groupContext="shape" transform="translate(314.811,-248.526)">
+			<title>Tabelle.1280</title>
+			<desc>Generate new features from bounding box data</desc>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="71.0259" cy="306.002" width="142.06" height="108.804"/>
+			<rect x="0" y="251.6" width="142.052" height="108.804" class="st9"/>
+			<text x="24.82" y="291.6" class="st10" v:langID="1031"><v:paragraph v:horizAlign="1"/><v:tabList/>Generate new <tspan
+						x="26.34" dy="1.2em" class="st4">features from </tspan><tspan x="10.14" dy="1.2em" class="st4">bounding box data</tspan></text>		</g>
+		<g id="shape1281-94" v:mID="1281" v:groupContext="shape" v:layerMember="0" transform="translate(378.75,-170.255)">
+			<title>Dynamischer Verbinder.1281</title>
+			<path d="M7.09 360.4 L7.09 282.13" class="st11"/>
+		</g>
+		<g id="shape1282-97" v:mID="1282" v:groupContext="shape" v:layerMember="0" transform="translate(456.863,-98.6789)">
+			<title>Dynamischer Verbinder.1282</title>
+			<path d="M0 353.32 L40.03 353.32" class="st7"/>
+		</g>
+		<g id="shape1356-102" v:mID="1356" v:groupContext="shape" transform="translate(1102.03,-41.276)">
+			<title>Tabelle.1356</title>
+			<desc>Data Analysis</desc>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="71.0259" cy="294.503" width="142.06" height="131.803"/>
+			<rect x="0" y="228.602" width="142.052" height="131.803" rx="11.3386" ry="11.3386" class="st2"/>
+			<text x="20.72" y="299.9" class="st3" v:langID="1031"><v:paragraph v:horizAlign="1"/><v:tabList/>Data Analysis</text>		</g>
+		<g id="shape1357-105" v:mID="1357" v:groupContext="shape" v:layerMember="0" transform="translate(1244.08,-100.091)">
+			<title>Dynamischer Verbinder.1357</title>
+			<path d="M0 353.32 L47.15 353.32" class="st7"/>
+		</g>
+		<g id="shape1358-110" v:mID="1358" v:groupContext="shape" transform="translate(1094.18,-248.526)">
+			<title>Tabelle.1358</title>
+			<desc>Store feature and class distributions</desc>
+			<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+			<v:textRect cx="71.0259" cy="306.002" width="142.06" height="108.804"/>
+			<rect x="0" y="251.6" width="142.052" height="108.804" class="st9"/>
+			<text x="13.92" y="301.2" class="st10" v:langID="1031"><v:paragraph v:horizAlign="1"/><v:tabList/>Store feature and <tspan
+						x="12.96" dy="1.2em" class="st4">class distributions</tspan></text>		</g>
+		<g id="shape1359-114" v:mID="1359" v:groupContext="shape" v:layerMember="0" transform="translate(1164.44,-173.079)">
+			<title>Dynamischer Verbinder.1359</title>
+			<path d="M7.09 360.4 L7.09 284.96" class="st11"/>
+		</g>
+	</g>
+</svg>
