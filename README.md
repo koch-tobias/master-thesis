@@ -137,9 +137,9 @@ master-thesis/ </br>
 │  ├─ raw/ </br> 
 │  ├─ raw_for_labeling/ </br>
 
-### Prelabeling new data
+### Prelabeling New Data
 For prelabeling new data, the first step is to add all new, raw datasets (excel files) to the folder "data/raw_for_labeling". 
-Each Excel file must contain the structure tree of a vehicle and needs at least the following attributes:
+Each excel file must contain the structure tree of a vehicle and needs at least the following attributes:
 - Sachnummer
 - Benennung (dt)
 - X-Min
@@ -169,34 +169,34 @@ Each Excel file must contain the structure tree of a vehicle and needs at least 
 - zy
 - zz
 
-After adding all files you can specify some settings in the src/config.yaml file, which are: 
+After adding all files, you can specify some of the following settings in the src/config.yaml file: 
 - binary_column and multiclass_column: Names of the label columns
 - binary_label_1, binary_label_0: The labels for the binary classification
-- keep_modules: Modules, which should be kept
-- relevant_features: The features which should be kept
+- keep_modules: Modules which should be kept
+- relevant_features: Features which should be kept
 
-After that, run the **label.py** file which you can find here: </br>
+Then, run the **label.py** file which you can find here: </br>
 master-thesis/  </br>
 ├─ src/ </br>
 │  ├─ deployment/ </br>
 │  │  ├─ data_prelabeling.py </br>
 
 This file executes the following steps:
-- **Data Preparation**: Keep only vehicle parts from relevant modules. All parent folders and not needed modules are removed
-- **Feature Selection**: Keep only the features, defined as relevant in the config file, which should be used for training the models
-- **Add label columns**: Add and initialize the label columns  ("Relevant fuer Messung" with "Nein" and "Einheitsname" with "Dummy")
-- **Prelabeling**: Use the trained models to identify the relevant car parts and classify a uniform name ("Einheitsname") for each relevant car part
+- **Data Preparation**: Keep only the vehicle parts from the relevant modules. All parent folders and not needed modules are removed.
+- **Feature Selection**: Keep only the features defined as relevant in the config file, which should be used for training the models.
+- **Add label columns**: Add and initialize the label columns. ("Relevant fuer Messung" with "Nein" and "Einheitsname" with "Dummy")
+- **Prelabeling**: Use the trained models to identify the relevant car parts and classify a uniform name ("Einheitsname") for each relevant car part.
 
 After these steps, the prelabeled datasets are stored in the folder "pre_labeled". 
-**Now please check carefully if the samples are labeled correctly.** If not, you have to correct this manually.
-This is a critical part, because incorrectly labeled data can lead to a significant drop in the model performance!
+**Now please check if the samples are labeled correctly.** If not, you have to correct the labels manually.
+This is a critical part, because incorrectly labeled data can lead to a significant drop in the model performance.
 As an assistance to correctly label the datasets and to quickly detect possible errors, a checklist with all vehicles and the determined relevant components is available in the data folder.
 
 After reviewing the pre-labeled datasets, move them to the "data/labeled" folder.
 
-### Generate the training data
+### Generate the Training Data
 
-To generate a new training, validation, and testsplit for training the models, you can run the data preprocessing pipeline using the file **data_preprocessing.py** which can be found here: </br>
+To generate a new training, validation, and test split for training the models, you can run the data preprocessing pipeline using the file **data_preprocessing.py**, which can be found here: </br>
 master-thesis/  </br>
 ├─ src/ </br>
 │  ├─ data_preprocessing_pipeline/ </br>
