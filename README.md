@@ -49,7 +49,7 @@ This output is used by a CATIA macro to load the car parts into a CATIA parametr
 
 The part number is used to load the parts from the database, the uniform name to assign the parts to the various measurements, and the original part designation to manually check whether the uniform name was correctly assigned by the machine learning model.
 
-CaPI is accessible via a ([REST-API](http://10.3.13.137:7070/docs#/default/post_relevant_parts_api_get_relevant_parts__post)) or a ([website](https://car-part-identification.streamlit.app/)). The REST-API is used for production to integrate with the measurement tool and the website is used in the development process to test the models and to get quick feedback from the special department / users.
+CaPI is accessible via a ([REST-API](http://10.3.13.137:7070/docs#/default/post_relevant_parts_api_get_relevant_parts__post)) or a ([website](https://car-part-identification.streamlit.app/)). The REST-API is implemented for production to integrate the measurement tool and the website is set up for the development process to test the models and to get quick feedback from the special department/users.
 
 ## 📖 Quick Index
 
