@@ -202,7 +202,7 @@ master-thesis/  </br>
 │  ├─ data_preprocessing_pipeline/ </br>
 │  │  ├─ data_preprocessing.py </br>
 
-Before running this file, you can specifiy some settings in the "src/config.yaml" file, which are:
+Before running this file, you can specifiy some of the following settings in the "src/config.yaml" file:
 - train_val_split: Split into (1-x)*100 % training and x*100 % validation set. (x=[0,1])
 - val_test_split: Split into (1-x)*100 % validationset and x*100 % testset. (x=[0,1])
 - seed: Seed for the train, val, test split
@@ -211,7 +211,7 @@ Before running this file, you can specifiy some settings in the "src/config.yaml
 
 ### Training
 
-After creating the dataset, you can train and evaluate new models. Currently, the machine learning methods LightGBM, XGBoost, and CatBoost are available for this purpose. Before training, the dataset path and training your models, and all settings, such as metrics, loss functions, hyperparameters, etc. can be set in the "src/config.yaml" file.
+After creating the dataset, you can train and evaluate new models. Currently, the machine learning methods LightGBM, XGBoost, and CatBoost are available. Before training, the dataset path and all settings, such as metrics, loss functions, hyperparameters, etc. can be set in the "src/config.yaml" file.
 
 After setting the desired training parameters, the training process can be started by executing the ***main.py*** file. </br>
 master-thesis/  </br>
