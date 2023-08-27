@@ -60,7 +60,7 @@ CaPI is accessible via a ([REST-API](http://10.3.13.137:7070/docs#/default/post_
 
 ## 💻 Installation
 1. Clone or download the repository
-2. (Optional) Create a virtuel environment
+2. (Optional) Create a virtual environment
 ```bash
 conda create -n envMesstool python=3.10
 ```
