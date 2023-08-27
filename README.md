@@ -5,14 +5,7 @@ CaPI (Car-Part-Identifier) is a service developed as part of my Master's Thesis 
 The input for the models is an excel file which contains a list of car parts (structure tree) including their metadata, for example:
 ![Sample excerpt input](images/sample_input.png)
 
-The output of the model is a list of all relevant car parts in the following format: </br>
-```
-  {
-    "Part number": ["Original part designation", "Uniform name"]
-  }
-```
-
-These car parts can be identified by the models:
+Out of the follwing list the relevant car parts are identified and output in format given below:
 - BLENDE HBL
 - BLENDE LADEKANTE
 - BLENDE BSAEULE HINTEN
@@ -45,6 +38,13 @@ These car parts can be identified by the models:
 - SITZBEZUG HINTEN
 - SPOILER
 - VERKLEIDUNG STOSSFAENGER
+
+</br>
+```
+  {
+    "Part number": ["Original part designation", "Uniform name"]
+  }
+```
 
 This output is used by a CATIA makro to load the car parts into a CATIA parametric model which then automatically performs the measurements and the comparison to the guidelines. 
 
