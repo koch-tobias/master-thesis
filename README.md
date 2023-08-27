@@ -60,21 +60,21 @@ CaPI is accessible via a ([REST-API](http://10.3.13.137:7070/docs#/default/post_
 
 ## 💻 Installation
 1. Clone or download the repository
-2. (optional) Create a virtuel environment: 
+2. (Optional) Create a virtuel environment
 ```bash
 conda create -n envMesstool python=3.10
 ```
-3. (optional) Activate the created environment 
+3. (Optional) Activate the created environment 
 ```bash 
 conda activate envMesstool 
 ```
 4. Go to the root directory of the project
-5. Install the requirements: 
+5. Install the requirements
 ```bash 
 pip install -r requirements.txt
 ``` 
 6. Go to the src/config.yaml file and change the ***project_path*** with your directory path.
-7. DONE! The code is ready to use! 
+7. DONE, the code is ready to use! 
 
 ## ⛏️ Architecture
 ![architecture](images/pipelines/architecture.svg)
