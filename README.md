@@ -1,7 +1,7 @@
 # Component Identification for Geometric Measurements in the Vehicle Development Process Using Machine Learning
 
 ## 🚘🔍 CaPI 
-CaPI (Car-Part-Identifier) is a service developed as part of my Master's Thesis and is based on two machine learning models. CaPI identifies car parts that are relevant for geometric measurements during the vehicle development process. It is one of three components of a tool that automates the process for determining different measures and compares them to guidelines and targets. </br>
+CaPI (Car-Part-Identifier) is a service developed as part of my Master's Thesis and is based on two machine learning models. CaPI identifies car parts that are relevant for geometric measurements during the vehicle development process.It is one of three components of a tool that automates the process for determining different measures and comparing them to guidelines and targets. </br>
 The input for the models is an excel file which contains a list of car parts (structure tree) including their metadata, for example:
 ![Sample excerpt input](images/sample_input.png)
 
