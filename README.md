@@ -219,9 +219,9 @@ master-thesis/  </br>
 │  ├─ training_pipeline/ </br>
 │  │  ├─ main.py </br> 
 
-The first step after loading the data sets is the tuning of the hyperparameters via grid search. Here, 81 models are trained iteratively by varying over 4 hyperparameters. </br>
-After that, the top x % [default = 10] of the models are selected by the best area under the curve (auc) score and then validated using k-fold crossvalidation [default = 4]. </br>
-The model with the highest auc score after crossvalidation is then selected as the "best" model and trained on a larger trainset that combines the previous trainset and the testset to use the entire available data. Only the validation set is retained for validation of the final model.
+The first step after loading the datasets is the tuning of the hyperparameters via grid search. Here, 81 models are trained iteratively by varying over 4 hyperparameters. </br>
+After that, the top x % [default = 10] of the models are selected by the highest area under the curve (auc) score and then validated using k-fold cross-validation [default = 4]. </br>
+The model with the highest auc score after cross-validation is then selected as the "best" model. It is trained on a larger trainset that combines the previous train set and the test set to use the entire available data. The validation of the final model is performed on the original validation set.
 
 The trained models and its files to validate and compare the models are stored in following folder: </br>
 master-thesis/ </br>
@@ -229,7 +229,7 @@ master-thesis/ </br>
 │  ├─ training_pipeline/ </br>
 │  │  ├─ trained_models/ </br>
 
-After comparing the new trained model(s), update the models in the following folder with the new models if they have a better performance: </br>
+If the new trained model(s) have a better performance, update the models in the following folder with the new models: </br>
 master-thesis/ </br>
 ├─ final_models/ </br>
 
