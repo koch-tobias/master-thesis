@@ -256,8 +256,8 @@ master-thesis/ </br>
 
 The current options to test and/or deploy the models are a streamlit website, which ist hosted on github, and a REST-API, which is hosted on an AWS server. </br>
 The streamlit website is only used for testing, debugging, and getting feedback of the department/users. </br>   
-The Rest-API developed with FastAPI and virtualized with docker is used for production and will addressed via a Catia macro. </br>
-At the moment, the input for the models is an excel file of the structure tree of a selected vehicle with all car parts and the relevant metadata. The output is a json file which contains the identified car parts with the part number, the original designation and an uniform name which is used in the Catia makro for further steps.
+The Rest-API developed with FastAPI and virtualized with docker is developed for production and will addressed via a Catia macro. </br>
+At the moment, the input for the models is an excel file of the structure tree of a selected vehicle with all car parts and the relevant metadata. The output is a json-file, which contains the identified car parts with the part number, the original designation and an uniform name.
 
 Example Output:
 ```
@@ -283,7 +283,7 @@ master-thesis/ </br>
 │  ├─ deployment_pipeline </br>
 │  │  ├─ prediction.py </br>
 
-Here you can add the path to your input which you want to use for testing. It uses the models folder "final_models" for the predictions.
+In the file you can add the path to your input which you want to use for testing. The predictions are generated with the models in the folder "final_models".
 
 ### Tests
 In order to test functions individually and independently for proper operation, unit tests were developed using the pyTest library. These can be executed in the root folder by using the following command:
