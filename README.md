@@ -12,7 +12,7 @@ The output of the model is a list of all relevant car parts in the following for
   }
 ```
 
-and is developed to identify the following car parts:
+These car parts can be identified by the models:
 - BLENDE HBL
 - BLENDE LADEKANTE
 - BLENDE BSAEULE HINTEN
