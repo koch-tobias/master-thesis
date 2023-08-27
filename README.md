@@ -88,8 +88,8 @@ The first process, highlighted in orange, is the prelabeling process. The prelab
 The second process, highlighted in blue, is the training process. Labeled data is used as input for the preprocessing pipeline, which generates the train, validation, and test splits. The models are then trained, and if they are better than the existing models, they can be replaced. To compare models, this proccess additionally includes options for analyzing the feature and class distributions, the models' explainability, and the results of the trained models.
 
 **DEPLOYMENT** </br>
-The third process, highlighted in green, is the deployment process. This process has two options - Website and REST-API.
-The Website is used only for testing purposes, allowing developers to quickly test new models and receive feedback from the special department or users.
+The third process, highlighted in green, is the deployment process. This process has two options - website and REST-API.
+The website is used only for testing purposes, allowing developers to quickly test new models and receive feedback from the special department or users.
 The REST-API option is developed for production usage, allowing users to send input data as a request and to receive the identiefied car parts of the machine learning models in a json-format.
 
 To better understand the structure of the code the devoloped piplines to implement this processes are explained in the following briefly:
