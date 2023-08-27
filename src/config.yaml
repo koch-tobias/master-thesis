@@ -1,7 +1,8 @@
 paths:
  folder_processed_dataset: data/processed/24082023_1721/    # Folder path to the proprocessed data set which will be used to train the model
  modelpath: final_models/Binary_model/
- project_path: C:/Users/q617269/Desktop/Masterarbeit_Tobias/master-thesis
+ test_file_path: data/raw/G20_prismaexport-20230621-143916.xls #Path to a file which should be used to test the API
+ project_path: C:/Users/q617269/Desktop/Masterarbeit_Tobias/master-thesis #Path to the projekt directory
 
 # Settings for the label
 labels:
