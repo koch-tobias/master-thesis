@@ -81,13 +81,13 @@ pip install -r requirements.txt
 
 This project follows a three-component architecture, comprising of three main processes - prelabeling, training, and deployment.
 
-**PRELABELING**
+**PRELABELING** </br>
 The first process, highlighted in orange, is the prelabeling process. The prelabeling process utilizes our already trained models to prelabel newly available data, thus reducing the manual effort required for data labeling. Developers only need to review the prelabeled data and make corrections to any misclassified parts.
 
-**TRAINING**
+**TRAINING** </br>
 The second process, highlighted in blue, is the training process. Labeled data is used as input for the preprocessing pipeline, which generates the train, validation, and test splits. The models are then trained, and if they are better than the existing models, they can be replaced. To compare models, this procesees additionally contains options to analyse the feature and class distributions, the models explainability and the results of the trained models.
 
-**DEPLOYMENT**
+**DEPLOYMENT** </br>
 The third process, highlighted in green, is the deployment process. This process has two options - Website and REST-API.
 The Website is used only for testing purposes, allowing developers to quickly test new models and receive feedback from the special department or users.
 The REST-API option is developed for production usage, allowing users to send input data as a request and to receive the identiefied car parts of the machine learning models in a json-format.
