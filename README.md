@@ -73,7 +73,7 @@ conda activate envMesstool
 ```bash 
 pip install -r requirements.txt
 ``` 
-6. Go to the src/config.yaml file and change the ***project_path*** with your directory path.
+6. Go to the src/config.yaml file and change the project path with your directory.
 7. DONE, the code is ready to use! 
 
 ## ⛏️ Architecture
