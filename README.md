@@ -92,7 +92,7 @@ The third process, highlighted in green, is the deployment process. This process
 The website is used only for testing purposes, allowing developers to quickly test new models and receive feedback from the special department or users.
 The REST-API option is developed for production usage, allowing users to send input data as a request and to receive the identiefied car parts of the machine learning models in a json-format.
 
-To better understand the structure of the code the devoloped piplines to implement this processes are explained in the following briefly:
+To better understand the structure of the code, the devoloped piplines to implement these processes are explained in the following briefly:
 
 ### Data Preparation Pipeline
 ![Data_preparation_pipeline](images/pipelines/data_preparation_pipeline.svg)
