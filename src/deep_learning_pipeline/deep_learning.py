@@ -21,7 +21,7 @@ with open('src/config.yaml') as file:
 import sys
 sys.path.append(config['paths']['project_path'])
 
-from src.training_pipeline.utils import load_dataset
+from src.utils import load_dataset
 
 def print_metrics(y_true, y_pred):
     if isinstance(y_true, pd.DataFrame) or isinstance(y_true, pd.Series):
