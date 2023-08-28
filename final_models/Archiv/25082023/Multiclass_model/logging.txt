@@ -1,0 +1,16 @@
+Dataset: data/processed/31072023_1319/
+Method: lgbm
+use_only_text: False
+Validation AUC: 0.99998
+Trained Iterations: 133
+Model index in GridSearch Hyperparametertuning: 20
+Hyperparameter:
+lr: 0.07
+max_depth: 3
+colsample_bytree: 0.7
+min_child_samples: 40
+
+_________________________________________________
+
+Validation AUC (final model): 0.9999994313797165
+Trained Iterations: 101

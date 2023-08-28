@@ -46,9 +46,9 @@ def binary_classifier(weight_factor: int, hp: dict, method: str):
                             scale_pos_weight=weight_factor,
                             gamma=hp["gamma"],
                             n_estimators= config["train_settings"]["n_estimators"],
-                            tree_method= 'gpu_hist',
-                            predictor='gpu_predictor',
-                            gpu_id=5,
+                            #tree_method= 'gpu_hist',
+                            #predictor='gpu_predictor',
+                            #gpu_id=5,
                             verbosity=0
                         )        
         metrics = config["xgb_params_binary"]["metrics"]
@@ -105,9 +105,9 @@ def multiclass_classifier(weight_factor: dict, hp: dict, method: str):
                             scale_pos_weight=weight_factor,
                             gamma=hp["gamma"],
                             n_estimators= config["train_settings"]["n_estimators"],
-                            tree_method= 'gpu_hist',
-                            predictor='gpu_predictor',
-                            gpu_id=5,
+                            #tree_method= 'gpu_hist',
+                            #predictor='gpu_predictor',
+                            #gpu_id=5,
                             verbosity=0
                         )   
         metrics = config["xgb_params_multiclass"]["metrics"]
@@ -125,4 +125,4 @@ def multiclass_classifier(weight_factor: dict, hp: dict, method: str):
                                 )
         metrics = config["cb_params_multiclass"]["metrics"]
 
-    return model, metrics     
+    return model, metrics

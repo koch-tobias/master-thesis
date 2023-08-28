@@ -18,8 +18,7 @@ with open('src/config.yaml') as file:
 
 import sys
 sys.path.append(config['paths']['project_path'])
-from src.deployment_pipeline.prediction import get_model
-from src.training_pipeline.utils import load_dataset
+from src.deployment.classification import get_model
 
 #%%
 def add_feature_importance(model, vocabulary, model_folder_path) -> pd.DataFrame:
