@@ -289,6 +289,6 @@ pytest
 ## 🚀 Updates
 
 **2023.08.27**
-Update models -> 3 more car parts are added (for interior measures)
+Update models -> 3 more car parts are added (for interior measures) </br>
 **2023.08.03**
-Update models -> Now trained on 33 vehicles instead of 8
+Update models -> Now trained on 33 vehicles instead of 8 </br>
