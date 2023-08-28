@@ -35,7 +35,7 @@ def test_add_labels():
 
 def test_car_part_selection():
     # Read the mock CSV file as a pandas dataframe
-    mock_dataframe = pd.read_excel('function_tests/mock_labeled_data.xls')
+    mock_dataframe = pd.read_excel('unittests/mock_labeled_data.xls')
     df_new = prep.car_part_selection(mock_dataframe)
 
     # Define the expected outcome based on the mock dataframe and the keep_modules config
@@ -45,7 +45,7 @@ def test_car_part_selection():
     assert expected_outcome_shape == df_new.shape
 
 def test_feature_selection():
-    df_test = pd.read_excel('function_tests/mock_labeled_data.xls')
+    df_test = pd.read_excel('unittests/mock_labeled_data.xls')
     df_test_prepared = prep.car_part_selection(df_test)
 
     #EXPECTED RESULT

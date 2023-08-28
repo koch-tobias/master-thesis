@@ -57,17 +57,17 @@ def test_remove_prefix():
     assert target == new_response2
 
 def test_augmented_boundingbox(): 
-    df_original = pd.read_csv("function_tests/augmentation/df_orignal.csv", index_col=False)
-    df_temp = pd.read_csv("function_tests/augmentation/df_temp.csv", index_col=False)
-    target_result = pd.read_csv("function_tests/augmentation/result.csv", index_col=False)
+    df_original = pd.read_csv("unittests/augmentation/df_orignal.csv", index_col=False)
+    df_temp = pd.read_csv("unittests/augmentation/df_temp.csv", index_col=False)
+    target_result = pd.read_csv("unittests/augmentation/result.csv", index_col=False)
 
     result = aug.augmented_boundingbox(df_original, df_temp)
 
     assert result.shape == target_result.shape
 
 def test_data_augmentation():
-    df_original = pd.read_csv("function_tests/augmentation/df_orignal.csv", index_col=False)
-    target_result = pd.read_csv("function_tests/augmentation/target_data_augmentation.csv", index_col=False)
+    df_original = pd.read_csv("unittests/augmentation/df_orignal.csv", index_col=False)
+    target_result = pd.read_csv("unittests/augmentation/target_data_augmentation.csv", index_col=False)
 
     result = aug.data_augmentation(df_original)
 
