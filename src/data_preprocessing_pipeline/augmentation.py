@@ -19,7 +19,7 @@ sys.path.append(config['paths']['project_path'])
 from src.data_preprocessing_pipeline.feature_engineering import find_valid_space, random_centerpoint_in_valid_space, calculate_transformed_corners
 
 
-# %%
+# PyTest exist
 def random_order(designation: str) -> str:
     '''
     Takes a sentence as input and changes the word order randomly. 
@@ -41,7 +41,7 @@ def random_order(designation: str) -> str:
 
     return new_designation
 
-# %%
+# PyTest exist
 def swap_chars(designation: str) -> str:
     '''
     Takes a text as input and randomly swap two chars which are next to each other
@@ -62,7 +62,7 @@ def swap_chars(designation: str) -> str:
     
     return ''.join(chars)
 
-# %%
+# PyTest exist
 def add_char(designation: str) -> str:
     '''
     Takes a text as input and randomly adds a char to a random position
@@ -85,7 +85,7 @@ def add_char(designation: str) -> str:
 
     return new_designation 
 
-# %%
+# PyTest exist
 def delete_char(designation: str) -> str:
     '''
     Takes a text as input and randomly deletes a char
@@ -99,7 +99,7 @@ def delete_char(designation: str) -> str:
     
     return new_designation  
 
-# %%
+# PyTest exist
 def remove_prefix(response: str) -> str:
     ''' 
     The output of GPT has always a prefix like "Answer: " or "Modified Designation: ". This prefix will be deleted that we keep only the generated text.
@@ -129,7 +129,7 @@ def init_openai():
     openai.api_version = config["gpt_settings"]["api_version"]
     openai.api_key = config["gpt_settings"]["api_key"]
 
-# %%
+# PyTest exist
 def create_prompt(designation: str) -> str:
     ''' 
     Adds the designation to the costumized prompt    
@@ -173,7 +173,6 @@ def create_prompt(designation: str) -> str:
             '''
     return prompt
 
-# %%
 def gpt35_designation(designation:str) -> str:
     ''' 
     Calls the GPT API and generates the response  
@@ -197,7 +196,7 @@ def gpt35_designation(designation:str) -> str:
         new_response = remove_prefix(response=response[0])
     return new_response
 
-# %%
+# PyTest exist
 def augmented_boundingbox(df_original: pd.DataFrame, df_temp: pd.DataFrame) -> pd.DataFrame:
     ''' 
     Generates a synthetic bounding box based on the car parts in the trainset
@@ -263,7 +262,7 @@ def augmented_boundingbox(df_original: pd.DataFrame, df_temp: pd.DataFrame) -> p
 
     return df_temp
 
-# %%
+# PyTest exist
 def data_augmentation(df: pd.DataFrame) -> pd.DataFrame:
     ''' 
     Generates synthetic data to extend the data set. 

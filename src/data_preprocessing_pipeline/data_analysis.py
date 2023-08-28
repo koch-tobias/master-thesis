@@ -15,7 +15,6 @@ sys.path.append(config['paths']['project_path'])
 
 from src.data_preprocessing_pipeline.feature_engineering import transform_boundingbox, find_valid_space
 
-# %%
 def plot_bounding_box(ax, transformed_boundingbox: np.array, designation: str, label_relevant: str) -> int:
     '''
     Plot the bounding boxes 
@@ -44,7 +43,6 @@ def plot_bounding_box(ax, transformed_boundingbox: np.array, designation: str, l
 
     return relevant_count
 
-# %%
 def plot_vehicle(df: pd.DataFrame, add_valid_space: bool, preprocessed_data: bool, mirrored: bool) -> None:
     '''
     Description:
@@ -126,15 +124,22 @@ def plot_bounding_boxes_all_vehicle_by_name(data_path: str) -> None:
     Return:
     '''
     df_preprocessed = pd.read_excel(data_path,index_col=0) 
-    # Hier muss noch wasgeändert werden
+    # TO DO !!
     #df_preprocessed, df_for_plot = preprocess_dataset(df)
     #plot_vehicle(df_for_plot, add_valid_space=True, preprocessed_data=False, mirrored=False)
 
 def analyse_data_split(df_preprocessed: pd.DataFrame, y_train: np.array, y_val: np.array, y_test: np.array, model_folder_path: str, binary_model: bool) -> None:
     '''
-    Description:
+    Create plots for the class distribution
     Args:
+        df_preprocessed: dataframe of the preprocessed data
+        y_train: class labels
+        y_val: class labels
+        y_test: class labels
+        model_folder_path: path where the plot should be stored
+        binary_model: 
     Return:
+        None
     '''
     
     logger.info("Start analysing the preprocessed dataset...")

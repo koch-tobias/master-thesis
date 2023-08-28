@@ -11,7 +11,6 @@ sys.path.append(config['paths']['project_path'])
 from src.utils import load_data_into_df
 from src.deployment.classification import classification_on_new_data
 
-   
 def label_data() -> None:
     ''' 
     Label the data by predicting relevant car parts and unique names on the new dataset. It saves the labeled data as a CSV file in the specified folder. 

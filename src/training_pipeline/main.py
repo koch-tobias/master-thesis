@@ -8,7 +8,6 @@ from yaml.loader import SafeLoader
 with open('src/config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
 
-# %%
 def main():
     train_binary_model = config["train_settings"]["train_binary_model"]
     train_multiclass_model = config["train_settings"]["train_multiclass_model"]
@@ -28,7 +27,6 @@ def main():
         logger.info("Start training the multiclass models...")
         train_model(folder_path, binary_model=False, method=method)
     
-# %%
 if __name__ == "__main__":
     
     main()

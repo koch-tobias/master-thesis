@@ -1,6 +1,5 @@
 # %%
 import pandas as pd
-import numpy as np
 
 import os
 import pickle
@@ -13,7 +12,6 @@ from yaml.loader import SafeLoader
 with open('src/config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
 
-# %%
 def load_training_data(binary_model: bool):
     ''' 
     This function loads the preprocessed dataset along with train, validation and test sets from the specified data folder. The binary_model parameter indicates whether the dataset is for a binary classification task or not.
@@ -67,7 +65,6 @@ def load_training_data(binary_model: bool):
 
     return X_train, y_train, X_val, y_val, X_test, y_test, df_preprocessed, df_train, df_val, df_test, weight_factor
 
-# %%
 def prepare_columns(df):
     ''' 
     This function prepares the columns of a DataFrame by removing double quotes and replacing commas with dots in values that start with a double quote.
@@ -90,7 +87,6 @@ def prepare_columns(df):
     
     return df
 
-# %%
 def read_file(file, folder_name, raw: bool):
     if raw:
         # Load the excel into a pandas dataframe, delete the header and declare the second row as new header
@@ -117,7 +113,6 @@ def read_file(file, folder_name, raw: bool):
     
     return df, ncar
 
-# %%
 def load_data_into_df(raw: bool) -> tuple[list, str]:
     ''' 
     This function loads data from the specified folder path. It reads data from all files in the folder, converts them to pandas dataframes and stores the dataframes in a list. 
@@ -166,7 +161,6 @@ def load_data_into_df(raw: bool) -> tuple[list, str]:
 
         return dataframes, ncars
     
-# %%
 def check_nan_values(df: pd.DataFrame, relevant_features: list, ncar: str) -> list:
     '''
     The function takes a pandas DataFrame as input and checks for the existence of any NaN values. It returns a list of columns that contain NaN values. 
@@ -183,7 +177,6 @@ def check_nan_values(df: pd.DataFrame, relevant_features: list, ncar: str) -> li
     
     return columns_with_nan
 
-# %%
 def combine_dataframes(dataframes: list, relevant_features: list, ncars: list) -> pd.DataFrame:
     '''
     The function takes a list of pandas DataFrames and combines them into a single data frame. Before merging, it checks if all dataframes have the same columns and returns an error if there are discrepancies. 
@@ -212,7 +205,6 @@ def combine_dataframes(dataframes: list, relevant_features: list, ncars: list) -
     
     return merged_df    
 
-# %%
 def store_trained_model(model, metrics: str, best_iteration: int, val_auc: float, hp: dict, index_best_model: int, model_folder_path: str, finalmodel: bool) -> None:
     ''' 
     This function stores the trained model, hyperparameters, metrics and best iteration information in a pickled file at the provided model folder path and logs the validation AUC and training information in a txt file.

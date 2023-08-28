@@ -15,7 +15,7 @@ from yaml.loader import SafeLoader
 with open('src/config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
 
-# %%
+# PyTest exist
 def outlier_detection(df_new_features: pd.DataFrame) -> pd.DataFrame:
     '''
     The function takes a pandas DataFrame as input and implements an outlier detection method to identify outliers in the "X-Max_transf" column. 
@@ -44,7 +44,7 @@ def outlier_detection(df_new_features: pd.DataFrame) -> pd.DataFrame:
 
     return df_new_features
 
-# %%
+# PyTest exist
 def prepare_text(designation: str) -> str:
     ''' 
     This function takes in a string, performs a series of text preprocessing tasks, and returns the resulting cleaned string. 
@@ -81,7 +81,7 @@ def prepare_text(designation: str) -> str:
 
     return prepared_designation
 
-# %%
+# PyTest exist
 def clean_text(df: pd.DataFrame) -> pd.DataFrame:
     ''' 
     Description: Cleans text data in the DataFrame by applying the 'prepare_text' function on the 'Benennung (dt)' column, and adds the cleaned text data as a new column, 'Benennung (bereinigt)'.
@@ -94,7 +94,7 @@ def clean_text(df: pd.DataFrame) -> pd.DataFrame:
 
     return df
 
-# %%
+# PyTest exist
 def nchar_text_to_vec(data: pd.DataFrame, model_folder_path: str) -> tuple:
     '''
     This function converts text data into vector representation using the n-gram approach.
@@ -124,8 +124,7 @@ def nchar_text_to_vec(data: pd.DataFrame, model_folder_path: str) -> tuple:
     # Return the vectorized text data
     return X_text
 
-
-# %%
+# PyTest exist
 def get_vocabulary(column) -> list:
     '''
     This function extracts the vocabulary from a given column of text data.
@@ -151,7 +150,6 @@ def get_vocabulary(column) -> list:
     return vocabulary
 
 
-# %%
 def clean_dataset(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     '''
     The function takes in a pandas DataFrame and performs various preprocessing steps on the data. 
@@ -211,7 +209,7 @@ def clean_dataset(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
 
     return df_relevants, df_for_plot
 
-# %%
+# PyTest exist
 def get_weight_factor(y, df: pd.DataFrame, binary_model: bool) -> int or dict:
     '''
     The function takes the labels (y), a pandas DataFrame, and a binary flag as input. 
@@ -244,7 +242,6 @@ def get_weight_factor(y, df: pd.DataFrame, binary_model: bool) -> int or dict:
 
     return weight_factor
 
-# %%
 def train_test_val(df: pd.DataFrame, model_folder_path: str, binary_model: bool):
     '''
     This function splits the input dataframe into training, validation and test sets for binary or multiclass task. 

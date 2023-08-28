@@ -1,13 +1,7 @@
-# %%
-from loguru import logger
-
 import pandas as pd
 import numpy as np
 
 from sklearn.metrics import accuracy_score, recall_score, f1_score
-
-import pickle
-import os
 
 import yaml
 from yaml.loader import SafeLoader
@@ -17,7 +11,7 @@ with open('src/config.yaml') as file:
 import sys
 sys.path.append(config['paths']['project_path'])
 
-from src.deployment_pipeline.prediction import model_predict
+from src.deployment.classification import model_predict
     
 def get_best_metric_results(evals: dict, best_iteration: int, method: str, binary_model: bool) -> tuple[float]:
     ''' 
@@ -72,7 +66,6 @@ def get_best_metric_results(evals: dict, best_iteration: int, method: str, binar
     train_loss = evals[training_name][loss][best_iteration]
     return train_auc, train_loss, val_auc, val_loss
 
-# %%
 def evaluate_model(model, X_test: np.array, y_test: np.array, evals: dict, hp_in_iteration: dict, num_models_trained: int, training_time: float, df_columns: list, binary_model: bool, method: str) -> tuple[np.array, np.array, float, float, float, float, float, float, pd.DataFrame]:
     ''' 
     This function evaluates a trained machine learning model. It does this by predicting the test set labels and probabilities.

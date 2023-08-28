@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-
 import math
 
 import yaml
@@ -8,6 +7,7 @@ from yaml.loader import SafeLoader
 with open('src/config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
 
+# PyTest exist
 def transform_boundingbox(x_min, x_max, y_min, y_max, z_min, z_max, ox, oy, oz, xx, xy, xz, yx, yy, yz, zx, zy, zz) -> np.array:
     ''' 
     This function takes the minimum and maximum coordinates of a bounding box as well as rotation and translation parameters as inputs. It returns the new coordinates of the bounding box after applying the provided rotation and translation. 
@@ -58,8 +58,7 @@ def transform_boundingbox(x_min, x_max, y_min, y_max, z_min, z_max, ox, oy, oz, 
     # Return the transformed corner points and the rotation matrix
     return transformed_corners, rotation_matrix
 
-
-# %%
+# PyTest exist
 def get_minmax(list_transformed_bboxes: list) -> float:
     '''
     This function takes a list of transformed bounding boxes and returns the minimum and maximum coordinates for each axis 
@@ -99,8 +98,7 @@ def get_minmax(list_transformed_bboxes: list) -> float:
     # Return the minimum and maximum coordinates for each axis
     return x_min, x_max, y_min, y_max, z_min, z_max
 
-
-# %%
+# PyTest exist
 def find_valid_space(df: pd.DataFrame) -> tuple[np.array, float, float, float]:
     ''' 
     This function takes in a Pandas DataFrame containing the transformed bounding box specifications of one or more 3D objects and calculates the expanded bounding box containing all of the 3D objects. 
@@ -164,8 +162,7 @@ def find_valid_space(df: pd.DataFrame) -> tuple[np.array, float, float, float]:
     # Return the corner matrix, length, width, and height of the expanded bounding box
     return corners, length, width, height
 
-
-# %%
+# PyTest exist
 def random_centerpoint_in_valid_space(corners: list, length: float, width: float, height: float) -> np.array:
     ''' 
     This function generates a random center point within the valid space defined by a 3D object's bounding box. 
@@ -197,8 +194,7 @@ def random_centerpoint_in_valid_space(corners: list, length: float, width: float
     # Return the random center point as a numpy array
     return np.array([x, y, z])
 
-
-# %%
+# PyTest exist
 def calculate_center_point(transformed_boundingbox: np.array) -> float:
     ''' 
     This function takes in the transformed bounding box as a list of 8 corner points in 3D space and computes the center point of the box. 
@@ -230,8 +226,7 @@ def calculate_center_point(transformed_boundingbox: np.array) -> float:
     # Return the center coordinates
     return center_x, center_y, center_z
 
-
-# %%
+# PyTest exist
 def calculate_lwh(transformed_boundingbox: list) -> float:
     ''' 
     This function takes in the transformed bounding box as a list of 8 corner points in 3D space and computes the length, width, and height of the bounding box. 
@@ -261,6 +256,7 @@ def calculate_lwh(transformed_boundingbox: list) -> float:
     # Return the length, width, and height
     return length, width, height
 
+# PyTest exist
 def rotation_to_orientation(rot_mat: np.array) -> tuple[float, float, float]:
     ''' 
     Calculates the orientation angles (in radians) of a given rotation matrix in 3D space.
@@ -286,7 +282,7 @@ def rotation_to_orientation(rot_mat: np.array) -> tuple[float, float, float]:
 
     return theta_x, theta_y, theta_z
 
-# %%
+# PyTest exist
 def calculate_transformed_corners(center_point: np.array, length: float, width: float, height: float, theta_x: float, theta_y: float, theta_z: float) -> float: 
     ''' 
     This function takes in the location, dimensions, and orientation of a 3D object and calculates the coordinates of its eight corners. 
@@ -337,7 +333,6 @@ def calculate_transformed_corners(center_point: np.array, length: float, width: 
 
     return x_min, x_max, y_min, y_max, z_min, z_max
 
-# %%
 def add_new_features(df: pd.DataFrame) -> pd.DataFrame:
     '''
     The function takes a pandas DataFrame as input and adds new features/variables by calculating the bounding box coordinates, orientation, center point, length, width, height, volume, and density for each car part in the DataFrame. 
@@ -390,16 +385,9 @@ def add_new_features(df: pd.DataFrame) -> pd.DataFrame:
         
     return df
 
-
-# %%
 def main():
+    print("Empty")
 
-    #calculate_transformed_corners(np.array[(3,4,5)], 5.0,4.5,3.5,0.11,0.22,0.33)
-    rotation_matrix = np.array([[0.5, -0.1464, 0.8536], [0.5, 0.8536, -0.1464], [-0.7071, 0.5, 0.5]])
-    theta_x, theta_y, theta_z = rotation_to_orientation(rot_mat=rotation_matrix)
-
-    
-# %%
 if __name__ == "__main__":
     
     main()

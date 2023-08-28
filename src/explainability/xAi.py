@@ -20,7 +20,6 @@ import sys
 sys.path.append(config['paths']['project_path'])
 from src.deployment.classification import get_model
 
-#%%
 def add_feature_importance(model, vocabulary, model_folder_path) -> pd.DataFrame:
       ''' 
       This function is used to extract the most important features from a given model. 
@@ -66,7 +65,6 @@ def add_feature_importance(model, vocabulary, model_folder_path) -> pd.DataFrame
 
       return df_features
 
-# %%
 def get_features(df_features: pd.DataFrame) -> tuple[list, list]:
     ''' 
     This function is used to retrieve the list of features and their importance scores from a given path of a folder where the features are stored in an Excel file. 
@@ -83,7 +81,6 @@ def get_features(df_features: pd.DataFrame) -> tuple[list, list]:
     feature_list = df_features["Feature"].values.tolist()
 
     return feature_list, topx_important_features
-
 
 def plot_shap_summary(model, vocabulary, model_folder_path):
 

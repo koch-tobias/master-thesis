@@ -5,12 +5,12 @@ from yaml.loader import SafeLoader
 
 with open('src/config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
-    
-# %%
+
+# PyTest exist
 def check_if_columns_available(dataframe: pd.DataFrame, relevant_features: list) -> list:
     '''
-    The function takes a pandas DataFrame and a list of relevant features/columns as input. 
-    It checks if all relevant features/columns are present in the input DataFrame and returns a list of missing features/columns. 
+    The function takes a pandas DataFrame and a list of relevant features as input. 
+    It checks if all relevant features are present in the input DataFrame and returns a list of missing features. 
     Args: 
         dataframe: A pandas DataFrame object 
         relevant_features: list of feature names that are required in the input DataFrame. 
@@ -24,20 +24,28 @@ def check_if_columns_available(dataframe: pd.DataFrame, relevant_features: list)
     
     return missing_columns
 
-def car_part_selection(dataframe: pd.DataFrame):
+# PyTest exist
+def car_part_selection(dataframe: pd.DataFrame) -> pd.DataFrame:
+    '''
+    This function selects the car parts from a dataframe of car structure and returns a new dataframe with only the selected modules.
+    Args:
+        dataframe: The initial dataframe containing the car structure with all car parts and the metadata.
+    Return:
+        dataframe_new: A new dataframe containing only the car parts on the last level of the car structure with "Dok-Format" equals to "5P" and the selected modules.
+    '''
     dataframe_new = pd.DataFrame(columns=dataframe.columns)
 
     for module in config["general_params"]["keep_modules"]:
         try: 
-            for i in range(dataframe[dataframe["Modul (Nr)"] == module].shape[0]):
-                level = dataframe[dataframe["Modul (Nr)"] == module]["Ebene"].values[i]
-                startindex = dataframe[dataframe["Modul (Nr)"] == module].index[i]
-                try:
-                    endindex = dataframe.loc[(dataframe["Ebene"] == level) & (dataframe.index > startindex)].index[i] - 1
-                except: 
-                    endindex = dataframe.shape[0] + 1
-                temp = dataframe.loc[startindex:endindex]
-                dataframe_new = pd.concat([dataframe_new, temp], ignore_index=True).reset_index(drop=True)
+            #for i in range(dataframe[dataframe["Modul (Nr)"] == module].shape[0]):
+            level = dataframe[dataframe["Modul (Nr)"] == module]["Ebene"].values[0]
+            startindex = dataframe[dataframe["Modul (Nr)"] == module].index[0]
+            try:
+                endindex = dataframe.loc[(dataframe["Ebene"] == level) & (dataframe.index > startindex)].index[0] - 1
+            except: 
+                endindex = dataframe.shape[0] + 1
+            temp = dataframe.loc[startindex:endindex]
+            dataframe_new = pd.concat([dataframe_new, temp], ignore_index=True).reset_index(drop=True)
         except:
             logger.info(f"Module {module} not found in the structure tree!")
 
@@ -46,21 +54,60 @@ def car_part_selection(dataframe: pd.DataFrame):
 
     return dataframe_new
 
-def feature_selection(dataframe: pd.DataFrame):
+# PyTest exist
+def feature_selection(dataframe: pd.DataFrame) -> pd.DataFrame:
+    '''
+    This function selects the relevant features from a given dataframe. It then converts the numerical features to float values.
+    Args:
+        dataframe: The initial dataframe containing possibly irrelevant features.
+    Return:
+        dataframe_new: A new dataframe with only relevant features and converted datatypes.
+    '''
     # Keep only features which are identified as relevant for the preprocessing, the predictions or for the users' next steps
     dataframe_new = dataframe[config["general_params"]["relevant_features"]]
     
-    dataframe_new = dataframe_new.astype(config["convert_dict"])
+    # Dict which is used to transform the data types of the bounding box features 
+    convert_dict = {
+                    "X-Min": float,
+                    "X-Max": float,
+                    "Y-Min": float,
+                    "Y-Max": float,
+                    "Z-Min": float,
+                    "Z-Max": float,
+                    "Wert": float,
+                    "ox": float,
+                    "oy": float,
+                    "oz": float,
+                    "xx": float,
+                    "xy": float,
+                    "xz": float,
+                    "yx": float,
+                    "yy": float,
+                    "yz": float,
+                    "zx": float,
+                    "zy": float,
+                    "zz": float
+                }           
+
+    dataframe_new = dataframe_new.astype(convert_dict)
 
     return dataframe_new
 
-def add_labels(dataframe: pd.DataFrame):
+# PyTest exist
+def add_labels(dataframe: pd.DataFrame) -> pd.DataFrame:
+    '''
+    This function adds the label columns to the dataframe.
+    Args:
+        dataframe: The initial dataframe containing possibly irrelevant features.
+    Return:
+        dataframe_new: A new dataframe with the added labels.
+    '''
     # Add and initialize columns for the label "Relevant für Messung" and "Einheitsname"
     dataframe.insert(len(dataframe.columns), config['labels']['binary_column'], config['labels']['binary_label_0']) 
     dataframe.insert(len(dataframe.columns), config['labels']['multiclass_column'], 'Dummy') 
 
     return dataframe
-# %%
+
 def data_preparation(dataframe: pd.DataFrame) -> tuple[pd.DataFrame, str]:
     '''
     The function takes a pandas DataFrame as input and prepares the data by performing several data preprocessing steps. 

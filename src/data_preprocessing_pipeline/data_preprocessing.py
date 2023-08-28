@@ -111,11 +111,9 @@ def generate_dataset() -> None:
     plot_distribution(df_preprocessed, storage_path)
     logger.success("Plots successfully stored!")
 
-# %%
 def main():
     generate_dataset()
 
-# %%
 if __name__ == "__main__":
     
     main()

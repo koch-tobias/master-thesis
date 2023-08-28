@@ -15,9 +15,8 @@ with open('src/config.yaml') as file:
 import sys
 sys.path.append(config['paths']['project_path'])
 
-from src.data_pipeline.feature_engineering import transform_boundingbox, find_valid_space
+from src.data_preprocessing_pipeline.feature_engineering import transform_boundingbox, find_valid_space
 
-# %%
 def plot_bounding_box(ax, transformed_boundingbox: np.array, designation: str, label_relevant: str):
     '''
     This function is used to plot a three-dimensional bounding box.
@@ -47,7 +46,6 @@ def plot_bounding_box(ax, transformed_boundingbox: np.array, designation: str, l
 
     return relevant_count
 
-# %%
 def plot_vehicle(df: pd.DataFrame, add_valid_space: bool, preprocessed_data: bool, mirrored: bool):
     ''' 
     This function takes a Pandas dataframe containing information about the bounding boxes of a vehicle and plot them in a 3D space. The plot can be mirrored and can have a valid space bounding box added. 
@@ -288,7 +286,6 @@ def store_metrics(evals: dict, best_iteration: int, model_folder_path: str, bina
         plt.ylim([-0.5, 1.2])
         plt.savefig(model_folder_path + add_to_path + 'auc_plot.png')
         plt.close()
-
     else:    
         plt.rcParams["figure.figsize"] = (10, 10)
         lgb.plot_metric(evals, metric=config["lgbm_params_multiclass"]["metrics"][1])
@@ -303,7 +300,6 @@ def store_metrics(evals: dict, best_iteration: int, model_folder_path: str, bina
         plt.savefig(model_folder_path + add_to_path + 'multi_logloss_plot.png')
         plt.close()
 
-# %% 
 def store_confusion_matrix(y_test: np.array, y_pred: np.array, folder_path: str, model_folder_path: str, binary_model: bool):
     ''' 
     This function stores the confusion matrix of a machine learning model, given the test labels and predicted labels.
