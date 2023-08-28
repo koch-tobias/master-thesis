@@ -1,11 +1,11 @@
 # Component Identification for Geometric Measurements in the Vehicle Development Process Using Machine Learning
 
 ## 🚘🔍 CaPI 
-CaPI (Car-Part-Identifier) is a service developed as part of my Master's Thesis and is based on two machine learning models. CaPI identifies car parts that are relevant for geometric measurements during the vehicle development process.It is one of three components of a tool that automates the process for determining different measures and comparing them to guidelines and targets. </br>
+CaPI (Car-Part-Identifier) is a service developed as part of my master's thesis and is based on two machine learning models. CaPI identifies car parts that are relevant for geometric measurements during the vehicle development process.It is one of three components of a tool that automates the process of determining various dimensions and comparing them to guidelines and targets. </br>
 The input for the models is an excel file which contains a list of car parts (structure tree) including their metadata, for example:
 ![Sample excerpt input](images/sample_input.png)
 
-Out of the follwing list the relevant car parts are identified and output in format given below:
+Out of the follwing list, the relevant car parts are identified and output in the format given below:
 - BLENDE HBL
 - BLENDE LADEKANTE
 - BLENDE BSAEULE HINTEN
@@ -45,7 +45,7 @@ Out of the follwing list the relevant car parts are identified and output in for
   }
 ```
 
-This output is used by a CATIA macro to load the car parts into a CATIA parametric model which then automatically performs the measurements and the comparisons to guidelines. 
+This output is used by a CATIA macro to load the car parts into a CATIA parametric model, which then automatically performs the measurements and the comparisons with the guidelines. 
 
 The part number is used to load the parts from the database, the uniform name to assign the parts to the various measurements, and the original part designation to manually check whether the uniform name was correctly assigned by the machine learning model.
 
@@ -82,40 +82,27 @@ pip install -r requirements.txt
 This project follows a three-component architecture, comprising of three main processes - prelabeling, training, and deployment.
 
 **PRELABELING** </br>
-The first process, highlighted in orange, is the prelabeling process. The prelabeling process utilizes our already trained models to prelabel newly available data, thus reducing the manual effort required for data labeling. Developers only need to review the prelabeled data and make corrections to any misclassified parts.
+The prelabeling process, highlighted in orange, utilizes our already trained models to prelabel newly available data, thus reducing the manual effort required for data labeling. Developers only need to review the prelabeled data and make corrections to any misclassified parts.
 
 **TRAINING** </br>
-The second process, highlighted in blue, is the training process. Labeled data is used as input for the preprocessing pipeline, which generates the train, validation, and test splits. The models are then trained, and if they are better than the existing models, they can be replaced. To compare models, this proccess additionally includes options for analyzing the feature and class distributions, the models' explainability, and the results of the trained models.
+The training process, highlighted in blue, uses the labeled data as input to the preprocessing pipeline that generates the training, validation, and test splits. The models are then trained, and if they are better than the existing models, they can replace them. In order to compare the models, this process also includes options to analyze the feature and class distributions, the explainability, and the results of the trained models.
 
 **DEPLOYMENT** </br>
-The third process, highlighted in green, is the deployment process. This process has two options - website and REST-API.
+The deployment process, highlighted in green, has two options - website and REST-API.
 The website is used only for testing purposes, allowing developers to quickly test new models and receive feedback from the department/ users.
-The REST-API option is developed for production usage, allowing users to send input data as a request and to receive the identiefied car parts of the machine learning models in a json-format.
+The REST-API is developed for production usage, allowing users to send data as a request and to receive the identiefied car parts of the machine learning models in a json-format.
 
 To better understand the structure of the code, the devoloped piplines to implement these processes are explained in the following briefly:
 
 ### Data Preparation Pipeline
 ![Data_preparation_pipeline](images/pipelines/data_preparation_pipeline.svg)
 
-This pipeline is used for preparing the raw data, which means to remove irrelevant modules/samples, selecting relevant features, and  adding/initializing the label columns
-
+This pipeline prepares the raw data, which means to remove irrelevant modules/samples, selecting relevant features, and adding/initializing the label columns.
 
 ### Data Preprocessing Pipeline
 ![data_preprocessing_pipeline](images/pipelines/data_preprocessing_pipeline.svg)
 
-This pipeline enables preprocessing of labeled data by merging labeled datasets, performing feature engineering, cleaning the data, augmenting the data, analyzing the data, and splitting the dataset into train, validation, and test set, more in detail:
-
-In the first step, all datasets which are in the data folder "data/labeled" will be combined to one dataframe.  
-Then, in the feature engineering step, the bounding box information is transformed to reduce the number of features. 
-In the original data set, a bounding box is represented by the minimum and maximum values in x-, y-, z-direction, a shift vector, and a rotation matrix.
-Here, this information is used to transform them into length, width, height, the center point in x-, y-, and z-direction, and an orientation vector of the bounding box. This reduces the number of features for representing the bounding box from 18 to 9. In addition, two more features (volume and density) are calculated.
-
-The next step is the preprocessing of the dataset. This involves a preselection of irrelevant car components based on the bounding box features (volume and position). In addition, component designations are cleaned by removing punctuation and frequently occurring words without information and converted to numeric vectors.
-
-To ensure that the datasets are balanced across class a stratified training, valiadation, test split is performed with additional help of data augmentation techniques to create synthetic car parts. The goal here is to have at least 2 / (1 - percentage trainset/100) car parts, so that each split has at least one car part for each class (uniform name). </br> 
-The synthetic designations are generated by adding random mistakes, switching words or generating new names using GPT3.5. The synthetic bounding box information is randomly generated, however, it must be within a validated range in terms of position, length, width, height, and volume in reference to the original components of the same class. 
-
-The last step splits the dataset into a training, validation, and test set.
+This pipeline merges the labeled datasets, performes feature engineering, cleanses the data, augments the data, analyzes the data, and splits the dataset into training, validation, and test set.
 
 ### Training Pipeline
 ![Training pipeline](images/pipelines/training_pipeline.svg)
@@ -184,7 +171,7 @@ master-thesis/  </br>
 This file executes the following steps:
 - **Data Preparation**: Keep only the vehicle parts from the relevant modules. All parent folders and not needed modules are removed.
 - **Feature Selection**: Keep only the features defined as relevant in the config file, which should be used for training the models.
-- **Add label columns**: Add and initialize the label columns. ("Relevant fuer Messung" with "Nein" and "Einheitsname" with "Dummy")
+- **Add Label Columns**: Add and initialize the label columns. ("Relevant fuer Messung" with "Nein" and "Einheitsname" with "Dummy")
 - **Prelabeling**: Use the trained models to identify the relevant car parts and classify a uniform name ("Einheitsname") for each relevant car part.
 
 After these steps, the prelabeled datasets are stored in the folder "pre_labeled". 
@@ -207,10 +194,17 @@ Before running this file, you can specifiy some of the following settings in the
 - val_test_split: Split into (1-x)*100 % validationset and x*100 % testset. (x=[0,1])
 - seed: Seed for the train, val, test split
 - cut_percent_of_front: All components located in the front x percent are removed. (For Example: 0.18 are all car parts up to the windshield)
-- use_only_text: If true, only the designation will be used as feature. All other features are not considered
+- use_only_text: If true, only the designation will be used as feature. All other features are not considered.
 
+This file executes the following steps:
+- **Combine Datasets**: All datasets which are in the data folder "data/labeled" will be combined to one dataframe.
+- **Feature Engineering**: The bounding box information is transformed to reduce the number of features. In the original data set, a bounding box is represented by the minimum and maximum values in x-, y-, z-direction, a shift vector, and a rotation matrix.
+Here, this information is used to transform them into length, width, height, the center point in x-, y-, and z-direction, and an orientation vector of the bounding box. This reduces the number of features for representing the bounding box from 18 to 9. In addition, two more features (volume and density) are calculated.
+- **Data Cleaning**: This involves a preselection of irrelevant car components based on the bounding box features (volume and position). In addition, component designations are cleaned by removing punctuation and frequently occurring words without information. The text data is then converted to numeric vectors.
+- **Data Augmentation**: The synthetic designations are generated by adding random mistakes, switching words or generating new names using GPT3.5. The synthetic bounding box information is randomly generated, however, it must be within a validated range in terms of position, length, width, height, and volume in reference to the original components of the same class.
+- **Training, Validation, and Test Split**: To ensure that the datasets are balanced across classes a stratified training, valiadation, test split is performed with additional help of data augmentation techniques to create synthetic car parts. The goal here is to have at least 2 / (1 - percentage trainset/100) car parts, so that each split has at least one car part for each class (uniform name). </br> 
+ 
 ### Training
-
 After creating the dataset, you can train and evaluate new models. Currently, the machine learning methods LightGBM, XGBoost, and CatBoost are available. Before training, the dataset path and all settings, such as metrics, loss functions, hyperparameters, etc. can be set in the "src/config.yaml" file.
 
 After setting the desired training parameters, the training process can be started by executing the ***main.py*** file. </br>
@@ -219,9 +213,10 @@ master-thesis/  </br>
 │  ├─ training_pipeline/ </br>
 │  │  ├─ main.py </br> 
 
-The first step after loading the datasets is the tuning of the hyperparameters via grid search. Here, 81 models are trained iteratively by varying over 4 hyperparameters. </br>
-After that, the top x % [default = 10] of the models are selected by the highest area under the curve (auc) score and then validated using k-fold cross-validation [default = 4]. </br>
-The model with the highest auc score after cross-validation is then selected as the "best" model. It is trained on a larger trainset that combines the previous train set and the test set to use the entire available data. The validation of the final model is performed on the original validation set.
+This file executes the following steps:
+- **Hyperparameter Tuning**: The first step after loading the datasets is the tuning of the hyperparameters via grid search. Here, 81 models are trained iteratively by varying over 4 hyperparameters. 
+- **Cross-Validation**: After grid search, the top x % [default = 10] of the models are selected by the highest area under the curve (auc) score and then validated using k-fold cross-validation [default = 4].
+- **Train the Final Model**: The model with the highest auc score after cross-validation is then selected as the "best" model. It is trained on a larger trainset that combines the previous train and test set to use the entire available data. The validation of the final model is performed on the original validation set.
 
 The trained models and its files to validate and compare the models are stored in following folder: </br>
 master-thesis/ </br>
@@ -242,9 +237,9 @@ master-thesis/ </br>
 │  │  ├─ xAi.py </br>
 
 It uses the folder "final_models" folder to generate insights in the following way:
-
-First, an excel file is created with all the features that the model has trained on and their importance to the model output. Then the SHAP library is used to create a swarm diagram, which also helps to understand which features and which feature values affect the models prediction. </br>
-In the last step to draw a decision tree, a tree index can be selected. Looking at multiple trees can help to understand misclassifications.
+- **Feature Importance**: Creates an excel file with all the features that the model has trained on and their importance to the model output. 
+- **SHAP**: Creates a swarm diagram, which also helps to understand which features and which feature values affect the models prediction.
+- **Decision Trees**: Plot a decision tree based on a selected tree index.
 
 The results of this pipeline are stored in the folder "final_models" for each classification task (binary and multiclass), for example: </br>
 master-thesis/ </br>
@@ -256,8 +251,8 @@ master-thesis/ </br>
 
 The current options to test and/or deploy the models are a streamlit website, which ist hosted on github, and a REST-API, which is hosted on an AWS server. </br>
 The streamlit website is only used for testing, debugging, and getting feedback of the department/users. </br>   
-The Rest-API developed with FastAPI and virtualized with docker is developed for production and will addressed via a Catia macro. </br>
-At the moment, the input for the models is an excel file of the structure tree of a selected vehicle with all car parts and the relevant metadata. The output is a json-file, which contains the identified car parts with the part number, the original designation and an uniform name.
+The REST-API developed with FastAPI and virtualized with docker is developed for production and will addressed via a CATIA macro. </br>
+The input for the models is an excel file of the structure tree of a selected vehicle with all car parts and the relevant metadata. The output is a json-file, which contains the identified car parts with the part number, the original designation and an uniform name.
 
 Example Output:
 ```
@@ -277,13 +272,13 @@ Example Output:
 }
 ```
 
-If you want to test your models locally, you can use the **prediction.py** file in the following folder: </br>
+If you want to test models locally, you can use the **prediction.py** file in the following folder: </br>
 master-thesis/ </br>
 ├─ src/ </br>
 │  ├─ deployment_pipeline </br>
 │  │  ├─ prediction.py </br>
 
-In the file you can add the path to your input which you want to use for testing. The predictions are generated with the models in the folder "final_models".
+In this file you can add the path to your input which you want to use for testing. The predictions are generated with the models in the folder "final_models".
 
 ### Tests
 In order to test functions individually and independently for proper operation, unit tests were developed using the pyTest library. These can be executed in the root folder by using the following command:
@@ -294,6 +289,6 @@ pytest
 ## 🚀 Updates
 
 **2023.08.27**
-Update models -> Models are trained on more data (3 car parts added for interior measurements)
+Update models -> 3 more car parts are added (for interior measures)
 **2023.08.03**
 Update models -> Now trained on 33 vehicles instead of 8
