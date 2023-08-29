@@ -104,7 +104,7 @@ def read_file(file, folder_name, raw: bool):
 
         old_path = os.path.join(folder_name, file)
         new_path = os.path.join("data/raw", ncar + '_' + file) 
-        shutil.move(old_path, new_path)
+        #shutil.move(old_path, new_path)
     
     else:
         df = pd.read_csv(os.path.join(folder_name, file))
@@ -173,7 +173,6 @@ def check_nan_values(df: pd.DataFrame, relevant_features: list, ncar: str) -> li
     columns_with_nan = df.columns[df.isna().any()].tolist()
     if len(columns_with_nan) > 0:
         logger.error(f"{ncar}: There are car parts in the dataset with NaN values in the following columns: {columns_with_nan}")
-        df.to_excel("check_df.xlsx")
     
     return columns_with_nan
 

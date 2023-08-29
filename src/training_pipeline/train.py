@@ -21,11 +21,11 @@ with open('src/config.yaml') as file:
 import sys
 sys.path.append(config['paths']['project_path'])
 
-from model_architectures import binary_classifier, multiclass_classifier
+from classifier import Classifier
+from plot_functions import Visualization
+from src.deployment.classification import Identifier 
 from evaluation import evaluate_model, get_best_metric_results
-from plot_functions import store_metrics, plot_metric_custom, store_confusion_matrix
 from src.utils import store_trained_model, load_training_data
-from src.deployment.classification import model_predict, store_predictions, get_best_iteration 
 
 warnings.filterwarnings("ignore")
 
@@ -55,9 +55,9 @@ def model_fit(X_train: np.array, y_train: np.array, X_val: np.array, y_val: np.a
         callbacks = [xgb.callback.EarlyStopping(config["train_settings"]["early_stopping"], metric_name=metric_name)]
 
     if binary_model:
-        model, metrics = binary_classifier(weight_factor=weight_factor, hp=hp_in_iteration, method=method)
+        model, metrics = Classifier.binary_classifier(weight_factor=weight_factor, hp=hp_in_iteration, method=method)
     else:
-        model, metrics = multiclass_classifier(weight_factor=weight_factor, hp=hp_in_iteration, method=method)
+        model, metrics = Classifier.multiclass_classifier(weight_factor=weight_factor, hp=hp_in_iteration, method=method)
     
     if method == "lgbm":
         model.fit(X_train, y_train,
@@ -351,12 +351,12 @@ def train_model(folder_path: str, binary_model: bool, method: str):
     logger.info("Start storing the best model with metrics plots and wrong predictions according to the validation auc...")
     best_model = model_results_dict["models_list"][index_best_model]
 
-    best_iteration = get_best_iteration(best_model, method)
+    best_iteration = Identifier.get_best_iteration(best_model, method)
 
     if method == 'lgbm':
-        store_metrics(evals=model_results_dict["evals_list"][index_best_model], best_iteration=best_iteration, model_folder_path=model_folder_path, binary_model=binary_model, finalmodel=False)
+        Visualization.store_metrics(evals=model_results_dict["evals_list"][index_best_model], best_iteration=best_iteration, model_folder_path=model_folder_path, binary_model=binary_model, finalmodel=False)
     else:
-        plot_metric_custom(evals=model_results_dict["evals_list"][index_best_model], best_iteration=best_iteration, model_folder_path=model_folder_path, method=method, binary=binary_model, finalmodel=False)
+        Visualization.plot_metric_custom(evals=model_results_dict["evals_list"][index_best_model], best_iteration=best_iteration, model_folder_path=model_folder_path, method=method, binary=binary_model, finalmodel=False)
 
     hp_keys = list(hp_dict.keys())
     best_hp = {}
@@ -364,9 +364,9 @@ def train_model(folder_path: str, binary_model: bool, method: str):
         best_hp[key] = df[key].iloc[index_best_model]
 
     store_trained_model(model=best_model, metrics=metrics, best_iteration=best_iteration, val_auc=df_cv["avg validation auc"].iloc[0], hp=best_hp, index_best_model=index_best_model, model_folder_path=model_folder_path, finalmodel=False)
-    y_pred, probs, best_iteration = model_predict(model=best_model, X_test=X_test, method=method, binary_model=binary_model)
-    store_confusion_matrix(y_test=y_test, y_pred=y_pred, folder_path=folder_path, model_folder_path=model_folder_path, binary_model=binary_model)
-    store_predictions(y_test=y_test, y_pred=y_pred, probs=probs, df_preprocessed=df_preprocessed, df_test=df_test, model_folder_path=model_folder_path, binary_model=binary_model)
+    y_pred, probs, best_iteration = Identifier.model_predict(model=best_model, X_test=X_test, method=method, binary_model=binary_model)
+    Visualization.store_confusion_matrix(y_test=y_test, y_pred=y_pred, folder_path=folder_path, model_folder_path=model_folder_path, binary_model=binary_model)
+    Identifier.store_predictions(y_test=y_test, y_pred=y_pred, probs=probs, df_preprocessed=df_preprocessed, df_test=df_test, model_folder_path=model_folder_path, binary_model=binary_model)
     logger.success("Storing was successfull!")
 
     logger.info("Train a new model on the entire data with the parameters of the best identified model...")
@@ -374,12 +374,12 @@ def train_model(folder_path: str, binary_model: bool, method: str):
     y_train = np.concatenate((y_train, y_test), axis=0)
         
     gbm_final, evals_final, metrics = model_fit(X_train=X_train, y_train=y_train, X_val=X_val, y_val=y_val, weight_factor=weight_factor, hp_in_iteration=best_hp, binary_model=binary_model, method=method)
-    best_iteration = get_best_iteration(model=gbm_final, method=method)
+    best_iteration = Identifier.get_best_iteration(model=gbm_final, method=method)
     _, _, val_auc, _ = get_best_metric_results(evals=evals_final, best_iteration=best_iteration, method=method, binary_model=binary_model)
     store_trained_model(model=gbm_final, metrics=metrics, best_iteration=best_iteration, val_auc=val_auc, hp=best_hp, index_best_model=index_best_model, model_folder_path=model_folder_path, finalmodel=True)
     if method == 'lgbm':
-        store_metrics(evals=evals_final, best_iteration=best_iteration, model_folder_path=model_folder_path, binary_model=binary_model, finalmodel=True)
+        Visualization.store_metrics(evals=evals_final, best_iteration=best_iteration, model_folder_path=model_folder_path, binary_model=binary_model, finalmodel=True)
     else:
-        plot_metric_custom(evals=evals_final, best_iteration=best_iteration, model_folder_path=model_folder_path, method=method, binary=binary_model, finalmodel=True)
+        Visualization.plot_metric_custom(evals=evals_final, best_iteration=best_iteration, model_folder_path=model_folder_path, method=method, binary=binary_model, finalmodel=True)
 
     logger.success("Training the model on the entire data was successfull!")

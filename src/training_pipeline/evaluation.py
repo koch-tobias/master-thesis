@@ -11,7 +11,7 @@ with open('src/config.yaml') as file:
 import sys
 sys.path.append(config['paths']['project_path'])
 
-from src.deployment.classification import model_predict
+from src.deployment.classification import Identifier
     
 def get_best_metric_results(evals: dict, best_iteration: int, method: str, binary_model: bool) -> tuple[float]:
     ''' 
@@ -92,7 +92,7 @@ def evaluate_model(model, X_test: np.array, y_test: np.array, evals: dict, hp_in
         df_new: a pandas dataframe containing the results of the evaluation process.
     '''
     
-    y_pred, probs, best_iteration  = model_predict(model=model, X_test=X_test, method=method, binary_model=binary_model)
+    y_pred, probs, best_iteration  = Identifier.model_predict(model=model, X_test=X_test, method=method, binary_model=binary_model)
 
     accuracy = accuracy_score(y_test, y_pred)
     sensitivity = recall_score(y_test, y_pred, average='macro')

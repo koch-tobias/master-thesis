@@ -1,7 +1,5 @@
 import numpy as np
 import pandas as pd
-import pytest
-import os
 import src.utils as utils
 
 def test_check_nan_values():

@@ -6,7 +6,7 @@ import streamlit_authenticator as stauth
 from io import BytesIO
 from pyxlsb import open_workbook as open_xlsb
 
-from classification import classification_on_new_data
+from classification import Identifier
 
 import yaml
 from yaml.loader import SafeLoader
@@ -72,7 +72,7 @@ if authentication_status:
         df = pd.read_excel(st.session_state['uploaded_file'], header=None, skiprows=1)
         df.columns = df.iloc[0]
         df = df.iloc[1:] 
-        df_preprocessed, df_relevant_parts, einheitsname_not_found, ncar = classification_on_new_data(df)
+        df_preprocessed, df_relevant_parts, einheitsname_not_found, ncar = Identifier.classification_on_new_data(df)
         df_relevant_parts.rename(columns={'L/R-Kz.':'Linke/Rechte Ausfuehrung'}, inplace=True)
 
 

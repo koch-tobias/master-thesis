@@ -6,139 +6,172 @@ from yaml.loader import SafeLoader
 with open('src/config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
 
-# PyTest exist
-def check_if_columns_available(dataframe: pd.DataFrame, relevant_features: list) -> list:
-    '''
-    The function takes a pandas DataFrame and a list of relevant features as input. 
-    It checks if all relevant features are present in the input DataFrame and returns a list of missing features. 
-    Args: 
-        dataframe: A pandas DataFrame object 
-        relevant_features: list of feature names that are required in the input DataFrame. 
-    Return: 
-        missing_columns: a list of features/columns that are missing in the input DataFrame. If all relevant features/columns are present in the input DataFrame, an empty list is returned.
-    '''    
-    missing_columns = []
-    for column in relevant_features:
-        if column not in dataframe.columns:
-            missing_columns.append(column)
-    
-    return missing_columns
+class Preperator:
+    """
+    This class creates a preperator instance.
+    """
 
-# PyTest exist
-def car_part_selection(dataframe: pd.DataFrame) -> pd.DataFrame:
-    '''
-    This function selects the car parts from a dataframe of car structure and returns a new dataframe with only the selected modules.
-    Args:
-        dataframe: The initial dataframe containing the car structure with all car parts and the metadata.
-    Return:
-        dataframe_new: A new dataframe containing only the car parts on the last level of the car structure with "Dok-Format" equals to "5P" and the selected modules.
-    '''
-    dataframe_new = pd.DataFrame(columns=dataframe.columns)
+    # PyTest exist
+    @staticmethod
+    def check_if_columns_available(dataframe: pd.DataFrame, relevant_features: list) -> list:
+        '''
+        The function takes a pandas DataFrame and a list of relevant features as input. 
+        It checks if all relevant features are present in the input DataFrame and returns a list of missing features. 
+        Args: 
+            dataframe: A pandas DataFrame object 
+            relevant_features: list of feature names that are required in the input DataFrame. 
+        Return: 
+            missing_columns: a list of features/columns that are missing in the input DataFrame. If all relevant features/columns are present in the input DataFrame, an empty list is returned.
+        '''    
+        missing_columns = []
+        for column in relevant_features:
+            if column not in dataframe.columns:
+                missing_columns.append(column)
+        
+        return missing_columns
 
-    for module in config["general_params"]["keep_modules"]:
-        try: 
-            #for i in range(dataframe[dataframe["Modul (Nr)"] == module].shape[0]):
-            level = dataframe[dataframe["Modul (Nr)"] == module]["Ebene"].values[0]
-            startindex = dataframe[dataframe["Modul (Nr)"] == module].index[0]
-            try:
-                endindex = dataframe.loc[(dataframe["Ebene"] == level) & (dataframe.index > startindex)].index[0] - 1
-            except: 
-                endindex = dataframe.shape[0] + 1
-            temp = dataframe.loc[startindex:endindex]
-            dataframe_new = pd.concat([dataframe_new, temp], ignore_index=True).reset_index(drop=True)
-        except:
-            logger.info(f"Module {module} not found in the structure tree!")
+    @staticmethod
+    def get_endindex(lst, value):
+        """
+        This function takes a list and a value as input, and returns the next value
+        after the given one.
+        """
+        # Get the index of the given value in the list
+        try:
+            index = lst.index(value)
+        except ValueError:
+            return None
+        
+        # If the given value is the last element in the list, return None
+        if index == len(lst) - 1:
+            return None
+        
+        # Otherwise, return the next value in the list
+        return lst[index + 1]
+        
+    # PyTest exist
+    @staticmethod
+    def car_part_selection(dataframe: pd.DataFrame) -> pd.DataFrame:
+        '''
+        This function selects the car parts from a dataframe of car structure and returns a new dataframe with only the selected modules.
+        Args:
+            dataframe: The initial dataframe containing the car structure with all car parts and the metadata.
+        Return:
+            dataframe_new: A new dataframe containing only the car parts on the last level of the car structure with "Dok-Format" equals to "5P" and the selected modules.
+        '''
+        dataframe_new = pd.DataFrame(columns=dataframe.columns)
 
-    # Keep only the relevant samples with Dok-Format=5P. These are on the last level of the car structure and contains only car parts
-    dataframe_new = dataframe_new[dataframe_new["Dok-Format"]=='5P'].reset_index(drop=True)
+        for module in config["general_params"]["keep_modules"]:
+            endindex = -1
+            try: 
+                for i in range(dataframe[dataframe["Modul (Nr)"] == module].shape[0]):
+                    level = dataframe[dataframe["Modul (Nr)"] == module]["Ebene"].values[i]
+                    startindex = dataframe[dataframe["Modul (Nr)"] == module].index[i]
+                    if startindex > endindex:
+                        try:
+                            modules_on_same_level = dataframe[dataframe["Ebene"] == level].index.tolist()
+                            endindex = Preperator.get_endindex(modules_on_same_level, startindex)
+                        except: 
+                            endindex = dataframe.shape[0] + 1
+                        temp = dataframe.loc[startindex:endindex]
+                        dataframe_new = pd.concat([dataframe_new, temp], ignore_index=True).reset_index(drop=True)
 
-    return dataframe_new
+            except:
+                logger.info(f"Module {module} not found in the structure tree!")
 
-# PyTest exist
-def feature_selection(dataframe: pd.DataFrame) -> pd.DataFrame:
-    '''
-    This function selects the relevant features from a given dataframe. It then converts the numerical features to float values.
-    Args:
-        dataframe: The initial dataframe containing possibly irrelevant features.
-    Return:
-        dataframe_new: A new dataframe with only relevant features and converted datatypes.
-    '''
-    # Keep only features which are identified as relevant for the preprocessing, the predictions or for the users' next steps
-    dataframe_new = dataframe[config["general_params"]["relevant_features"]]
-    
-    # Dict which is used to transform the data types of the bounding box features 
-    convert_dict = {
-                    "X-Min": float,
-                    "X-Max": float,
-                    "Y-Min": float,
-                    "Y-Max": float,
-                    "Z-Min": float,
-                    "Z-Max": float,
-                    "Wert": float,
-                    "ox": float,
-                    "oy": float,
-                    "oz": float,
-                    "xx": float,
-                    "xy": float,
-                    "xz": float,
-                    "yx": float,
-                    "yy": float,
-                    "yz": float,
-                    "zx": float,
-                    "zy": float,
-                    "zz": float
-                }           
+        # Keep only the relevant samples with Dok-Format=5P. These are on the last level of the car structure and contains only car parts
+        dataframe_new = dataframe_new[dataframe_new["Dok-Format"]=='5P'].reset_index(drop=True)
 
-    dataframe_new = dataframe_new.astype(convert_dict)
+        return dataframe_new
 
-    return dataframe_new
+    # PyTest exist
+    @staticmethod
+    def feature_selection(dataframe: pd.DataFrame) -> pd.DataFrame:
+        '''
+        This function selects the relevant features from a given dataframe. It then converts the numerical features to float values.
+        Args:
+            dataframe: The initial dataframe containing possibly irrelevant features.
+        Return:
+            dataframe_new: A new dataframe with only relevant features and converted datatypes.
+        '''
+        # Keep only features which are identified as relevant for the preprocessing, the predictions or for the users' next steps
+        dataframe_new = dataframe[config["general_params"]["relevant_features"]]
+        
+        # Dict which is used to transform the data types of the bounding box features 
+        convert_dict = {
+                        "X-Min": float,
+                        "X-Max": float,
+                        "Y-Min": float,
+                        "Y-Max": float,
+                        "Z-Min": float,
+                        "Z-Max": float,
+                        "Wert": float,
+                        "ox": float,
+                        "oy": float,
+                        "oz": float,
+                        "xx": float,
+                        "xy": float,
+                        "xz": float,
+                        "yx": float,
+                        "yy": float,
+                        "yz": float,
+                        "zx": float,
+                        "zy": float,
+                        "zz": float
+                    }           
 
-# PyTest exist
-def add_labels(dataframe: pd.DataFrame) -> pd.DataFrame:
-    '''
-    This function adds the label columns to the dataframe.
-    Args:
-        dataframe: The initial dataframe containing possibly irrelevant features.
-    Return:
-        dataframe_new: A new dataframe with the added labels.
-    '''
-    # Add and initialize columns for the label "Relevant für Messung" and "Einheitsname"
-    dataframe.insert(len(dataframe.columns), config['labels']['binary_column'], config['labels']['binary_label_0']) 
-    dataframe.insert(len(dataframe.columns), config['labels']['multiclass_column'], 'Dummy') 
+        dataframe_new = dataframe_new.astype(convert_dict)
 
-    return dataframe
+        return dataframe_new
 
-def data_preparation(dataframe: pd.DataFrame) -> tuple[pd.DataFrame, str]:
-    '''
-    The function takes a pandas DataFrame as input and prepares the data by performing several data preprocessing steps. 
-    It drops all empty columns, checks if all relevant features are available, stores the NCAR abbreviation for file paths, retains only the relevant samples with Dok-Format=5P and only keep relevant features. 
-    It then creates and adds two new columns "Relevant fuer Messung" and "Einheitsname". Finally, it returns a tuple with the preprocessed DataFrame object and the NCAR abbreviation. 
-    Args: 
-        dataframe: A pandas DataFrame object. 
-    Return: 
-        dataframe: preprocessed pandas DataFrame object 
-        ncar: string (NCAR abbreviation) which is used for file paths.
-    '''
-    logger.info("Start preparing the data...")
+    # PyTest exist
+    @staticmethod
+    def add_labels(dataframe: pd.DataFrame) -> pd.DataFrame:
+        '''
+        This function adds the label columns to the dataframe.
+        Args:
+            dataframe: The initial dataframe containing possibly irrelevant features.
+        Return:
+            dataframe_new: A new dataframe with the added labels.
+        '''
+        # Add and initialize columns for the label "Relevant für Messung" and "Einheitsname"
+        dataframe.insert(len(dataframe.columns), config['labels']['binary_column'], config['labels']['binary_label_0']) 
+        dataframe.insert(len(dataframe.columns), config['labels']['multiclass_column'], 'Dummy') 
 
-    missing_columns = check_if_columns_available(dataframe=dataframe, relevant_features=config["general_params"]["relevant_features"])
-    if len(missing_columns) > 0:
-        logger.exit(f"Please check your dataset. The following attributes are missing: {missing_columns}")
+        return dataframe
 
-    # Get the derivat of the selected car
-    ncar = dataframe.iloc[1]['Code']
+    @staticmethod
+    def data_preparation(dataframe: pd.DataFrame) -> tuple[pd.DataFrame, str]:
+        '''
+        The function takes a pandas DataFrame as input and prepares the data by performing several data preprocessing steps. 
+        It drops all empty columns, checks if all relevant features are available, stores the NCAR abbreviation for file paths, retains only the relevant samples with Dok-Format=5P and only keep relevant features. 
+        It then creates and adds two new columns "Relevant fuer Messung" and "Einheitsname". Finally, it returns a tuple with the preprocessed DataFrame object and the NCAR abbreviation. 
+        Args: 
+            dataframe: A pandas DataFrame object. 
+        Return: 
+            dataframe: preprocessed pandas DataFrame object 
+            ncar: string (NCAR abbreviation) which is used for file paths.
+        '''
+        logger.info("Start preparing the data...")
 
-    dataframe_new = car_part_selection(dataframe)
+        missing_columns = Preperator.check_if_columns_available(dataframe=dataframe, relevant_features=config["general_params"]["relevant_features"])
+        if len(missing_columns) > 0:
+            logger.exit(f"Please check your dataset. The following attributes are missing: {missing_columns}")
 
-    # Delete the NCAR abbreviation due to data security
-    dataframe_new[config["general_params"]["car_part_designation"]] = dataframe_new[config["general_params"]["car_part_designation"]].apply(lambda x: x.replace(ncar, ""))
+        # Get the derivat of the selected car
+        ncar = dataframe.iloc[1]['Code']
 
-    dataframe_new = feature_selection(dataframe_new)
+        dataframe_new = Preperator.car_part_selection(dataframe)
 
-    dataframe_new = add_labels(dataframe_new)
+        # Delete the NCAR abbreviation due to data security
+        dataframe_new[config["general_params"]["car_part_designation"]] = dataframe_new[config["general_params"]["car_part_designation"]].apply(lambda x: x.replace(ncar, ""))
 
-    dataframe_new = dataframe_new.reset_index(drop=True)
+        dataframe_new = Preperator.feature_selection(dataframe_new)
 
-    logger.success(f"The data is successfully prepared! The features are reduced and formated to the correct data type, subfolders are deleted, and only relevant modules are kept!")
-    
-    return dataframe_new, ncar
+        dataframe_new = Preperator.add_labels(dataframe_new)
+
+        dataframe_new = dataframe_new.reset_index(drop=True)
+
+        logger.success(f"The data is successfully prepared! The features are reduced and formated to the correct data type, subfolders are deleted, and only relevant modules are kept!")
+        
+        return dataframe_new, ncar

@@ -9,7 +9,7 @@ import sys
 sys.path.append(config['paths']['project_path'])
 
 from src.utils import load_data_into_df
-from src.deployment.classification import classification_on_new_data
+from src.deployment.classification import Identifier
 
 def label_data() -> None:
     ''' 
@@ -20,7 +20,7 @@ def label_data() -> None:
     '''
     dataframes, ncar = load_data_into_df(raw=True)
     for df in dataframes:
-        df_with_label_columns, df_relevant_parts, einheitsname_not_found, ncar = classification_on_new_data(df)
+        df_with_label_columns, df_relevant_parts, einheitsname_not_found, ncar = Identifier.classification_on_new_data(df)
 
         for index, row in df_relevant_parts.iterrows():
             label_column_binary = config['labels']['binary_column']

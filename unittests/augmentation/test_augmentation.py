@@ -1,5 +1,5 @@
 import pandas as pd
-import src.data_preprocessing_pipeline.augmentation as aug
+from src.data_preprocessing_pipeline.augmentation import DataAugmention as aug
 
 def test_random_order():
     designation = "MD HIMMEL SKYROOF US A.F."

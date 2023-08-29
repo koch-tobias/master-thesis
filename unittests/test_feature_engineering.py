@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 import pytest
-import src.data_preprocessing_pipeline.feature_engineering as fe
+from src.data_preprocessing_pipeline.feature_engineering import Feature_Engineering as fe
 
 def test_transform_boundingbox(): 
     x_min, x_max, y_min, y_max, z_min, z_max = 0, 1, 0, 1, 0, 1 

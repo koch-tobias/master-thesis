@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 from pyxlsb import open_workbook as open_xlsb
 from io import BytesIO
 
-from classification import classification_on_new_data
+from classification import Identifier
 
 app = FastAPI() # Initialize api
 
@@ -50,7 +50,7 @@ async def post_relevant_parts(file: UploadFile = File(...)):
             return JSONResponse(status_code=400, content={"error": "Error reading file. Make sure it is a valid Excel file."})
       
         try:
-            df_preprocessed, df_relevant_parts, einheitsname_not_found, ncar = classification_on_new_data(df)
+            df_preprocessed, df_relevant_parts, einheitsname_not_found, ncar = Identifier.classification_on_new_data(df)
         except Exception:
             return JSONResponse(status_code=400, content={"error": "Error in identifying the relevant components."})
         

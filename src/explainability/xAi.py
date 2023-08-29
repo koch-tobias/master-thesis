@@ -18,130 +18,140 @@ with open('src/config.yaml') as file:
 
 import sys
 sys.path.append(config['paths']['project_path'])
-from src.deployment.classification import get_model
 
-def add_feature_importance(model, vocabulary, model_folder_path) -> pd.DataFrame:
-      ''' 
-      This function is used to extract the most important features from a given model. 
-      It takes in a trained model and the path of the folder where the model vocabulary is stored. The output of the function is a pandas DataFrame containing the column names, corresponding features, and their importance scores.
-      Args:
-         model: a trained model object
-         vocabulary: vocabulary used to train the model
-         model_folder_path: a string representing the path to the folder where the model is stored
-      Return: 
-         df_features: a pandas DataFrame containing the column names, corresponding features, and their importance scores.
-      '''
-      path_feature_importance = model_folder_path + "feature_importance.csv"
-      if os.path.exists(path_feature_importance):
-         df_features = pd.read_csv(path_feature_importance)
-      else:
-         # Extrahieren der wichtigsten Features
-         boost = model.booster_
-         importance = boost.feature_importance()
-         column = boost.feature_name()
-         feature_dict = {vocabulary.shape[0]+index: key for index, key in enumerate(config["general_params"]["features_for_model"])}
+from src.utils import load_training_data
+from src.deployment.classification import Identifier
 
-         if isinstance(model, lgb.Booster):
+class xAi:
+
+   @staticmethod
+   def add_feature_importance(model, vocabulary, model_folder_path) -> pd.DataFrame:
+         ''' 
+         This function is used to extract the most important features from a given model. 
+         It takes in a trained model and the path of the folder where the model vocabulary is stored. The output of the function is a pandas DataFrame containing the column names, corresponding features, and their importance scores.
+         Args:
+            model: a trained model object
+            vocabulary: vocabulary used to train the model
+            model_folder_path: a string representing the path to the folder where the model is stored
+         Return: 
+            df_features: a pandas DataFrame containing the column names, corresponding features, and their importance scores.
+         '''
+         path_feature_importance = model_folder_path + "feature_importance.csv"
+         if os.path.exists(path_feature_importance):
+            df_features = pd.read_csv(path_feature_importance)
+         else:
+            # Extrahieren der wichtigsten Features
             boost = model.booster_
             importance = boost.feature_importance()
             column = boost.feature_name()
-         elif isinstance(model, xgb.Booster):
-            importance = model.get_score(importance_type='weight')
-            column = list(importance.keys())
-         elif isinstance(model, cbo.CatBoostClassifier) or isinstance(model, cbo.CatBoostRegressor):
-            importance = model.get_feature_importance()
-            column = model.feature_names_
+            feature_dict = {vocabulary.shape[0]+index: key for index, key in enumerate(config["general_params"]["features_for_model"])}
 
-         df_features = pd.DataFrame(columns=['Column','Feature','Importance Score'])
-         df_features["Column"] = column
-         df_features["Importance Score"] = importance
-         for j in range(len(column)):
-            if j < vocabulary.shape[0]:
-                  df_features.loc[j,"Feature"] = vocabulary[j]
-            else:
-                  df_features.loc[j,"Feature"] = feature_dict[j]
+            if isinstance(model, lgb.Booster):
+               boost = model.booster_
+               importance = boost.feature_importance()
+               column = boost.feature_name()
+            elif isinstance(model, xgb.Booster):
+               importance = model.get_score(importance_type='weight')
+               column = list(importance.keys())
+            elif isinstance(model, cbo.CatBoostClassifier) or isinstance(model, cbo.CatBoostRegressor):
+               importance = model.get_feature_importance()
+               column = model.feature_names_
 
-         df_features.to_csv(path_feature_importance)
+            df_features = pd.DataFrame(columns=['Column','Feature','Importance Score'])
+            df_features["Column"] = column
+            df_features["Importance Score"] = importance
+            for j in range(len(column)):
+               if j < vocabulary.shape[0]:
+                     df_features.loc[j,"Feature"] = vocabulary[j]
+               else:
+                     df_features.loc[j,"Feature"] = feature_dict[j]
 
-      return df_features
+            df_features.to_csv(path_feature_importance)
 
-def get_features(df_features: pd.DataFrame) -> tuple[list, list]:
-    ''' 
-    This function is used to retrieve the list of features and their importance scores from a given path of a folder where the features are stored in an Excel file. 
-    The function returns two lists - a complete list of feature names and a list of top 20 most important features.
-    Args:
-        model_folder_path: a string representing the path of the folder where the features are stored
-    Return:
-        feature_list: a list of strings representing all features stored in the Excel file
-        topx_important_features: a list of integers representing the indices of the 20 most important features in the feature_list. If the Excel file does not exist, a message indicating the error is printed and the function returns None.
-    '''
+         return df_features
 
-    topx_important_features = df_features.sort_values(by=["Importance Score"], ascending=False).head(20)
-    topx_important_features = topx_important_features.index.tolist()
-    feature_list = df_features["Feature"].values.tolist()
+   @staticmethod
+   def get_features(df_features: pd.DataFrame) -> tuple[list, list]:
+      ''' 
+      This function is used to retrieve the list of features and their importance scores from a given path of a folder where the features are stored in an Excel file. 
+      The function returns two lists - a complete list of feature names and a list of top 20 most important features.
+      Args:
+         model_folder_path: a string representing the path of the folder where the features are stored
+      Return:
+         feature_list: a list of strings representing all features stored in the Excel file
+         topx_important_features: a list of integers representing the indices of the 20 most important features in the feature_list. If the Excel file does not exist, a message indicating the error is printed and the function returns None.
+      '''
 
-    return feature_list, topx_important_features
+      topx_important_features = df_features.sort_values(by=["Importance Score"], ascending=False).head(20)
+      topx_important_features = topx_important_features.index.tolist()
+      feature_list = df_features["Feature"].values.tolist()
 
-def plot_shap_summary(model, vocabulary, model_folder_path):
+      return feature_list, topx_important_features
 
-   df_features = add_feature_importance(model, vocabulary, model_folder_path)
-   feature_list, topx_important_features = get_features(df_features)
+   @staticmethod
+   def plot_shap_summary(model, vocabulary, model_folder_path):
 
-   # Create the explainer object
-   explainer = shap.TreeExplainer(model)
+      df_features = xAi.add_feature_importance(model, vocabulary, model_folder_path)
+      feature_list, topx_important_features = xAi.get_features(df_features)
 
-   #Load dataset
-   X_train, y_train, X_val, y_val, X_test, y_test, df_preprocessed, df_train, df_val, df_test, weight_factor = load_dataset(binary_model=True)
+      # Create the explainer object
+      explainer = shap.TreeExplainer(model)
 
-   X = np.concatenate((X_train, X_val), axis=0)
-   y = np.concatenate((y_train, y_val), axis=0)
+      #Load dataset
+      X_train, y_train, X_val, y_val, X_test, y_test, df_preprocessed, df_train, df_val, df_test, weight_factor = load_training_data(binary_model=True)
 
-   # Get shap values for all features
-   shap_values = explainer.shap_values(X, y)
-   plt.clf()
-   shap.summary_plot(shap_values[1], X, feature_list, show=False)
-   plt.savefig(model_folder_path + "shap_top10_features.png")
+      X = np.concatenate((X_train, X_val), axis=0)
+      y = np.concatenate((y_train, y_val), axis=0)
 
-   return df_features, X, y
+      # Get shap values for all features
+      shap_values = explainer.shap_values(X, y)
+      plt.clf()
+      shap.summary_plot(shap_values[1], X, feature_list, show=False)
+      plt.savefig(model_folder_path + "shap_top10_features.png")
 
-def load_model(model_path):
-   with open(model_path + "/final_model.pkl", "rb") as fid:
-      model = pickle.load(fid)
-   return model
-    
-def create_tree(model, X, y, model_path, tree_index: int):
-   os.environ["PATH"] += os.pathsep + "C:/Program Files/Graphviz/bin"
-   plt.clf()
-   if isinstance(model, lgb.Booster):
-      ax = lgb.plot_tree(model.booster_, orientation='vertical', tree_index=tree_index, figsize=(20, 8), show_info=['split_gain'])
-   elif isinstance(model, xgb.Booster):
-      ax = xgb.plot_tree(model, num_trees=tree_index)
-   elif isinstance(model, cbo.CatBoostClassifier) or isinstance(model, cbo.CatBoostRegressor):
-      pool = cbo.Pool(X, y, feature_names=list(X.columns))
-      ax = cbo.plot_tree(model.booster_, orientation='vertical', tree_idx=tree_index, figsize=(20, 8), show_info=['split_gain'])
+      return df_features, X, y
 
-   plt.savefig(model_path + "/xAi_tree.png")
+   @staticmethod
+   def load_model(model_path):
+      with open(model_path + "/final_model.pkl", "rb") as fid:
+         model = pickle.load(fid)
+      return model
 
-def create_path(path):
-   isExist = os.path.exists(path)
-   if not isExist:
-      os.makedirs(path)
+   @staticmethod
+   def create_tree(model, X, y, model_path, tree_index: int):
+      os.environ["PATH"] += os.pathsep + "C:/Program Files/Graphviz/bin"
+      plt.clf()
+      if isinstance(model, lgb.Booster):
+         ax = lgb.plot_tree(model.booster_, orientation='vertical', tree_index=tree_index, figsize=(20, 8), show_info=['split_gain'])
+      elif isinstance(model, xgb.Booster):
+         ax = xgb.plot_tree(model, num_trees=tree_index)
+      elif isinstance(model, cbo.CatBoostClassifier) or isinstance(model, cbo.CatBoostRegressor):
+         pool = cbo.Pool(X, y, feature_names=list(X.columns))
+         ax = cbo.plot_tree(model.booster_, orientation='vertical', tree_idx=tree_index, figsize=(20, 8), show_info=['split_gain'])
+
+      plt.savefig(model_path + "/xAi_tree.png")
+
+   @staticmethod
+   def create_path(path):
+      isExist = os.path.exists(path)
+      if not isExist:
+         os.makedirs(path)
       
 def main():
 
    model_path_binary = "final_models/Binary_model"
-   model, vectorizer, vocabulary, bbox_features = get_model(model_path_binary)
+   model, vectorizer, vocabulary, bbox_features = Identifier.get_model(model_path_binary)
    xai_folder_path = model_path_binary + "/xAi/"
-   create_path(xai_folder_path)
-   df_features, X, y = plot_shap_summary(model, vocabulary, model_folder_path=xai_folder_path)
-   create_tree(model, X, y, xai_folder_path, tree_index=300)
+   xAi.create_path(xai_folder_path)
+   df_features, X, y = xAi.plot_shap_summary(model, vocabulary, model_folder_path=xai_folder_path)
+   xAi.create_tree(model, X, y, xai_folder_path, tree_index=300)
 
    model_path_multiclass = "final_models/Multiclass_model/"
-   model, vectorizer, vocabulary, bbox_features = get_model(model_path_multiclass)
+   model, vectorizer, vocabulary, bbox_features = Identifier.get_model(model_path_multiclass)
    xai_folder_path = model_path_multiclass + "/xAi/"
-   create_path(xai_folder_path)
-   df_features, X, y = plot_shap_summary(model, vocabulary, model_folder_path=xai_folder_path)
-   create_tree(model, X, y, xai_folder_path, tree_index=300)
+   xAi.create_path(xai_folder_path)
+   df_features, X, y = xAi.plot_shap_summary(model, vocabulary, model_folder_path=xai_folder_path)
+   xAi.create_tree(model, X, y, xai_folder_path, tree_index=300)
 
 if __name__ == "__main__":
     
