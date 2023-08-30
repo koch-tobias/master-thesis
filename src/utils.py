@@ -28,14 +28,17 @@ def load_training_data(binary_model: bool):
         df_test: A DataFrame containing the test set data.
         weight_factor: A float value indicating the weight factor for the dataset.
     '''
+    # Get dataset path from config.yaml
     data_folder = config["paths"]["folder_processed_dataset"]
     path_trainset = os.path.join(data_folder, "processed_dataset.csv")  
 
+    # Load dataset
     if os.path.exists(path_trainset):
         df_preprocessed = pd.read_csv(path_trainset) 
     else:
         logger.error(f"No trainset found! Please check if the dataset exist at following path: {path_trainset}. If not, please use the file generate.py to create the processed dataset.")
 
+    # Create paths to load the datasets
     if binary_model:
         data_folder = data_folder + "binary/"
         train_val_test_path = os.path.join(data_folder, "binary_train_test_val_split.pkl")
@@ -45,6 +48,7 @@ def load_training_data(binary_model: bool):
         train_val_test_path = os.path.join(data_folder, "multiclass_train_test_val_split.pkl")
         train_val_test_df_paths = os.path.join(data_folder, "multiclass_train_test_val_dataframes.pkl")
 
+    # Load and return the datasets
     with open(train_val_test_path, 'rb') as handle:
         train_val_test_dict = pickle.load(handle)
 

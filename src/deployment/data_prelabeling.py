@@ -22,6 +22,7 @@ def label_data() -> None:
     for df in dataframes:
         df_with_label_columns, df_relevant_parts, einheitsname_not_found, ncar = Identifier.classification_on_new_data(df)
 
+        # Generate the prelabeled data
         for index, row in df_relevant_parts.iterrows():
             label_column_binary = config['labels']['binary_column']
             label_column_multiclass = config['labels']['multiclass_column']

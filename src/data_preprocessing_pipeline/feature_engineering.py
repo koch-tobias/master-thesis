@@ -309,16 +309,17 @@ class Feature_Engineering:
         Return: Six float values representing the minimum and maximum x, y, and z coordinates of the bounding box of the 3D object. 
         '''
         # Calculate the rotation matrix using the Euler angles
-        
         rotation_matrix = np.array([
             [math.cos(float(theta_y)) * math.cos(float(theta_z)), -math.cos(float(theta_y)) * math.sin(float(theta_z)), math.sin(float(theta_y))],
             [math.cos(float(theta_x)) * math.sin(float(theta_z)) + math.sin(float(theta_x)) * math.sin(float(theta_y)) * math.cos(float(theta_z)), math.cos(float(theta_x)) * math.cos(float(theta_z)) - math.sin(float(theta_x)) * math.sin(float(theta_y)) * math.sin(float(theta_z)), -math.sin(float(theta_x)) * math.cos(float(theta_y))],
             [math.sin(float(theta_x)) * math.sin(float(theta_z)) - math.cos(float(theta_x)) * math.sin(float(theta_y)) * math.cos(float(theta_z)), math.sin(float(theta_x)) * math.cos(float(theta_z)) + math.cos(float(theta_x)) * math.sin(float(theta_y)) * math.sin(float(theta_z)), math.cos(float(theta_x)) * math.cos(float(theta_y))]
         ])
+
         # Calculate the half-lengths of the box along each axis
         half_length = length / 2
         half_width = width / 2
         half_height = height / 2
+
         # Calculate the coordinates of the eight corners of the box
         corners = np.array([
             [half_length, -half_width, -half_height],
@@ -330,10 +331,13 @@ class Feature_Engineering:
             [-half_length, half_width, -half_height],
             [-half_length, half_width, half_height]
         ])
+
         # Rotate the corners using the rotation matrix
         rotated_corners = np.dot(corners, rotation_matrix)
+
         # Translate the corners to the center point
         translated_corners = rotated_corners + np.array([center_point[0], center_point[1], center_point[2]])
+        
         # Calculate the minimum and maximum x, y, and z coordinates of the new bounding box
         x_min = np.min(translated_corners[:, 0])
         x_max = np.max(translated_corners[:, 0])

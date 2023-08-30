@@ -98,16 +98,23 @@ def store_class_distribution(df: pd.DataFrame, class_column: list, storage_path:
     plt.title('Class Distribution')
     plt.savefig(storage_path + f'Distribution_{class_column}_{len(class_counts)}.png', dpi=150)
 
-def plot_distribution(df, storage_path: str):
-   numerics = ['int16', 'int32', 'int64', 'float16', 'float32', 'float64']
-   numerics_columns = list(df.select_dtypes(include=numerics).columns)
-   plt. close('all')
-   os.makedirs(storage_path + "Feature_distributions")
-   for col in numerics_columns:
-       plt.figure(figsize=(8,6))
-       plt.hist(df[col], bins=30)
-       plt.xlabel(col)
-       plt.ylabel("Frequency")
-       plt.title(f"Distribution of {col}")
-       plt.savefig(storage_path + f"Feature_distributions/Distribution_of_{col}.png")
-       plt. close('all')
+def store_feature_distribution(df, storage_path: str):
+    '''
+    Create a distribution plot for each numeric feature and save the plot in the storage_path
+    Args:
+        df = dataframe of the labeled data
+        storage_path = path where the plot should be stored
+    Return: None
+    '''
+    numerics = ['int16', 'int32', 'int64', 'float16', 'float32', 'float64']
+    numerics_columns = list(df.select_dtypes(include=numerics).columns)
+    plt. close('all')
+    os.makedirs(storage_path + "Feature_distributions")
+    for col in numerics_columns:
+        plt.figure(figsize=(8,6))
+        plt.hist(df[col], bins=30)
+        plt.xlabel(col)
+        plt.ylabel("Frequency")
+        plt.title(f"Distribution of {col}")
+        plt.savefig(storage_path + f"Feature_distributions/Distribution_of_{col}.png")
+        plt. close('all')

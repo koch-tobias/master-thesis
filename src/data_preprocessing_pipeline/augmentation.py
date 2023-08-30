@@ -37,7 +37,6 @@ class DataAugmention:
         # Shuffle the words in the designation
         while new_designation == designation:
             random.shuffle(words)
-
             # Join the shuffled words back into a string
             new_designation = ' '.join(words)
 
@@ -191,6 +190,8 @@ class DataAugmention:
             New response
         '''
         prompt= DataAugmention.create_prompt(designation=designation)
+
+        # Create a new designation using GPT until it is different to the original designation
         new_response = designation
         while new_response == designation:
             response = openai.ChatCompletion.create(
@@ -215,12 +216,13 @@ class DataAugmention:
         Return: 
             Dataframe with the new synthetic bounding box  
         '''
+        # The valid space is the area +/- 10% where all bounding boxes of car parts with the same class are inside
         corners, valid_length, valid_width, valid_height = Feature_Engineering.find_valid_space(df=df_original)
 
         list_corners = []
         list_corners.append(corners)
 
-        # Generate random values for length, width, and height until the volume is within the desired range
+        # Generate random values for length, width, and height until the volume is within the desired range +/- 10% of the original bounding boxes of the same class
         min_volume = df_original['volume'].min()
         max_volume = df_original['volume'].max()
         if min_volume == max_volume:
@@ -251,10 +253,12 @@ class DataAugmention:
             height = np.random.uniform(min_height, max_height)
             volume = length * width * height
         
+        # Choose a random center point that the new box fits in the valid area 
         center_point = Feature_Engineering.random_centerpoint_in_valid_space(corners=corners, length=length, width=width, height=height)
+        # Calculate the new min, max values in x-, y,- and z-direction
         x_min, x_max, y_min, y_max, z_min, z_max = Feature_Engineering.calculate_transformed_corners(center_point=center_point, length=length, width=width, height=height, theta_x=df_temp.loc[0, "theta_x"], theta_y=df_temp.loc[0, "theta_y"], theta_z=df_temp.loc[0, "theta_z"])
 
-        # Modify the bounding box information
+        # Store the new generated bounding box information for the augmented car part
         df_temp.loc[0, "X-Min_transf"] = x_min
         df_temp.loc[0, "X-Max_transf"] = x_max
         df_temp.loc[0, "Y-Min_transf"] = y_min
@@ -288,16 +292,24 @@ class DataAugmention:
 
         logger.info("Start adding artificial designations...")
 
+        # Select the relevant car parts
         df_relevant_parts = df[df["Relevant fuer Messung"] == "Ja"]    
 
+        # Get a list of all uniform names in the dataset and sort them alphabetically
         unique_names = df_relevant_parts["Einheitsname"].unique().tolist()
         unique_names.sort()
+
+        # Iterate over all names 
         for name in unique_names:
+            # Create a temporary dataframe with the car parts having the current uniform name 
             df_new = df_relevant_parts[(df_relevant_parts["Einheitsname"] == name)].reset_index(drop=True)
             df_temp = df_new.iloc[[0]]
 
+            # Check if there are enough car parts of this class to split the data in a balanced way into training, validation and test set
             count_designations = df_new.shape[0]
             target_nr_of_unique_carparts = math.ceil(2 / config["train_settings"]["train_val_split"])
+
+            # If no enough car parts in the dataset, generate synthetic car parts for that class
             if count_designations < target_nr_of_unique_carparts:
                 logger.info(f"Adding {target_nr_of_unique_carparts-count_designations} synthetic generated car parts of {name}..")
             while count_designations < target_nr_of_unique_carparts:

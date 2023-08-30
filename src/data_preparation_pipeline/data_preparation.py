@@ -8,7 +8,7 @@ with open('src/config.yaml') as file:
 
 class Preperator:
     """
-    This class creates a preperator instance.
+    This class creates a instance to prepare raw data.
     """
 
     # PyTest exist
@@ -31,10 +31,15 @@ class Preperator:
         return missing_columns
 
     @staticmethod
-    def get_endindex(lst, value):
+    def get_endindex(lst: list, value):
         """
         This function takes a list and a value as input, and returns the next value
         after the given one.
+        Args:
+            lst: list 
+            value: value which will be searched in the list
+        Return: 
+            Next value in list or None (if not found or last element in list)
         """
         # Get the index of the given value in the list
         try:
@@ -59,11 +64,15 @@ class Preperator:
         Return:
             dataframe_new: A new dataframe containing only the car parts on the last level of the car structure with "Dok-Format" equals to "5P" and the selected modules.
         '''
+        # Initialize an empty dataframe with the same columns as the given one
         dataframe_new = pd.DataFrame(columns=dataframe.columns)
 
+        # Iterate over each module which should be kept
         for module in config["general_params"]["keep_modules"]:
             endindex = -1
             try: 
+                # Iterate over each sample where the module number equals the module which should be kept.
+                # It stores all car parts which are in the module to the new dataframe
                 for i in range(dataframe[dataframe["Modul (Nr)"] == module].shape[0]):
                     level = dataframe[dataframe["Modul (Nr)"] == module]["Ebene"].values[i]
                     startindex = dataframe[dataframe["Modul (Nr)"] == module].index[i]
@@ -134,7 +143,7 @@ class Preperator:
         Return:
             dataframe_new: A new dataframe with the added labels.
         '''
-        # Add and initialize columns for the label "Relevant für Messung" and "Einheitsname"
+        # Add and initialize the label columns "Relevant für Messung" and "Einheitsname"
         dataframe.insert(len(dataframe.columns), config['labels']['binary_column'], config['labels']['binary_label_0']) 
         dataframe.insert(len(dataframe.columns), config['labels']['multiclass_column'], 'Dummy') 
 
@@ -154,6 +163,7 @@ class Preperator:
         '''
         logger.info("Start preparing the data...")
 
+        # Check if all necassary columns are available in the dataset
         missing_columns = Preperator.check_if_columns_available(dataframe=dataframe, relevant_features=config["general_params"]["relevant_features"])
         if len(missing_columns) > 0:
             logger.exit(f"Please check your dataset. The following attributes are missing: {missing_columns}")
@@ -161,15 +171,19 @@ class Preperator:
         # Get the derivat of the selected car
         ncar = dataframe.iloc[1]['Code']
 
+        # Select specified modules 
         dataframe_new = Preperator.car_part_selection(dataframe)
 
         # Delete the NCAR abbreviation due to data security
         dataframe_new[config["general_params"]["car_part_designation"]] = dataframe_new[config["general_params"]["car_part_designation"]].apply(lambda x: x.replace(ncar, ""))
-
+        
+        # Select relevant features
         dataframe_new = Preperator.feature_selection(dataframe_new)
 
+        # Add label columns
         dataframe_new = Preperator.add_labels(dataframe_new)
 
+        # Reset and drop index
         dataframe_new = dataframe_new.reset_index(drop=True)
 
         logger.success(f"The data is successfully prepared! The features are reduced and formated to the correct data type, subfolders are deleted, and only relevant modules are kept!")

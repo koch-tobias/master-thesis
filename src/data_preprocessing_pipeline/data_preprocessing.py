@@ -20,7 +20,7 @@ sys.path.append(config['paths']['project_path'])
 from src.data_preprocessing_pipeline.feature_engineering import Feature_Engineering
 from src.data_preprocessing_pipeline.data_cleaning import DataCleaner
 from src.data_preprocessing_pipeline.augmentation import DataAugmention
-from src.data_preprocessing_pipeline.data_analysis import store_class_distribution, analyse_data_split, plot_distribution
+from src.data_preprocessing_pipeline.data_analysis import store_class_distribution, analyse_data_split, store_feature_distribution
 from src.utils import load_data_into_df, combine_dataframes
 
 class DataGenerator:
@@ -42,7 +42,6 @@ class DataGenerator:
             weight_factor: A dictionary with keys as class labels and values as corresponding weight factors for multi-class classification or a single integer indicating the weight factor for binary classification. If there are no samples labeled "Ja" in the binary classification dataset, the function returns 0.
         '''
         if binary_model == False:
-            # Get list of unique values in column "Einheitsname"
             unique_einheitsnamen = np.unique(y)
             weight_factor = {}
             for name in unique_einheitsnamen:
@@ -80,21 +79,25 @@ class DataGenerator:
         else:
             logger.info("Split the dataset into train validation and test sets for the multiclass task and store the sets in dictionaries......")
         
+        # Vektorizing the text column 
         X = DataCleaner.nchar_text_to_vec(data=df, model_folder_path=model_folder_path)
 
-        # Combine text features with other features
+        # Combine text features with bounding box features
         features = config["general_params"]["features_for_model"]
         bbox_features_dict = {"features_for_model": features}
         with open(model_folder_path + 'boundingbox_features.pkl', 'wb') as fp:
             pickle.dump(bbox_features_dict, fp)
 
+        # Use only the text or additionally the bounding box information to generate the datasets 
         if config["general_params"]["use_only_text"] == False:
             X = np.concatenate((X, df[features].values), axis=1)
 
         if binary_model:
+            # Map relevant features to 1 and not relevant features to 0
             y = df[config['labels']['binary_column']]
             y = y.map({config['labels']['binary_label_1']: 1, config['labels']['binary_label_0']: 0})
         else:
+            # Encode the labels with the sklearn LabelEncoder
             y = df[config['labels']['multiclass_column']] 
             le = preprocessing.LabelEncoder()
             y = le.fit_transform(y)
@@ -102,12 +105,15 @@ class DataGenerator:
             with open(model_folder_path + 'label_encoder.pkl', 'wb') as f: 
                 pickle.dump(le, f)  
 
+        # Get the weight factor to deal with the unbalanced dataset
         weight_factor = DataGenerator.get_weight_factor(y=y, df=df, binary_model=binary_model)     
 
+        # Split the dataset into training, validation and testsplit
         indices = np.arange(X.shape[0])
         X_train, X_val, y_train, y_val, indices_train, indices_val = train_test_split(X, y, indices, test_size=config["train_settings"]["train_val_split"], stratify=y, random_state=config["general_params"]["seed"])
         X_val, X_test, y_val, y_test, indices_val, indices_test = train_test_split(X_val, y_val, indices_val, test_size=config["train_settings"]["val_test_split"], stratify=y_val, random_state=config["general_params"]["seed"])
 
+        # Generate dataframes of the training, validation and test sets
         df_train = df.iloc[indices_train]
         df_val = df.iloc[indices_val]
         df_test = df.iloc[indices_test]
@@ -132,10 +138,13 @@ class DataGenerator:
         Return: None 
         '''
 
+        # Load the training, validation, and test sets
         X_train, y_train, X_val, y_val, X_test, y_test, df_train, df_val, df_test, weight_factor = DataGenerator.train_test_val(df, model_folder_path=storage_path, binary_model=binary_model)
 
+        # Analyse the dataset classes 
         analyse_data_split(df, y_train, y_val, y_test, storage_path, binary_model) 
         
+        # Store the train, validation, and test datasets as arrays
         train_val_test_dict = dict({
             "X_train": X_train,
             "y_train": y_train,
@@ -146,6 +155,7 @@ class DataGenerator:
             "weight_factor": weight_factor
         })
 
+        # Store the train, validation, and test datasets as dataframes
         train_val_test_dataframes = dict({
             "df_train": df_train,
             "df_val": df_val,
@@ -171,25 +181,32 @@ class DataGenerator:
 
     @staticmethod
     def generate_dataset() -> None:
+        # Create the storage path using the current datetime
         dateTimeObj = datetime.now()
         timestamp = dateTimeObj.strftime("%d%m%Y_%H%M")
         storage_path = f"data/processed/{timestamp}/"
 
+        # Load the labeled data into a list of dataframes
         dataframes_list, ncars = load_data_into_df(raw=False)
 
+        # Combine all dataframes to one
         df_combined = combine_dataframes(dataframes_list, relevant_features=config["general_params"]["check_features_for_nan_values"], ncars=ncars)
 
+        # Transdorm and add new features
         df_new_features = Feature_Engineering.add_new_features(df_combined)
         
+        # Clean the dataset
         df_preprocessed, df_for_plot = DataCleaner.clean_dataset(df_new_features)
 
-        # Generate the new dataset
+        # Generate the synthetic data (if neccessary)
         df_preprocessed = DataAugmention.data_augmentation(df_preprocessed)
 
+        # Store the processed dataset
         os.makedirs(storage_path + "binary")
         os.makedirs(storage_path + "multiclass")
         df_preprocessed.to_csv(storage_path + "processed_dataset.csv")
 
+        # Generate the training, validation, and test split
         train_val_test_dict_binary, train_val_test_dataframes_binary = DataGenerator.generate_dataset_dict(df_preprocessed, storage_path, binary_model=True)
         train_val_test_dict_multiclass, train_val_test_dataframes_multiclass = DataGenerator.generate_dataset_dict(df_preprocessed, storage_path, binary_model=False)
 
@@ -202,7 +219,7 @@ class DataGenerator:
         store_class_distribution(filtered_df, label_column_multiclass, storage_path + "multiclass/")
 
         logger.info("Generate and store plots for feature distributions...")
-        plot_distribution(df_preprocessed, storage_path)
+        store_feature_distribution(df_preprocessed, storage_path)
         logger.success("Plots successfully stored!")
 
         return train_val_test_dict_binary, train_val_test_dataframes_binary, train_val_test_dict_multiclass, train_val_test_dataframes_multiclass

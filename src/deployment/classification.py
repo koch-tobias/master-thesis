@@ -59,6 +59,7 @@ class Identifier():
         with open(model_path, "rb") as fid:
             model = pickle.load(fid)
 
+        # Get the dataset path from the logging file
         dataset_path = Identifier.search_in_logging(text="Dataset:", model_folder_path=folder_path)
 
         # Load the vectorizer from the file
@@ -71,6 +72,7 @@ class Identifier():
         with open(vocab_path, 'rb') as f:
             vocabulary = pickle.load(f) 
 
+        # Get the used boundingbox features
         bbox_features_path = dataset_path + "boundingbox_features.pkl"
         with open(bbox_features_path, 'rb') as f:
             bbox_features = pickle.load(f)  
@@ -98,6 +100,7 @@ class Identifier():
         X = vectorizer.transform(df_preprocessed['Benennung (bereinigt)']).toarray()
 
         use_only_text = Identifier.search_in_logging(text="use_only_text:", model_folder_path=model_folder_path)
+
         # Combine text features with other features
         if use_only_text == "False":      
             X = np.concatenate((X, df_preprocessed[bbox_features].values), axis=1)
@@ -164,6 +167,7 @@ class Identifier():
         probs = Identifier.get_probabilities(model=model, X_test=X_test, best_iteration=best_iteration, method=method)
 
         if binary_model:
+            # Predict that the car part is relevant if the probability is above the threshold
             y_pred = (probs[:,1] >= config["prediction_settings"]["prediction_threshold"])
             y_pred =  np.where(y_pred, 1, 0)
         else:
@@ -199,7 +203,7 @@ class Identifier():
         except:
             pass
         
-        # Ausgabe der Vorhersagen, der Wahrscheinlichkeiten und der wichtigsten Features
+        # Store all wrongly identified car parts in a csv file to analyse the model predictions
         for i in range(len(y_test)):
             if y_pred[i] != y_test[i]:
                 df_wrong_predictions.loc[i,"Sachnummer"] = df_test.loc[i, "Sachnummer"]
@@ -215,7 +219,6 @@ class Identifier():
                 else:
                     df_wrong_predictions.loc[i,"Probability"] = probs[i][1]
     
-        # Serialize data into file:
         df_wrong_predictions.to_csv(model_folder_path + "wrong_predictions.csv")
 
     @staticmethod
@@ -249,6 +252,7 @@ class Identifier():
         model_multiclass, vectorizer_multiclass, vocabulary_multiclass, boundingbox_features_multiclass = Identifier.get_model(folder_path=model_folder_path_multiclass)       
         logger.success("Pretrained models are loaded!")
 
+        # Transform the data in the same way the model is trained
         X_binary = Identifier.get_X(vocab=vocabulary_binary, vectorizer=vectorizer_binary, bbox_features=boundingbox_features_binary["features_for_model"], df_preprocessed=df_preprocessed, model_folder_path=model_folder_path_binary)
         X_multiclass = Identifier.get_X(vocab=vocabulary_multiclass, vectorizer=vectorizer_multiclass, bbox_features=boundingbox_features_multiclass["features_for_model"], df_preprocessed=df_preprocessed, model_folder_path=model_folder_path_multiclass)
 
@@ -258,6 +262,7 @@ class Identifier():
         y_pred_binary, probs_binary, _  = Identifier.model_predict(model=model_binary, X_test=X_binary, method=binary_method, binary_model=True)
         y_pred_multiclass, probs_multiclass, _ = Identifier.model_predict(model=model_multiclass, X_test=X_multiclass, method=multiclass_method, binary_model=False)
 
+        # Search in logging which dataset is used for training
         dataset_path_binary = Identifier.search_in_logging(text="Dataset:", model_folder_path=model_folder_path_binary)
         dataset_path_multiclass = Identifier.search_in_logging(text="Dataset:", model_folder_path=model_folder_path_multiclass)
 
@@ -281,6 +286,7 @@ class Identifier():
         df_relevant_parts = df_relevant_parts[df_relevant_parts['Relevant fuer Messung'] == 'Ja']
         logger.success("Relevant car parts are identified!")
         
+        
         logger.info("Valid identified car parts by comparing the position of the new car part to them in the trainset")
 
         logger.info("Load dataset used for training..")
@@ -290,8 +296,7 @@ class Identifier():
         unique_names = trainset_relevant_parts["Einheitsname"].unique().tolist()
         unique_names.sort()
         logger.success("Dataset loaded!")
-
-        einheitsname_not_found = []
+        
         for index, row in df_relevant_parts.iterrows():
             for name in unique_names:
                 trainset_name = trainset_relevant_parts[(trainset_relevant_parts["Einheitsname"] == name)].reset_index(drop=True)
@@ -318,8 +323,9 @@ class Identifier():
                                             df_relevant_parts.loc[index,'Einheitsname'] = name
                                         break
         logger.success("Validation successfull!")
-
+        
         logger.info("Prepare output...")
+        einheitsname_not_found = []
         for name in unique_names:        
             if name not in df_relevant_parts['Einheitsname'].unique():
                 einheitsname_not_found.append(name)
@@ -336,13 +342,17 @@ class Identifier():
 # %%
 def main():
     
-    data_path = 'data/raw_for_labeling/G60_prismaexport-20230731-171755.xls'
-
+    data_path = 'data/raw/G65_prismaexport-20230515-85131.xls'
     df = pd.read_excel(data_path, header=None, skiprows=1)
     df.columns = df.iloc[0]
-    df = df.iloc[1:] 
+    df = df.iloc[1:]
+
+    # Drop all empty columns
+    df = df.dropna(how= "all", axis=1, inplace=False)
+
     df_preprocessed, df_relevant_parts, einheitsname_not_found, ncar = Identifier.classification_on_new_data(df)
     print(df_relevant_parts)
+    print(einheitsname_not_found)
 
 # %%
 if __name__ == "__main__":

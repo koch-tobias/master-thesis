@@ -18,7 +18,7 @@ class DataCleaner:
     @staticmethod
     def outlier_detection(df_new_features: pd.DataFrame) -> pd.DataFrame:
         '''
-        The function takes a pandas DataFrame as input and implements an outlier detection method to identify outliers in the "X-Max_transf" column. 
+        The function takes a pandas DataFrame as input and implements an outlier detection method to identify outliers of the bounding box features.
         It calculates the upper and lower limits, creates arrays of Boolean values indicating the outlier rows, and sets the bounding box features to zero if detected as an outlier. 
         The function returns the updated pandas DataFrame with the outliers removed/set to zero. 
         Args: 
@@ -155,6 +155,13 @@ class DataCleaner:
 
     @staticmethod
     def drop_unnamed_columns(df):
+        '''
+        This function drops all columns which starts with "Unnames". This columns are wrongly generate through the preprocessing.
+        Args:
+            df: The dataframe which should be cleaned.
+        Returns:
+            df: The cleaned dataframe.
+        '''
         unnamed_cols = [col for col in df.columns if col.startswith('Unnamed')]
         df.drop(unnamed_cols, axis=1, inplace=True)
         return df

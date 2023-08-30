@@ -40,12 +40,9 @@ class xAi:
          if os.path.exists(path_feature_importance):
             df_features = pd.read_csv(path_feature_importance)
          else:
-            # Extrahieren der wichtigsten Features
-            boost = model.booster_
-            importance = boost.feature_importance()
-            column = boost.feature_name()
             feature_dict = {vocabulary.shape[0]+index: key for index, key in enumerate(config["general_params"]["features_for_model"])}
 
+            # Generate the feature importance values
             if isinstance(model, lgb.Booster):
                boost = model.booster_
                importance = boost.feature_importance()
@@ -53,10 +50,11 @@ class xAi:
             elif isinstance(model, xgb.Booster):
                importance = model.get_score(importance_type='weight')
                column = list(importance.keys())
-            elif isinstance(model, cbo.CatBoostClassifier) or isinstance(model, cbo.CatBoostRegressor):
+            elif isinstance(model, cbo.CatBoostClassifier):
                importance = model.get_feature_importance()
                column = model.feature_names_
 
+            # Store the feature importance
             df_features = pd.DataFrame(columns=['Column','Feature','Importance Score'])
             df_features["Column"] = column
             df_features["Importance Score"] = importance
@@ -82,6 +80,7 @@ class xAi:
          topx_important_features: a list of integers representing the indices of the 20 most important features in the feature_list. If the Excel file does not exist, a message indicating the error is printed and the function returns None.
       '''
 
+      # Get top 20 features
       topx_important_features = df_features.sort_values(by=["Importance Score"], ascending=False).head(20)
       topx_important_features = topx_important_features.index.tolist()
       feature_list = df_features["Feature"].values.tolist()
@@ -97,7 +96,7 @@ class xAi:
       # Create the explainer object
       explainer = shap.TreeExplainer(model)
 
-      #Load dataset
+      # Load dataset
       X_train, y_train, X_val, y_val, X_test, y_test, df_preprocessed, df_train, df_val, df_test, weight_factor = load_training_data(binary_model=True)
 
       X = np.concatenate((X_train, X_val), axis=0)
