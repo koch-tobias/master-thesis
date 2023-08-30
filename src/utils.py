@@ -104,7 +104,7 @@ def read_file(file, folder_name, raw: bool):
 
         old_path = os.path.join(folder_name, file)
         new_path = os.path.join("data/raw", ncar + '_' + file) 
-        #shutil.move(old_path, new_path)
+        shutil.move(old_path, new_path)
     
     else:
         df = pd.read_csv(os.path.join(folder_name, file))
@@ -242,7 +242,7 @@ def store_trained_model(model, metrics: str, best_iteration: int, val_auc: float
         f= open(model_folder_path + "logging.txt","w+")
         f.write(dataset_path)
         f.write(model_folder)
-        f.write("use_only_text: {}".format(config["general_params"]["use_only_text"]))
+        f.write("use_only_text: {}\n".format(config["general_params"]["use_only_text"]))
         f.write("Method: {}".format(config["train_settings"]["ml-method"]))
         f.write("\n_________________________________________________\n")
         f.write("Best model after hyperparameter tuning:\n")
