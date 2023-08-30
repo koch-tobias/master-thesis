@@ -1,0 +1,22 @@
+Dataset: data/processed/24082023_1721/
+Model folder path: src/training_pipeline/trained_models/catboost_HyperparameterTuning_24082023_1948/Binary_model/
+use_only_text: False
+Method: catboost
+_________________________________________________
+Best model after hyperparameter tuning:
+Validation AUC: 0.998058
+Trained Iterations: 519
+Model index in hyperparameter tuning: 78
+Hyperparameter:
+lr: 0.07
+depth: 6
+colsample_bylevel: 0.7
+min_data_in_leaf: 30
+Metrics: ['AUC', 'Logloss'] 
+{"train_binary_model": true, "train_multiclass_model": true, "ml-method": "catboost", "k-folds": 4, "early_stopping": 50, "train_val_split": 0.3, "val_test_split": 0.5, "top_x_models_for_cv": 0.1, "n_estimators": 10000}
+{"prediction_threshold": 0.6}
+
+_________________________________________________
+Final model:
+Validation AUC (final model): 0.9924533216876977
+Trained Iterations: 315

@@ -1,0 +1,22 @@
+Dataset: data/processed/24082023_1721/
+Model folder path: src/training_pipeline/trained_models/xgboost_HyperparameterTuning_26082023_1821/Multiclass_model/
+use_only_text: False
+Method: xgboost
+_________________________________________________
+Best model after hyperparameter tuning:
+Validation AUC: 0.998803
+Trained Iterations: 308
+Model index in hyperparameter tuning: 61
+Hyperparameter:
+lr: 0.3
+max_depth: 6
+colsample_bytree: 0.9
+gamma: 0.5
+Metrics: ['auc', 'mlogloss'] 
+{"train_binary_model": false, "train_multiclass_model": true, "ml-method": "xgboost", "k-folds": 4, "early_stopping": 50, "train_val_split": 0.3, "val_test_split": 0.5, "top_x_models_for_cv": 0.1, "n_estimators": 10000}
+{"prediction_threshold": 0.6}
+
+_________________________________________________
+Final model:
+Validation AUC (final model): 0.9987808449451391
+Trained Iterations: 57
