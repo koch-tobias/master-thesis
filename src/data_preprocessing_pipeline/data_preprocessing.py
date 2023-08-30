@@ -167,6 +167,8 @@ class DataGenerator:
 
         logger.success("Splitted datasets are successfully stored!")
 
+        return train_val_test_dict, train_val_test_dataframes
+
     @staticmethod
     def generate_dataset() -> None:
         dateTimeObj = datetime.now()
@@ -188,8 +190,8 @@ class DataGenerator:
         os.makedirs(storage_path + "multiclass")
         df_preprocessed.to_csv(storage_path + "processed_dataset.csv")
 
-        DataGenerator.generate_dataset_dict(df_preprocessed, storage_path, binary_model=True)
-        DataGenerator.generate_dataset_dict(df_preprocessed, storage_path, binary_model=False)
+        train_val_test_dict_binary, train_val_test_dataframes_binary = DataGenerator.generate_dataset_dict(df_preprocessed, storage_path, binary_model=True)
+        train_val_test_dict_multiclass, train_val_test_dataframes_multiclass = DataGenerator.generate_dataset_dict(df_preprocessed, storage_path, binary_model=False)
 
         logger.info("Generate and store the class distribution plots...")
         label_column_binary = config['labels']['binary_column']
@@ -202,6 +204,8 @@ class DataGenerator:
         logger.info("Generate and store plots for feature distributions...")
         plot_distribution(df_preprocessed, storage_path)
         logger.success("Plots successfully stored!")
+
+        return train_val_test_dict_binary, train_val_test_dataframes_binary, train_val_test_dict_multiclass, train_val_test_dataframes_multiclass
 
 def main():
     DataGenerator.generate_dataset()
