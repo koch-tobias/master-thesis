@@ -60,20 +60,28 @@ CaPI is accessible via a ([REST-API](http://10.3.13.137:7070/docs#/default/post_
 
 ## 💻 Installation
 1. Clone or download the repository
-2. (Optional) Create a virtual environment
+2. Create a virtual environment
 ```bash
 conda create -n envMesstool python=3.10
 ```
-3. (Optional) Activate the created environment 
+</br>or go to the root directory of the project and execute:
+```bash
+python3.10 -m venv envMesstool
+```
+3. Activate the created environment 
 ```bash 
 conda activate envMesstool 
+```
+</br>or
+```bash
+source env/bin/activate
 ```
 4. Go to the root directory of the project
 5. Install the requirements
 ```bash 
 pip install -r requirements.txt
 ``` 
-6. Go to the src/config.yaml file and change the project path with your directory.
+6. Go to the **src/config.yaml** file and change the variable **project_path** to the path to your root project folder path.
 7. DONE, the code is ready to use! 
 
 ## ⛏️ Architecture
@@ -115,7 +123,7 @@ This pipeline is used to train and evaluate new binary/multiclass models using g
 This pipeline is used to generate insights about the predictions of the final models.
 
 ## 🐍 Usage in Python
-Since there is no data provided in this repository, the first step is to add your data by using the following folder structure:</br>
+Since there is no data provided in this repository, the first step is to add the data to the root folder by using the following folder structure:</br>
 master-thesis/ </br>
 ├─ data/ </br>
 │  ├─ labeled/ </br>
@@ -156,17 +164,16 @@ Each excel file must contain the structure tree of a vehicle and needs at least 
 - zy
 - zz
 
-After adding all files, you can specify some of the following settings in the src/config.yaml file: 
-- binary_column and multiclass_column: Names of the label columns
-- binary_label_1, binary_label_0: The labels for the binary classification
-- keep_modules: Modules which should be kept
-- relevant_features: Features which should be kept
+After adding all files, you can specify some of the following settings in the **src/config.yaml** file: 
+- **binary_column** and **multiclass_column**: Names of the label columns
+- **binary_label_1** and **binary_label_0**: The labels for the binary classification
+- **keep_modules**: Modules which should be kept
+- **relevant_features**: Features which should be kept
 
-Then, run the **label.py** file which you can find here: </br>
-master-thesis/  </br>
-├─ src/ </br>
-│  ├─ deployment/ </br>
-│  │  ├─ data_prelabeling.py </br>
+Now, run the following command from the root directory: </br>
+```bash
+python src\deployment\data_prelabeling.py 
+``` 
 
 This file executes the following steps:
 - **Data Preparation**: Keep only the vehicle parts from the relevant modules. All parent folders and not needed modules are removed.
@@ -174,27 +181,29 @@ This file executes the following steps:
 - **Add Label Columns**: Add and initialize the label columns. ("Relevant fuer Messung" with "Nein" and "Einheitsname" with "Dummy")
 - **Prelabeling**: Use the trained models to identify the relevant car parts and classify a uniform name ("Einheitsname") for each relevant car part.
 
-After these steps, the prelabeled datasets are stored in the folder "pre_labeled". 
+After these steps, the prelabeled datasets are stored in the folder **"data/pre_labeled"**. 
 **Now please check if the samples are labeled correctly.** If not, you have to correct the labels manually.
 This is a critical part, because incorrectly labeled data can lead to a significant drop in the model performance.
 As an assistance to correctly label the datasets and to quickly detect possible errors, a checklist with all vehicles and the determined relevant components is available in the data folder.
 
-After reviewing the pre-labeled datasets, move them to the "data/labeled" folder.
+After reviewing the pre-labeled datasets, move the labeld datasets to the **"data/labeled"** folder and move the raw datasets from "data/raw_for_labeling" to the folder "data/raw" (add the derivat to the file name).
 
 ### Generate the Training Data
 
-To generate a new training, validation, and test split for training the models, you can run the data preprocessing pipeline using the file **data_preprocessing.py**, which can be found here: </br>
-master-thesis/  </br>
-├─ src/ </br>
-│  ├─ data_preprocessing_pipeline/ </br>
-│  │  ├─ data_preprocessing.py </br>
+Before running this process, you can specifiy the following settings in the **"src/config.yaml"** file:
+- **seed**: Seed for the train, val, test split
+- **cut_percent_of_front**: All components located in the front x percent are removed. (For Example: 0.18 are all car parts up to the windshield)
+- **car_part_designation**: Specify the column which contains the car part designation as text
+- **use_only_text**: If true, only the designation will be used as feature. All other features are not considered.x
+- **bounding_box_features_original**: List of all features which represent the bounding boxes
+- **features_for_model**: List of all features (except of the designation column) which are used to train the model
+- **train_val_split**: Split into (1-x)*100 % training and x*100 % validation set. (x=[0,1])
+- **val_test_split**: Split into (1-x)*100 % validationset and x*100 % testset. (x=[0,1])
 
-Before running this file, you can specifiy some of the following settings in the "src/config.yaml" file:
-- train_val_split: Split into (1-x)*100 % training and x*100 % validation set. (x=[0,1])
-- val_test_split: Split into (1-x)*100 % validationset and x*100 % testset. (x=[0,1])
-- seed: Seed for the train, val, test split
-- cut_percent_of_front: All components located in the front x percent are removed. (For Example: 0.18 are all car parts up to the windshield)
-- use_only_text: If true, only the designation will be used as feature. All other features are not considered.
+Now, to generate a new training, validation, and test split for training the models, run the data preprocessing pipeline from the root directory using the command: </br>
+```bash
+python src\data_preprocessing_pipeline\data_preprocessing.py
+``` 
 
 This file executes the following steps:
 - **Combine Datasets**: All datasets which are in the data folder "data/labeled" will be combined to one dataframe.
@@ -204,19 +213,48 @@ Here, this information is used to transform them into length, width, height, the
 - **Data Augmentation**: The synthetic designations are generated by adding random mistakes, switching words or generating new names using GPT3.5. The synthetic bounding box information is randomly generated, however, it must be within a validated range in terms of position, length, width, height, and volume in reference to the original components of the same class.
 - **Training, Validation, and Test Split**: To ensure that the datasets are balanced across classes a stratified training, valiadation, test split is performed with additional help of data augmentation techniques to create synthetic car parts. The goal here is to have at least 2 / (1 - percentage trainset/100) car parts, so that each split has at least one car part for each class (uniform name). </br> 
  
-### Training
-After creating the dataset, you can train and evaluate new models. Currently, the machine learning methods LightGBM, XGBoost, and CatBoost are available. Before training, the dataset path and all settings, such as metrics, loss functions, hyperparameters, etc. can be set in the "src/config.yaml" file.
+The following outputs of this process are then stored in a newly created folder with the naming convention "YYYYMMDD_Time" in the folder **"data/processed"**:
+- binary folder:
+  - Dict with train, validation, and test split in dataframes (pickle file)
+  - Dict with train, validation, and test split in numpy arrays (pickle file)
+  - Train, validation, and test split distribution plot
+  - Class distribution plot
+- multiclass folder:
+  - Dict with train, validation, and test split in dataframes (pickle file)
+  - Dict with train, validation, and test split in numpy arrays (pickle file)
+  - Train, validation, and test split distribution plot
+  - Class distribution plot
+- feature_distribution folder: Contains a distribution plot for each numerical feature
+- boundingbox_features.pkl: Stores all features used additionaly to the car part designation
+- label_encoder.pkl: Label encoder for inverse encoding
+- processed_data.csv: The combined dataframe used to create the train, validation, and test split
+- vectorizer.pkl: Used in production to convert the text data in the same way as the model was trained
+- vocabulary.pkl: Stores the used vocabulary
 
-After setting the desired training parameters, the training process can be started by executing the ***main.py*** file. </br>
-master-thesis/  </br>
-├─ src/ </br>
-│  ├─ training_pipeline/ </br>
-│  │  ├─ main.py </br> 
+### Training
+After creating the dataset, you can train and evaluate new models. Currently, the machine learning methods LightGBM, XGBoost, and CatBoost are available. </br>
+Before running this process, you can specifiy the following settings in the **"src/config.yaml"** file:
+- **folder_processed_dataset**: Path to the dataset folder
+- **train_binary_model**: True = Training a binary model
+- **train_multiclass_model**: True = Training a multiclass model
+- **ml-method**: Choose between lgbm, catboost, or xgboost
+- **k-folds**: Number of folds used for cross validation
+- **early_stopping**: Patience which is used for early stopping
+- **top_x_models_for_cv**: x*100 percent of the trained models with grid search hyperparameter tuning will be used for validation with k-fold crossvalidation
+- **n_estimators**: Number of iteration the model will be trained
+- **Specific method setting**: Metrics, boosting type, and hyperparamters for each machine learning method
+
+If train_binary_model and train_multiclass_model are both declared true, the process is executed first for the binary case and then for the multiclass case, but stored in the same main folder
+
+After setting the desired training parameters, the training process can be started by executing the **main.py** file from the root directory by using the comand: </br>
+```bash
+python src\training_pipeline\main.py 
+``` 
 
 This file executes the following steps:
 - **Hyperparameter Tuning**: The first step after loading the datasets is the tuning of the hyperparameters via grid search. Here, 81 models are trained iteratively by varying over 4 hyperparameters. 
-- **Cross-Validation**: After grid search, the top x % [default = 10] of the models are selected by the highest area under the curve (auc) score and then validated using k-fold cross-validation [default = 4].
-- **Train the Final Model**: The model with the highest auc score after cross-validation is then selected as the "best" model. It is trained on a larger trainset that combines the previous train and test set to use the entire available data. The validation of the final model is performed on the original validation set.
+- **Cross-Validation**: After grid search, the top x % [default = 10] of the models are selected by the highest area under the curve (auc) score on the validation set and then validated using k-fold cross-validation.
+- **Train the Final Model**: The model with the highest auc score after cross-validation on the validation set is then selected as the "best" model. Then, the hyperparameter of the "best" model are used to train the final model on a larger trainset that combines the previous train set and the test set to use the entire available data for training. The validation of the final model is still performed on the validation set as before. 
 
 The trained models and its files to validate and compare the models are stored in following folder: </br>
 master-thesis/ </br>
@@ -224,19 +262,29 @@ master-thesis/ </br>
 │  ├─ training_pipeline/ </br>
 │  │  ├─ trained_models/ </br>
 
-If the new trained models have a better performance, update the final models in the following folder with the new trained models: </br>
+To check how the trained models has performed, the following files are stored after training:
+- For the best model after cross-validation and the final model
+  - Area under the curve plot 
+  - Loss plot 
+  - Confustion matrix on test set 
+- Table (csv-file) with all results for hyperparameter tuning and cross-validation
+- Table (csv-file) with all wrongly classified car par parts 
+- Logging file (txt) with the hyperparemeters the stored models are trainined on, and the dataset settings
+
+If the new trained models have a better performance, update the final models in the following folder with the new trained models: (The existing models should be moved to the "final_models/Archiv" folder) </br>
 master-thesis/ </br>
 ├─ final_models/ </br>
 
+The "final_models" folder is used in production for the classification tasks.
+
 **Explainability**
 
-For each of the final model, insights about the predictions can be generated by excecuting the ***xAi.py*** file, which can be found in the folder: </br>
-master-thesis/ </br>
-├─ src/ </br>
-│  ├─ explainability/ </br>
-│  │  ├─ xAi.py </br>
+For each of the final model, insights about the predictions can be generated by excecuting: </br>
+```bash
+python python src\explainability\xAi.py 
+``` 
 
-It uses the folder "final_models" folder to generate insights in the following way:
+It uses the models in the folder "final_models" to generate insights in the following way:
 - **Feature Importance**: Creates an excel file with all the features that the model has trained on and their importance to the model output. 
 - **SHAP**: Creates a swarm diagram, which also helps to understand which features and which feature values affect the models prediction.
 - **Decision Trees**: Plot a decision tree based on a selected tree index.
@@ -249,12 +297,22 @@ master-thesis/ </br>
 
 ### Deployment
 
-The current options to test and/or deploy the models are a streamlit website, which ist hosted on github, and a REST-API, which is hosted on an AWS server. </br>
-The streamlit website is only used for testing, debugging, and getting feedback of the department/users. </br>   
-The REST-API developed with FastAPI and virtualized with docker is developed for production and will addressed via a CATIA macro. </br>
-The input for the models is an excel file of the structure tree of a selected vehicle with all car parts and the relevant metadata. The output is a json-file, which contains the identified car parts with the part number, the original designation and an uniform name.
+The current options to deploy the models are a streamlit website, and a REST-API, which are both hosted on an AWS server. </br>
+The streamlit website is used for testing, debugging, and getting feedback of the department/users and can be adressed by the following url:
+```
+URL zur Website
+```
+If you want to run the website locally, run the following command from the root folder:
+```bash
+streamlit run src\deployment\website.py
+```
 
-Example Output:
+The REST-API developed with FastAPI and virtualized with docker is developed for production and can be addressed by sending a request to the following url: </br>
+```
+http://10.3.13.137:7070/api/get_relevant_parts/
+```
+
+The input is an excel file of the structure tree of a selected vehicle with all car parts and the relevant metadata. The output is a json-file, which contains the identified car parts with the part number, the original designation and an uniform name, for example:
 ```
 {
   "1234567": [
@@ -271,16 +329,47 @@ Example Output:
   ]
 }
 ```
+You can test the API using the following python code (src/deployment/api_request.py) which sends a excel file to the API and returns the identified car parts:
+```python
+import requests
 
-If you want to test models locally, you can use the **prediction.py** file in the following folder: </br>
-master-thesis/ </br>
-├─ src/ </br>
-│  ├─ deployment_pipeline </br>
-│  │  ├─ prediction.py </br>
+import yaml
+from yaml.loader import SafeLoader
+with open('src/config.yaml') as file:
+    config = yaml.load(file, Loader=SafeLoader)
 
-In this file you can add the path to your input which you want to use for testing. The predictions are generated with the models in the folder "final_models".
+url = "http://10.3.13.137:7070/api/get_relevant_parts/" 
 
-### Tests
+file_path = config["paths"]["test_file_path"]
+files = {"file": open(file_path, "rb")}
+headers = {"accept": "application/json"}
+
+proxies = {
+  "http": None,
+  "https": None
+  }
+
+response = requests.post(url, files=files, headers=headers, proxies=proxies)
+print(response.content)
+```
+
+For running the API locally, run the following command from the root directory:
+```bash
+uvicorn src.deployment.api:app --reload
+```
+
+Now you can access the local API using:
+```bash
+ http://127.0.0.1:8000/docs
+ ```
+
+If you want to quickly test models locally, add the path of the testing file to the parameter **test_file_path** in the "src/config.yaml" file and run the command from the root directory: </br>
+```bash
+python src\deployment\classification.py 
+``` 
+This outputs the dataframe with all identified car parts and a list with all car parts which are not identified by the models (located in the "final_models" folder). The output is only visible in the terminal and is not stored.
+
+### Unittests
 In order to test functions individually and independently for proper operation, unit tests were developed using the pyTest library. These can be executed in the root folder by using the following command:
 ``` 
 pytest 
