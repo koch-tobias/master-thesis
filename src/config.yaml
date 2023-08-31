@@ -2,9 +2,8 @@
 ##             PATH SETTINGS            ##
 ##########################################
 paths:
- folder_processed_dataset: data/processed/24082023_1721/    # Path to the proprocessed data folder which will be used to train the model
- test_file_path: data/raw/G20_prismaexport-20230621-143916.xls # Path to a file which should be used to test the API
- project_path: C:/Users/q617269/Desktop/Masterarbeit_Tobias/master-thesis # Path to the projekt directory
+  test_file_path: data/raw/G20_prismaexport-20230621-143916.xls # Path to a file which should be used to test the API
+  project_path: C:/Users/q617269/Desktop/Masterarbeit_Tobias/master-thesis # Path to the projekt directory
 
 ##########################################
 ##           LABELING SETTINGS          ##
@@ -14,234 +13,210 @@ labels:
   binary_label_1: Ja                     # Label which will be converted to 1 [default = Ja]
   binary_label_0: Nein                   # Label which will be converted to 0 [default = Nein]
   multiclass_column: Einheitsname        # Column name with the multi classes [default = Einheitsname]
+keep_modules:                            # This modules are used, all other modules will be not considered
+  - FBEP
+  - CE05
+  - CD07
+relevant_features:                       # List of all relevant features from the raw data which will be kept in the labeled data                   
+  - Sachnummer
+  - Benennung (dt)
+  - X-Min
+  - X-Max
+  - Y-Min
+  - Y-Max
+  - Z-Min
+  - Z-Max
+  - ox
+  - oy
+  - oz
+  - xx
+  - xy
+  - xz
+  - yx
+  - yy
+  - yz
+  - zx
+  - zy
+  - zz
+  - Wert
+  - Einheit
+  - Gewichtsart
+  - L-Kz.
+  - Kurzname
+  - L/R-Kz.
+  - Modul (Nr)
+  - Code
 
 ##########################################
 ##      DATA AUGMENTATION SETTINGS      ##
 ##########################################
 gpt_settings:                     
- temperature: 0.6                        # [default = 0.6]
- api_version: 2023-03-15-preview         # [default = 2023-03-15-preview]
- api_key: 9e6fa24631f54cf58866766bd31a2bff  
+  temperature: 0.6                        # [default = 0.6]
+  api_version: 2023-03-15-preview         # [default = 2023-03-15-preview]
+  api_key: 9e6fa24631f54cf58866766bd31a2bff  
 
 ##########################################
 ##    SETTINGS FOR DATASET GENERATION   ##
 ##########################################
-general_params:
- seed: 42
- cut_percent_of_front: 0.18               # All car parts which are in the X percent of the front of the car will be deleted (no relevant car parts in the front of the car) 
- # List of all relevant features from the raw data which will be kept in the labeled data
- relevant_features:                       
-   - Sachnummer
-   - Benennung (dt)
-   - X-Min
-   - X-Max
-   - Y-Min
-   - Y-Max
-   - Z-Min
-   - Z-Max
-   - ox
-   - oy
-   - oz
-   - xx
-   - xy
-   - xz
-   - yx
-   - yy
-   - yz
-   - zx
-   - zy
-   - zz
-   - Wert
-   - Einheit
-   - Gewichtsart
-   - L-Kz.
-   - Kurzname
-   - L/R-Kz.
-   - Modul (Nr)
-   - Code
- check_features_for_nan_values:           
-   - Sachnummer
-   - Benennung (dt)
-   - X-Min
-   - X-Max
-   - Y-Min
-   - Y-Max
-   - Z-Min
-   - Z-Max
-   - ox
-   - oy
-   - oz
-   - xx
-   - xy
-   - xz
-   - yx
-   - yy
-   - yz
-   - zx
-   - zy
-   - zz
- # List of all features (except of the designation column) which are used to train the model
- features_for_model:                    
-   - volume
-   - Wert
-   - center_x
-   - center_y
-   - center_z
-   - length
-   - width
-   - height
-   - theta_x
-   - theta_y
-   - theta_z
- # List of all features which represent the bounding boxes
- bounding_box_features_original:          
-   - X-Min
-   - X-Max
-   - Y-Min
-   - Y-Max
-   - Z-Min
-   - Z-Max
-   - ox
-   - oy
-   - oz
-   - xx
-   - xy
-   - xz
-   - yx
-   - yy
-   - yz
-   - zx
-   - zy
-   - zz
-   - Wert
- # This modules are used, all other modules will be not considered
- keep_modules:                          
-   - FBEP
-   - CE05
-   - CD07
- car_part_designation: Benennung (dt)   # Column of the designation (text) which will be used for training
- use_only_text: False                   # True = Generate the dataset with only car part designation as feature
+dataset_params:
+  seed: 42
+  cut_percent_of_front: 0.18               # All car parts which are in the X percent of the front of the car will be deleted (no relevant car parts in the front of the car)
+  car_part_designation: Benennung (dt)     # Column of the designation (text) which will be used for training
+  use_only_text: False                     # True = Generate the dataset with only car part designation as feature
+  bounding_box_features_original:          # List of all features which represent the bounding boxes
+    - X-Min
+    - X-Max
+    - Y-Min
+    - Y-Max
+    - Z-Min
+    - Z-Max
+    - ox
+    - oy
+    - oz
+    - xx
+    - xy
+    - xz
+    - yx
+    - yy
+    - yz
+    - zx
+    - zy
+    - zz
+    - Wert
+  features_for_model:                       # List of all features (except of the designation column) which are used to train the model               
+    - volume
+    - Wert
+    - center_x
+    - center_y
+    - center_z
+    - length
+    - width
+    - height
+    - theta_x
+    - theta_y
+    - theta_z
+  train_val_split: 0.3                    # The dataset will be split into (1-X)*100 percent train set and x*100 percent validation set -> [default = 0.3]
+  val_test_split: 0.5                     # The validation set will be split into (1-X)*100 percent validation set and x*100 percent test set -> [default = 0.5]
 
 ##########################################
-##          PREDICTION SETTINGS         ##
+##      CLASSIFICATION SETTINGS         ##
 ##########################################
 
 prediction_settings:
-  prediction_threshold: 0.60       # The probality of the prediction must be higer than X*100 percent that a car part will be classified as relevant (1=relevant, 0=not relevant)
+  prediction_threshold: 0.60              # The probality of the prediction must be higer than X*100 percent that a car part will be classified as relevant (1=relevant, 0=not relevant)
 
 ##########################################
 ##        GENERAL TRAIN SETTINGS        ##
 ##########################################
 
 train_settings:
- train_binary_model: False          # True = Training a binary model
- train_multiclass_model: True     # True = Training a multiclass model
- ml-method: xgboost               # Choose lightgbm, catboost, or xgboost
- k-folds: 4                        # Number of folds used for cross validation -> [default = 4]
- early_stopping: 50                # Patience which is used for early stopping -> [default = 50]
- train_val_split: 0.3              # The dataset will be split into (1-X)*100 percent train set and x*100 percent validation set -> [default = 0.3]
- val_test_split: 0.5               # The validation set will be split into (1-X)*100 percent validation set and x*100 percent test set -> [default = 0.5]
- top_x_models_for_cv: 0.10         # X*100 percent of the trained models with grid search hyperparameter tuning will be used for validation with k-fold crossvalidation [default = 10]
- n_estimators: 10000               # Number of iteration the model will be trained [default = 10000]
+  folder_processed_dataset: data/processed/24082023_1721/    # Path to the proprocessed data folder which will be used to train the model
+  train_binary_model: False                # True = Training a binary model
+  train_multiclass_model: True             # True = Training a multiclass model
+  ml-method: xgboost                       # Choose lgbm, catboost, or xgboost
+  k-folds: 4                               # Number of folds used for cross validation -> [default = 4]
+  early_stopping: 50                       # Patience which is used for early stopping -> [default = 50]
+  top_x_models_for_cv: 0.10                # X*100 percent of the trained models with grid search hyperparameter tuning will be used for validation with k-fold crossvalidation [default = 10]
+  n_estimators: 10000                      # Number of iteration the model will be trained [default = 10000]
 
 ##########################################
 ##          LGBM TRAIN SETTINGS         ##
 ##########################################
 
 lgbm_params_binary:
- boosting_type: gbdt              # I tried gbdt and dart -> gbdt performed better due to slight overfitting in dart -> default = gbdt
- metrics:
-   - auc                          # I have tested also auc and f1_score. Better performance with auc -> default = auc 
-   - binary_logloss               # I have tested binary_logloss, cross_entropy_lambda, cross_entropy. No significant difference -> default = binary_logloss
+  boosting_type: gbdt                      # I tried gbdt and dart -> gbdt performed better due to slight overfitting in dart -> default = gbdt
+  metrics:
+    - auc                                  # I have tested also auc and f1_score. Better performance with auc -> default = auc 
+    - binary_logloss                       # I have tested binary_logloss, cross_entropy_lambda, cross_entropy. No significant difference -> default = binary_logloss
 
 lgbm_params_multiclass:
- boosting_type: gbdt
- metrics:
-   - auc_mu
-   - multi_logloss
+  boosting_type: gbdt
+  metrics:
+    - auc_mu
+    - multi_logloss
 
-lgbm_hyperparameter:        # Hyperparameters used for grid search hyperparameter tuning
- lr:
-   - 0.05
-   - 0.07
-   - 0.1
- max_depth:
-   - 3
-   - 5
-   - 7
- colsample_bytree:
-   - 0.5
-   - 0.7
-   - 0.9
- min_child_samples:
-   - 20
-   - 30
-   - 40
+lgbm_hyperparameter:                      # Hyperparameters used for grid search hyperparameter tuning
+  lr:
+    - 0.05
+    - 0.07
+    - 0.1
+  max_depth:
+    - 3
+    - 5
+    - 7
+  colsample_bytree:
+    - 0.5
+    - 0.7
+    - 0.9
+  min_child_samples:
+    - 20
+    - 30
+    - 40
 
 ##########################################
 ##       XGBoost TRAIN SETTINGS         ##
 ##########################################
 
 xgb_params_binary:
- boosting_type: gbtree
- metrics:
-   - auc
-   - logloss
+  boosting_type: gbtree
+  metrics:
+    - auc
+    - logloss
 
 xgb_params_multiclass:
- boosting_type: gbtree
- metrics:
-   - auc
-   - mlogloss
+  boosting_type: gbtree
+  metrics:
+    - auc
+    - mlogloss
 
-xgb_hyperparameter:       # Hyperparameters used for grid search hyperparameter tuning
- lr:
-   - 0.05
-   - 0.1
-   - 0.3
- max_depth:
-   - 4
-   - 6
-   - 9
- colsample_bytree:
-   - 0.5
-   - 0.7
-   - 0.9
- gamma:
-   - 0
-   - 0.2
-   - 0.5
+xgb_hyperparameter:                       # Hyperparameters used for grid search hyperparameter tuning
+  lr:
+    - 0.05
+    - 0.1
+    - 0.3
+  max_depth:
+    - 4
+    - 6
+    - 9
+  colsample_bytree:
+    - 0.5
+    - 0.7
+    - 0.9
+  gamma:
+    - 0
+    - 0.2
+    - 0.5
 
 ##########################################
 ##       CatBoost TRAIN SETTINGS        ##
 ##########################################
 
 cb_params_binary:                 
- boosting_type: Plain
- metrics:
-   - AUC
-   - Logloss
+  boosting_type: Plain
+  metrics:
+    - AUC
+    - Logloss
 
 cb_params_multiclass:
- boosting_type: Plain
- metrics:
-   - AUC
-   - MultiClass
+  boosting_type: Plain
+  metrics:
+    - AUC
+    - MultiClass
 
-cb_hyperparameter:                    # Hyperparameters used for grid search hyperparameter tuning
- lr:
-   - 0.05
-   - 0.07
-   - 0.1
- depth:
-   - 4
-   - 6
-   - 9
- colsample_bylevel:
-   - 0.5
-   - 0.7
-   - 0.9
- min_data_in_leaf:
-   - 20
-   - 30
-   - 40
+cb_hyperparameter:                          # Hyperparameters used for grid search hyperparameter tuning
+  lr:
+    - 0.05
+    - 0.07
+    - 0.1
+  depth:
+    - 4
+    - 6
+    - 9
+  colsample_bylevel:
+    - 0.5
+    - 0.7
+    - 0.9
+  min_data_in_leaf:
+    - 20
+    - 30
+    - 40
