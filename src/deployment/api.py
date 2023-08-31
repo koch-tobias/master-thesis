@@ -6,8 +6,8 @@ from fastapi.responses import JSONResponse
 from pyxlsb import open_workbook as open_xlsb
 from io import BytesIO
 
-from classification import Identifier
-from utils import read_file
+from src.deployment.classification import Identifier
+from src.utils import read_file
 
 app = FastAPI() # Initialize api
 
@@ -43,7 +43,7 @@ async def post_relevant_parts(file: UploadFile = File(...)):
     if file.filename.endswith(".xlsx") or file.filename.endswith(".xls"):
         try:
             contents = await file.read()
-            df = read_file(BytesIO(contents), raw=True)         
+            df, ncar = read_file(BytesIO(contents), raw=True)         
         except Exception:
             return JSONResponse(status_code=400, content={"error": "Error reading file. Make sure it is a valid Excel file."})
       
