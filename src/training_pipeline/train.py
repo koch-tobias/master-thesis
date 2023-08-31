@@ -337,7 +337,8 @@ def train_model(folder_path: str, binary_model: bool, method: str):
         hp_dict = config["cb_hyperparameter"]
    
     # Training with the hold out method and grid search hyperparameter tuning
-    X_train, y_train, X_val, y_val, X_test, y_test, df_preprocessed, df_train, df_val, df_test, weight_factor = load_training_data(binary_model=binary_model)
+    data_folder = config["train_settings"]["folder_processed_dataset"]
+    X_train, y_train, X_val, y_val, X_test, y_test, df_preprocessed, df_train, df_val, df_test, weight_factor = load_training_data(data_folder, binary_model=binary_model)
 
     # Copy the label encoder from the dataset path to the model folder. This file is used in the deployment process.
     copy_labelencoder(model_folder_path)
