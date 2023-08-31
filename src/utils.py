@@ -29,7 +29,7 @@ def load_training_data(binary_model: bool):
         weight_factor: A float value indicating the weight factor for the dataset.
     '''
     # Get dataset path from config.yaml
-    data_folder = config["paths"]["folder_processed_dataset"]
+    data_folder = config["train_settings"]["folder_processed_dataset"]
     path_trainset = os.path.join(data_folder, "processed_dataset.csv")  
 
     # Load dataset
@@ -91,10 +91,10 @@ def prepare_columns(df):
     
     return df
 
-def read_file(file, folder_name, raw: bool):
+def read_file(file_path, raw: bool):
     if raw:
         # Load the excel into a pandas dataframe, delete the header and declare the second row as new header
-        df = pd.read_excel(os.path.join(folder_name, file), header=None, skiprows=1)
+        df = pd.read_excel(file_path, header=None, skiprows=1)
         df.columns = df.iloc[0]
         df = df.iloc[1:]
 
@@ -105,13 +105,9 @@ def read_file(file, folder_name, raw: bool):
         ncar = df.iloc[0]['Code']
 
         df = prepare_columns(df)
-
-        old_path = os.path.join(folder_name, file)
-        new_path = os.path.join("data/raw", ncar + '_' + file) 
-        shutil.move(old_path, new_path)
     
     else:
-        df = pd.read_csv(os.path.join(folder_name, file))
+        df = pd.read_csv(file_path)
         ncar = file.split("_")[0]
         df["Derivat"] = ncar
     
@@ -146,7 +142,8 @@ def load_data_into_df(raw: bool) -> tuple[list, str]:
         # Loop through all files in the folder and open them as dataframes
         for file in os.listdir(folder_name):
                 try:
-                    df, ncar = read_file(file, folder_name, raw)
+                    file_path = os.path.join(folder_name, file)
+                    df, ncar = read_file(file_path, raw)
                 except:
                     logger.info(f"Error reading file {file}. Skipping...")
                     continue
@@ -241,12 +238,12 @@ def store_trained_model(model, metrics: str, best_iteration: int, val_auc: float
         f.write("Trained Iterations: {}\n".format(best_iteration))
         f.close()
     else:
-        dataset_path = "Dataset: {}\n".format(config["paths"]["folder_processed_dataset"])
+        dataset_path = "Dataset: {}\n".format(config["train_settings"]["folder_processed_dataset"])
         model_folder = "Model folder path: {}\n".format(model_folder_path)
         f= open(model_folder_path + "logging.txt","w+")
         f.write(dataset_path)
         f.write(model_folder)
-        f.write("use_only_text: {}\n".format(config["general_params"]["use_only_text"]))
+        f.write("use_only_text: {}\n".format(config["dataset_params"]["use_only_text"]))
         f.write("Method: {}".format(config["train_settings"]["ml-method"]))
         f.write("\n_________________________________________________\n")
         f.write("Best model after hyperparameter tuning:\n")
