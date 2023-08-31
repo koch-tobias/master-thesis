@@ -84,13 +84,14 @@ def prepare_columns(df):
                 # Remove the double quotes and replace commas with dots
                 modified_value = str(value).replace('"', '').replace(',', '.')
                 # Update the value in the DataFrame
-                df.at[i, column] = modified_value
+                df.at[i+1, column] = modified_value
     
     return df
 
 def read_file(file_path, raw: bool):
     if raw:
         # Load the excel into a pandas dataframe, delete the header and declare the second row as new header
+
         df = pd.read_excel(file_path, header=None, skiprows=1)
         df.columns = df.iloc[0]
         df = df.iloc[1:]
@@ -105,7 +106,7 @@ def read_file(file_path, raw: bool):
     
     else:
         df = pd.read_csv(file_path)
-        ncar = file.split("_")[0]
+        ncar = file_path.split("_")[0]
         df["Derivat"] = ncar
     
     return df, ncar
