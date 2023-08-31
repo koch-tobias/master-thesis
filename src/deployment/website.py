@@ -39,7 +39,7 @@ def df_to_excel(df):
     processed_data = output.getvalue()
     return processed_data
 
-@st.cache
+@st.cache_resource
 def logout():
     authenticator.logout('Logout', 'main')
 
@@ -57,7 +57,6 @@ def hide_streamlit_header_footer():
 if authentication_status:
     hide_streamlit_header_footer()
 
-    st.title("Car Part Identification")
     uploaded_file = st.sidebar.file_uploader("Upload your Excel file here...", type="xls")
     st.sidebar.write("After a successful upload, it takes a few seconds for the AI ​​to identify the relevant car parts")
 
@@ -70,57 +69,61 @@ if authentication_status:
     if uploaded_file is not None:
         st.session_state['uploaded_file'] = uploaded_file
 
+    run_identification = True
     if 'uploaded_file' in st.session_state:
-        df = read_file(st.session_state['uploaded_file'], raw=True)
-        df_preprocessed, df_relevant_parts, einheitsname_not_found, ncar = Identifier.classification_on_new_data(df)
-        df_relevant_parts.rename(columns={'L/R-Kz.':'Linke/Rechte Ausfuehrung'}, inplace=True)
+        if run_identification:
+            df, ncar = read_file(st.session_state['uploaded_file'], raw=True)
+            df_preprocessed, df_relevant_parts, einheitsname_not_found, ncar = Identifier.classification_on_new_data(df)
+            df_relevant_parts.rename(columns={'L/R-Kz.':'Linke/Rechte Ausfuehrung'}, inplace=True)
 
 
-        if username == "tkoch":
-            df_prediction = df_relevant_parts.loc[:,["Sachnummer", "Benennung (dt)", "Einheitsname", "Wahrscheinlichkeit Relevanz", "Wahrscheinlichkeit Einheitsname", "In Bounding-Box-Position von"]]
-        else:
-            df_prediction = df_relevant_parts.loc[:,["Sachnummer", "Benennung (dt)", "Einheitsname"]]
+            if username == "admin":
+                df_prediction = df_relevant_parts.loc[:,["Sachnummer", "Benennung (dt)", "Einheitsname", "Wahrscheinlichkeit Relevanz", "Wahrscheinlichkeit Einheitsname"]]
+            else:
+                df_prediction = df_relevant_parts.loc[:,["Sachnummer", "Benennung (dt)", "Einheitsname"]]
 
-        st.write(f"## Relevant car parts for the {ncar}:")
-        st.write(df_prediction)
-        df_xlsx = df_to_excel(df_prediction)
-        st.download_button(label='🚘 Download List',
-                                        data=df_xlsx ,
-                                        file_name= f'{ncar}_relevant_car_parts.xlsx')
+            st.write(f"## Relevant car parts for the {ncar}:")
+            st.write(df_prediction)
+            df_xlsx = df_to_excel(df_prediction)
+            st.download_button(label='🚘 Download List',
+                                            data=df_xlsx ,
+                                            file_name= f'{ncar}_relevant_car_parts.xlsx')
 
-        if len(einheitsname_not_found) > 0:
-            st.write("The following parts are not found in the uploaded data. Please check manually: ")
-        
-        col1, col2, col3 = st.columns([1, 5, 1])
-        with col2:
             if len(einheitsname_not_found) > 0:
-                st.write("\t" + "- " + "\n- ".join(einheitsname_not_found))
+                st.write("The following parts are not found in the uploaded data. Please check manually: ")
+            
+            col1, col2, col3 = st.columns([1, 5, 1])
+            with col2:
+                if len(einheitsname_not_found) > 0:
+                    st.write("\t" + "- " + "\n- ".join(einheitsname_not_found))
 
-        st.subheader("Feedback Email Template")
+            st.subheader("Feedback Email Template")
 
-        st.markdown("""
-        The AI is still in the development process so it is important to detect and analyze errors. 
-        Please let me know if you are missing something in the list of relevant car parts. Positive feedback also helps to improve the model. 
-        \n Thank you very much for your support! 
-        """)
-        with st.expander("Template", expanded=False):
             st.markdown("""
-            **To:** tobias.ko.koch@bmw.de and julian.chander@bmw.de
-
-            **Subject:** Feedback AI Model (Website)
-
-            **Body:**
-
-            Internal Model Name: [G65]
-
-            Model Name: [X5]
-
-            Part Number (Sachnummer): [P0HL8W7]
-
-            Negative Feedback: [Leider fehlt der Himmel]
-
-            Positive Feedback: [Alle anderen Bauteile wurden richtig ausgegeben]
+            The AI is still in the development process so it is important to detect and analyze errors. 
+            Please let me know if you are missing something in the list of relevant car parts. Positive feedback also helps to improve the model. 
+            \n Thank you very much for your support! 
             """)
+            with st.expander("Template", expanded=False):
+                st.markdown("""
+                **To:** tobias.ko.koch@bmw.de and julian.chander@bmw.de
+
+                **Subject:** Feedback AI Model (Website)
+
+                **Body:**
+
+                Internal Model Name: [G65]
+
+                Model Name: [X5]
+
+                Part Number (Sachnummer): [P0HL8W7]
+
+                Negative Feedback: [Leider fehlt der Himmel]
+
+                Positive Feedback: [Alle anderen Bauteile wurden richtig ausgegeben]
+                """)
+
+            run_identification = False
         
     else:
         st.subheader(f"Welcome to CaPI, please follow the instructions for downloading the car part structure tree:")
