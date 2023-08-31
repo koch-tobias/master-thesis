@@ -7,7 +7,7 @@ WORKDIR /code
 # Copy the file with the requirements to the /code directory.
 COPY ./requirements.txt /code/requirements.txt
 COPY ./src /code/src
-COPY ./models /code/models
+COPY ./final_models /code/final_models
 COPY ./__init__.py /code/__init__.py
 
 # Install the package dependencies in the requirements file.
