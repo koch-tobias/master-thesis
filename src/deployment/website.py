@@ -7,6 +7,7 @@ from io import BytesIO
 from pyxlsb import open_workbook as open_xlsb
 
 from classification import Identifier
+from src.utils import read_file
 
 import yaml
 from yaml.loader import SafeLoader
@@ -69,9 +70,7 @@ if authentication_status:
         st.session_state['uploaded_file'] = uploaded_file
 
     if 'uploaded_file' in st.session_state:
-        df = pd.read_excel(st.session_state['uploaded_file'], header=None, skiprows=1)
-        df.columns = df.iloc[0]
-        df = df.iloc[1:] 
+        df = read_file(st.session_state['uploaded_file'], raw=True)
         df_preprocessed, df_relevant_parts, einheitsname_not_found, ncar = Identifier.classification_on_new_data(df)
         df_relevant_parts.rename(columns={'L/R-Kz.':'Linke/Rechte Ausfuehrung'}, inplace=True)
 
@@ -105,7 +104,7 @@ if authentication_status:
         """)
         with st.expander("Template", expanded=False):
             st.markdown("""
-            **To:** tobias.ko.koch@bmw.de
+            **To:** tobias.ko.koch@bmw.de and julian.chander@bmw.de
 
             **Subject:** Feedback AI Model (Website)
 
@@ -123,7 +122,7 @@ if authentication_status:
             """)
         
     else:
-        st.subheader(f"Hello {name}, please follow the instructions for downloading the car part structure tree:")
+        st.subheader(f"Welcome to CaPI, please follow the instructions for downloading the car part structure tree:")
         st.image("images/Instruction_data_collection/Anleitung_ExcelDownload.PNG")
         st.image("images/Instruction_data_collection/Anleitung_ExcelDownload2.PNG")
 elif authentication_status == False:

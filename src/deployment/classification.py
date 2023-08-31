@@ -15,6 +15,7 @@ sys.path.append(config['paths']['project_path'])
 from src.data_preparation_pipeline.data_preparation import Preperator
 from src.data_preprocessing_pipeline.feature_engineering import Feature_Engineering
 from src.data_preprocessing_pipeline.data_cleaning import DataCleaner
+from src.utils import read_file
 
 class Identifier():
 
@@ -286,9 +287,7 @@ class Identifier():
         df_relevant_parts = df_relevant_parts[df_relevant_parts['Relevant fuer Messung'] == 'Ja']
         logger.success("Relevant car parts are identified!")
         
-        
-        logger.info("Valid identified car parts by comparing the position of the new car part to them in the trainset")
-
+        '''
         logger.info("Load dataset used for training..")
         trainset = pd.read_csv(dataset_path_binary + "processed_dataset.csv")
         trainset_relevant_parts = trainset[trainset["Relevant fuer Messung"] == "Ja"]
@@ -297,6 +296,7 @@ class Identifier():
         unique_names.sort()
         logger.success("Dataset loaded!")
         
+        logger.info("Valid identified car parts by comparing the position of the new car part to them in the trainset")
         for index, row in df_relevant_parts.iterrows():
             for name in unique_names:
                 trainset_name = trainset_relevant_parts[(trainset_relevant_parts["Einheitsname"] == name)].reset_index(drop=True)
@@ -323,10 +323,15 @@ class Identifier():
                                             df_relevant_parts.loc[index,'Einheitsname'] = name
                                         break
         logger.success("Validation successfull!")
-        
+        '''
         logger.info("Prepare output...")
+        # Load list of the uniform names (classes)
+        with open(model_folder_path_binary + "list_of_uniform_names.pkl", 'rb') as names:
+            uniform_names = pickle.load(names)
+            
+        # Check which uniform names are not identified
         einheitsname_not_found = []
-        for name in unique_names:        
+        for name in uniform_names:        
             if name not in df_relevant_parts['Einheitsname'].unique():
                 einheitsname_not_found.append(name)
 
@@ -342,13 +347,8 @@ class Identifier():
 # %%
 def main():
     
-    data_path = 'data/raw/G65_prismaexport-20230515-85131.xls'
-    df = pd.read_excel(data_path, header=None, skiprows=1)
-    df.columns = df.iloc[0]
-    df = df.iloc[1:]
-
-    # Drop all empty columns
-    df = df.dropna(how= "all", axis=1, inplace=False)
+    data_path = config["paths"]["test_file_path"]
+    df = read_file(data_path)
 
     df_preprocessed, df_relevant_parts, einheitsname_not_found, ncar = Identifier.classification_on_new_data(df)
     print(df_relevant_parts)

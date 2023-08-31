@@ -7,6 +7,7 @@ from pyxlsb import open_workbook as open_xlsb
 from io import BytesIO
 
 from classification import Identifier
+from utils import read_file
 
 app = FastAPI() # Initialize api
 
@@ -42,10 +43,7 @@ async def post_relevant_parts(file: UploadFile = File(...)):
     if file.filename.endswith(".xlsx") or file.filename.endswith(".xls"):
         try:
             contents = await file.read()
-            df = pd.read_excel(BytesIO(contents))
-            df.columns = df.iloc[0]
-            df = df.iloc[1:]
-            
+            df = read_file(BytesIO(contents), raw=True)         
         except Exception:
             return JSONResponse(status_code=400, content={"error": "Error reading file. Make sure it is a valid Excel file."})
       
