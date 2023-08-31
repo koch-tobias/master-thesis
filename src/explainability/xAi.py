@@ -10,6 +10,7 @@ import warnings
 warnings.filterwarnings("ignore", message=".*The 'nopython' keyword.*")
 import shap
 
+from loguru import logger
 import os
 import pickle
 import yaml
@@ -66,6 +67,8 @@ class xAi:
                else:
                      df_features.loc[j,"Feature"] = feature_dict[j]
 
+            df_features = df_features.sort_values(by=['Importance Score'], ascending=False)
+
             df_features.to_csv(path_feature_importance)
 
          return df_features
@@ -83,14 +86,14 @@ class xAi:
       '''
 
       # Get top 20 features
-      topx_important_features = df_features.sort_values(by=["Importance Score"], ascending=False).head(20)
+      topx_important_features = df_features.head(20)
       topx_important_features = topx_important_features.index.tolist()
       feature_list = df_features["Feature"].values.tolist()
 
       return feature_list, topx_important_features
 
    @staticmethod
-   def plot_shap_summary(model, vocabulary, model_folder_path):
+   def plot_shap_summary(model, vocabulary, dataset_folder, model_folder_path):
 
       df_features = xAi.add_feature_importance(model, vocabulary, model_folder_path)
       feature_list, topx_important_features = xAi.get_features(df_features)
@@ -99,7 +102,7 @@ class xAi:
       explainer = shap.TreeExplainer(model)
 
       # Load dataset
-      X_train, y_train, X_val, y_val, X_test, y_test, df_preprocessed, df_train, df_val, df_test, weight_factor = load_training_data(binary_model=True)
+      X_train, y_train, X_val, y_val, X_test, y_test, df_preprocessed, df_train, df_val, df_test, weight_factor = load_training_data(dataset_folder, binary_model=True)
 
       X = np.concatenate((X_train, X_val), axis=0)
       y = np.concatenate((y_train, y_val), axis=0)
@@ -113,12 +116,6 @@ class xAi:
       return df_features, X, y
 
    @staticmethod
-   def load_model(model_path):
-      with open(model_path + "/final_model.pkl", "rb") as fid:
-         model = pickle.load(fid)
-      return model
-
-   @staticmethod
    def create_tree(model, X, y, model_path, tree_index: int):
       os.environ["PATH"] += os.pathsep + "C:/Program Files/Graphviz/bin"
       plt.clf()
@@ -126,7 +123,7 @@ class xAi:
          ax = lgb.plot_tree(model.booster_, orientation='vertical', tree_index=tree_index, figsize=(20, 8), show_info=['split_gain'])
       elif isinstance(model, xgb.Booster):
          ax = xgb.plot_tree(model, num_trees=tree_index)
-      elif isinstance(model, cbo.CatBoostClassifier) or isinstance(model, cbo.CatBoostRegressor):
+      elif isinstance(model, cbo.CatBoostClassifier):
          pool = cbo.Pool(X, y, feature_names=list(X.columns))
          ax = cbo.plot_tree(model.booster_, orientation='vertical', tree_idx=tree_index, figsize=(20, 8), show_info=['split_gain'])
 
@@ -139,20 +136,25 @@ class xAi:
          os.makedirs(path)
       
 def main():
-
+   logger.info("Store plots to explain the binary model...")
    model_path_binary = "final_models/Binary_model"
    model, vectorizer, vocabulary, bbox_features = Identifier.get_model(model_path_binary)
    xai_folder_path = model_path_binary + "/xAi/"
    xAi.create_path(xai_folder_path)
-   df_features, X, y = xAi.plot_shap_summary(model, vocabulary, model_folder_path=xai_folder_path)
+   dataset_folder = Identifier.search_in_logging(text="Dataset:", model_folder_path=model_path_binary)
+   df_features, X, y = xAi.plot_shap_summary(model, vocabulary,dataset_folder, model_folder_path=xai_folder_path)
    xAi.create_tree(model, X, y, xai_folder_path, tree_index=300)
 
+   logger.info("Store plots to explain the multiclass model...")
    model_path_multiclass = "final_models/Multiclass_model/"
    model, vectorizer, vocabulary, bbox_features = Identifier.get_model(model_path_multiclass)
    xai_folder_path = model_path_multiclass + "/xAi/"
    xAi.create_path(xai_folder_path)
-   df_features, X, y = xAi.plot_shap_summary(model, vocabulary, model_folder_path=xai_folder_path)
+   dataset_folder = Identifier.search_in_logging(text="Dataset:", model_folder_path=model_path_binary)
+   df_features, X, y = xAi.plot_shap_summary(model, vocabulary, dataset_folder, model_folder_path=xai_folder_path)
    xAi.create_tree(model, X, y, xai_folder_path, tree_index=300)
+
+   logger.info("xAi plots successfully stored!")
 
 if __name__ == "__main__":
     
