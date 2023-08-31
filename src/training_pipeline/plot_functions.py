@@ -360,7 +360,7 @@ class Visualization:
             plt.savefig(model_folder_path + 'confusion_matrix.png')  
 
         else:
-            with open(config["paths"]["folder_processed_dataset"] + 'label_encoder.pkl', 'rb') as f:
+            with open(config["train_settings"]["folder_processed_dataset"] + 'label_encoder.pkl', 'rb') as f:
                 le = pickle.load(f)
 
             class_names = []

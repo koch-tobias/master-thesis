@@ -83,13 +83,13 @@ class DataGenerator:
         X = DataCleaner.nchar_text_to_vec(data=df, model_folder_path=model_folder_path)
 
         # Combine text features with bounding box features
-        features = config["general_params"]["features_for_model"]
+        features = config["dataset_params"]["features_for_model"]
         bbox_features_dict = {"features_for_model": features}
         with open(model_folder_path + 'boundingbox_features.pkl', 'wb') as fp:
             pickle.dump(bbox_features_dict, fp)
 
         # Use only the text or additionally the bounding box information to generate the datasets 
-        if config["general_params"]["use_only_text"] == False:
+        if config["dataset_params"]["use_only_text"] == False:
             X = np.concatenate((X, df[features].values), axis=1)
 
         if binary_model:
@@ -110,8 +110,8 @@ class DataGenerator:
 
         # Split the dataset into training, validation and testsplit
         indices = np.arange(X.shape[0])
-        X_train, X_val, y_train, y_val, indices_train, indices_val = train_test_split(X, y, indices, test_size=config["train_settings"]["train_val_split"], stratify=y, random_state=config["general_params"]["seed"])
-        X_val, X_test, y_val, y_test, indices_val, indices_test = train_test_split(X_val, y_val, indices_val, test_size=config["train_settings"]["val_test_split"], stratify=y_val, random_state=config["general_params"]["seed"])
+        X_train, X_val, y_train, y_val, indices_train, indices_val = train_test_split(X, y, indices, test_size=config["dataset_params"]["train_val_split"], stratify=y, random_state=config["dataset_params"]["seed"])
+        X_val, X_test, y_val, y_test, indices_val, indices_test = train_test_split(X_val, y_val, indices_val, test_size=config["dataset_params"]["val_test_split"], stratify=y_val, random_state=config["dataset_params"]["seed"])
 
         # Generate dataframes of the training, validation and test sets
         df_train = df.iloc[indices_train]
@@ -183,14 +183,14 @@ class DataGenerator:
     def generate_dataset() -> None:
         # Create the storage path using the current datetime
         dateTimeObj = datetime.now()
-        timestamp = dateTimeObj.strftime("%d%m%Y_%H%M")
+        timestamp = dateTimeObj.strftime("%Y%m%d_%H%M")
         storage_path = f"data/processed/{timestamp}/"
 
         # Load the labeled data into a list of dataframes
         dataframes_list, ncars = load_data_into_df(raw=False)
 
         # Combine all dataframes to one
-        df_combined = combine_dataframes(dataframes_list, relevant_features=config["general_params"]["check_features_for_nan_values"], ncars=ncars)
+        df_combined = combine_dataframes(dataframes_list, relevant_features=config["dataset_params"]["bounding_box_features_original"], ncars=ncars)
 
         # Transdorm and add new features
         df_new_features = Feature_Engineering.add_new_features(df_combined)

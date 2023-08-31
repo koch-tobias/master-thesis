@@ -68,7 +68,7 @@ class Preperator:
         dataframe_new = pd.DataFrame(columns=dataframe.columns)
 
         # Iterate over each module which should be kept
-        for module in config["general_params"]["keep_modules"]:
+        for module in config["keep_modules"]:
             endindex = -1
             try: 
                 # Iterate over each sample where the module number equals the module which should be kept.
@@ -104,7 +104,7 @@ class Preperator:
             dataframe_new: A new dataframe with only relevant features and converted datatypes.
         '''
         # Keep only features which are identified as relevant for the preprocessing, the predictions or for the users' next steps
-        dataframe_new = dataframe[config["general_params"]["relevant_features"]]
+        dataframe_new = dataframe[config["relevant_features"]]
         
         # Dict which is used to transform the data types of the bounding box features 
         convert_dict = {
@@ -164,7 +164,7 @@ class Preperator:
         logger.info("Start preparing the data...")
 
         # Check if all necassary columns are available in the dataset
-        missing_columns = Preperator.check_if_columns_available(dataframe=dataframe, relevant_features=config["general_params"]["relevant_features"])
+        missing_columns = Preperator.check_if_columns_available(dataframe=dataframe, relevant_features=config["relevant_features"])
         if len(missing_columns) > 0:
             logger.exit(f"Please check your dataset. The following attributes are missing: {missing_columns}")
 
@@ -175,7 +175,7 @@ class Preperator:
         dataframe_new = Preperator.car_part_selection(dataframe)
 
         # Delete the NCAR abbreviation due to data security
-        dataframe_new[config["general_params"]["car_part_designation"]] = dataframe_new[config["general_params"]["car_part_designation"]].apply(lambda x: x.replace(ncar, ""))
+        dataframe_new[config["dataset_params"]["car_part_designation"]] = dataframe_new[config["dataset_params"]["car_part_designation"]].apply(lambda x: x.replace(ncar, ""))
         
         # Select relevant features
         dataframe_new = Preperator.feature_selection(dataframe_new)

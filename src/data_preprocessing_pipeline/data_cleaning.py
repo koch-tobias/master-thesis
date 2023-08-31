@@ -39,8 +39,8 @@ class DataCleaner:
             lower_array = np.where(df_new_features['X-Max_transf']<=lower)[0]
             
             # Set the bounding box features to zero if detected as outlier
-            df_new_features.loc[upper_array, config["general_params"]["bounding_box_features_original"]] = 0
-            df_new_features.loc[lower_array, config["general_params"]["bounding_box_features_original"]] = 0
+            df_new_features.loc[upper_array, config["dataset_params"]["bounding_box_features_original"]] = 0
+            df_new_features.loc[lower_array, config["dataset_params"]["bounding_box_features_original"]] = 0
 
         return df_new_features
 
@@ -92,7 +92,7 @@ class DataCleaner:
         Return:
             df: DataFrame with an additional cleaned text column, 'Benennung (bereinigt)' 
         '''
-        df["Benennung (bereinigt)"] = df.apply(lambda x: DataCleaner.prepare_text(x[config['general_params']['car_part_designation']]), axis=1) 
+        df["Benennung (bereinigt)"] = df.apply(lambda x: DataCleaner.prepare_text(x[config['dataset_params']['car_part_designation']]), axis=1) 
 
         return df
 
@@ -219,7 +219,7 @@ class DataCleaner:
         # Delete all samples where the parts are in the front area of the car
         x_min_transf, x_max_transf = df_relevants["X-Min_transf"].min(), df_relevants["X-Max_transf"].max()
         car_length = x_max_transf - x_min_transf
-        cut_point_x = x_min_transf + car_length*config["general_params"]["cut_percent_of_front"]
+        cut_point_x = x_min_transf + car_length*config["dataset_params"]["cut_percent_of_front"]
         df_relevants = df_relevants[df_relevants["X-Min_transf"] > cut_point_x]
 
         # Concatenate the two dataframes

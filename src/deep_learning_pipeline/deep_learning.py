@@ -43,7 +43,7 @@ def model_architecture(lr, dropout, batch_size, epochs, patience, activation, la
     # Setting up the data configs
     data_config = DataConfig(
                                 target=["Relevant fuer Messung"], #target should always be a list. Multi-targets are only supported for regression. Multi-Task Classification is not implemented
-                                continuous_cols=config["general_params"]["features_for_model"],
+                                continuous_cols=config["dataset_params"]["features_for_model"],
                                 categorical_cols=["Benennung (bereinigt)"],
                                 continuous_feature_transform="quantile_normal",
                                 normalize_continuous_features=True
@@ -104,7 +104,7 @@ def create_logfile(model_folder_path, val_auc, best_iteration, index_best_model,
         f= open(model_folder_path + "logging.txt","w+")
         f.write(dataset_path)
         f.write(model_folder)
-        f.write("use_only_text: {}".format(config["general_params"]["use_only_text"]))
+        f.write("use_only_text: {}".format(config["dataset_params"]["use_only_text"]))
         f.write("\n_________________________________________________\n")
         f.write("Best model after hyperparameter tuning:\n")
         f.write("Validation AUC: {}\n".format(val_auc))
@@ -149,7 +149,7 @@ def main():
     X_train, y_train, X_val, y_val, X_test, y_test, df_preprocessed, df_train, df_val, df_test, weight_factor = load_dataset(binary_model=True)
 
     # Keep only relevant features
-    relevant_columns = config["general_params"]["features_for_model"] + ["Benennung (bereinigt)", "Relevant fuer Messung"]
+    relevant_columns = config["dataset_params"]["features_for_model"] + ["Benennung (bereinigt)", "Relevant fuer Messung"]
     df_train = df_train[relevant_columns]
     df_val = df_val[relevant_columns]
     df_test = df_test[relevant_columns]

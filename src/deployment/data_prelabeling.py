@@ -33,7 +33,7 @@ def label_data() -> None:
                 df_with_label_columns.loc[df_with_label_columns['Sachnummer'] == sachnummer, label_column_binary] = config['labels']['binary_label_1']
                 df_with_label_columns.loc[df_with_label_columns['Sachnummer'] == sachnummer, label_column_multiclass] = einheitsname
 
-        features = config["general_params"]["relevant_features"] + [label_column_binary, label_column_multiclass]
+        features = config["relevant_features"] + [label_column_binary, label_column_multiclass]
         df_with_label_columns = df_with_label_columns[features]
         df_with_label_columns.to_csv(f"data/pre_labeled/{ncar}_labeled.csv")
 

@@ -307,7 +307,7 @@ class DataAugmention:
 
             # Check if there are enough car parts of this class to split the data in a balanced way into training, validation and test set
             count_designations = df_new.shape[0]
-            target_nr_of_unique_carparts = math.ceil(2 / config["train_settings"]["train_val_split"])
+            target_nr_of_unique_carparts = math.ceil(2 / config["dataset_params"]["train_val_split"])
 
             # If no enough car parts in the dataset, generate synthetic car parts for that class
             if count_designations < target_nr_of_unique_carparts:
