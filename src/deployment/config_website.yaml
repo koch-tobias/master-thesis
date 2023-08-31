@@ -5,7 +5,8 @@ credentials:
       password: admin
     bmwuser:
       name: bmwuser
-      password: bmwuser
+      password: user
+
 cookie:
   expiry_days: 30
   key: some_signature_key # Must be string
