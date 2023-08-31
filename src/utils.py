@@ -11,7 +11,7 @@ from yaml.loader import SafeLoader
 with open('src/config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
 
-def load_training_data(binary_model: bool):
+def load_training_data(data_folder, binary_model: bool):
     ''' 
     This function loads the preprocessed dataset along with train, validation and test sets from the specified data folder. The binary_model parameter indicates whether the dataset is for a binary classification task or not.
     Args:
@@ -28,7 +28,6 @@ def load_training_data(binary_model: bool):
         weight_factor: A float value indicating the weight factor for the dataset.
     '''
     # Get dataset path from config.yaml
-    data_folder = config["train_settings"]["folder_processed_dataset"]
     path_trainset = os.path.join(data_folder, "processed_dataset.csv")  
 
     # Load dataset
