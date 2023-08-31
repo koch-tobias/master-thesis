@@ -2,25 +2,27 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-import warnings
-warnings.filterwarnings("ignore", message=".*The 'nopython' keyword.*")
-import shap
 import lightgbm as lgb
 import xgboost as xgb
 import catboost as cbo
+
+import warnings
+warnings.filterwarnings("ignore", message=".*The 'nopython' keyword.*")
+import shap
+
 import os
 import pickle
-
 import yaml
 from yaml.loader import SafeLoader
-with open('src/config.yaml') as file:
-    config = yaml.load(file, Loader=SafeLoader)
-
 import sys
-sys.path.append(config['paths']['project_path'])
+sys.path.append(os.getcwd())
 
 from src.utils import load_training_data
 from src.deployment.classification import Identifier
+
+
+with open('src/config.yaml') as file:
+    config = yaml.load(file, Loader=SafeLoader)
 
 class xAi:
 

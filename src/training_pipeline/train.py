@@ -9,8 +9,10 @@ from sklearn.model_selection import StratifiedKFold
 import warnings
 from loguru import logger
 import os
+import shutil
 import time
 import math
+import pickle
 from statistics import mean
 
 import yaml
@@ -19,7 +21,7 @@ with open('src/config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
 
 import sys
-sys.path.append(config['paths']['project_path'])
+sys.path.append(os.getcwd())
 
 from classifier import Classifier
 from plot_functions import Visualization
@@ -251,7 +253,7 @@ def k_fold_crossvalidation(X: np.array, y: np.array, X_test: np.array, y_test: n
     Return:
         df_cv (Pandas dataframe): A dataframe containing the average evaluation metrics for each of the top x models based on cross-validation.
     '''
-    kfold = StratifiedKFold(n_splits=config["train_settings"]["k-folds"], shuffle=True, random_state=config["general_params"]["seed"])
+    kfold = StratifiedKFold(n_splits=config["train_settings"]["k-folds"], shuffle=True, random_state=config["dataset_params"]["seed"])
 
     fix_columns = ["model_name", "avg train auc", "avg train loss", "avg validation auc", "avg validation loss", "avg test accuracy", "avg test sensitivity"]
 
@@ -306,6 +308,11 @@ def k_fold_crossvalidation(X: np.array, y: np.array, X_test: np.array, y_test: n
 
     return df_cv
 
+def copy_labelencoder(model_folder_path):
+    data_folder = config["train_settings"]["folder_processed_dataset"]
+    src = os.path.join(data_folder, "label_encoder.pkl") 
+    dst = os.path.join(model_folder_path, "label_encoder.pkl")
+    shutil.copy2(src, dst)
 
 def train_model(folder_path: str, binary_model: bool, method: str):
     ''' 
@@ -331,6 +338,15 @@ def train_model(folder_path: str, binary_model: bool, method: str):
     # Training with the hold out method and grid search hyperparameter tuning
     X_train, y_train, X_val, y_val, X_test, y_test, df_preprocessed, df_train, df_val, df_test, weight_factor = load_training_data(binary_model=binary_model)
 
+    # Copy the label encoder from the dataset path to the model folder. This file is used in the deployment process.
+    copy_labelencoder(model_folder_path)
+
+    # Store the list of uniform names (for the xAi pipeline)
+    unique_names = df_preprocessed[config['labels']['multiclass_column']].unique().tolist()
+    with open(model_folder_path + "list_of_uniform_names.pkl", 'wb') as f:
+        pickle.dump(unique_names, f)
+
+    # Start grid search hyperparamter tuning
     df, model_results_dict, metrics = grid_search(X_train=X_train, y_train=y_train, X_val=X_val, y_val=y_val, X_test=X_test, y_test=y_test, weight_factor=weight_factor, hp_dict=hp_dict, binary_model=binary_model, method=method)
 
     df.to_csv(model_folder_path + "hyperparametertuning_results.csv")

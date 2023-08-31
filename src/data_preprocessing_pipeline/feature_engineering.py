@@ -1,13 +1,14 @@
 import numpy as np
 import pandas as pd
+
 import math
 
+from loguru import logger
 import yaml
 from yaml.loader import SafeLoader
+
 with open('src/config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
-
-from loguru import logger
 
 class Feature_Engineering:
     # PyTest exist

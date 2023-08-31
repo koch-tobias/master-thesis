@@ -1,27 +1,26 @@
 import pandas as pd
 import numpy as np
-
 from sklearn.model_selection import train_test_split
 from sklearn import preprocessing
 
-import os
-import pickle
 from datetime import datetime
-from loguru import logger
 
+from loguru import logger
+import pickle
+import os
+import sys
 import yaml
 from yaml.loader import SafeLoader
-with open('src/config.yaml') as file:
-    config = yaml.load(file, Loader=SafeLoader)
-
-import sys
-sys.path.append(config['paths']['project_path'])
+sys.path.append(os.getcwd())
 
 from src.data_preprocessing_pipeline.feature_engineering import Feature_Engineering
 from src.data_preprocessing_pipeline.data_cleaning import DataCleaner
 from src.data_preprocessing_pipeline.augmentation import DataAugmention
 from src.data_preprocessing_pipeline.data_analysis import store_class_distribution, analyse_data_split, store_feature_distribution
 from src.utils import load_data_into_df, combine_dataframes
+
+with open('src/config.yaml') as file:
+    config = yaml.load(file, Loader=SafeLoader)
 
 class DataGenerator:
 

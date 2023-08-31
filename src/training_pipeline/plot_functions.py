@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import lightgbm as lgb
 from sklearn.metrics import ConfusionMatrixDisplay
 
+import os
 import pickle
 from loguru import logger
 import yaml
@@ -13,7 +14,7 @@ with open('src/config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
 
 import sys
-sys.path.append(config['paths']['project_path'])
+sys.path.append(os.getcwd())
 
 from src.data_preprocessing_pipeline.feature_engineering import Feature_Engineering
 

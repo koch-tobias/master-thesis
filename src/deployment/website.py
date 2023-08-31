@@ -3,14 +3,15 @@ import pandas as pd
 import streamlit as st
 import streamlit_authenticator as stauth
 
+import yaml
+from yaml.loader import SafeLoader
 from io import BytesIO
 from pyxlsb import open_workbook as open_xlsb
 
 from classification import Identifier
 from src.utils import read_file
 
-import yaml
-from yaml.loader import SafeLoader
+
 with open('src/deployment/config_website.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
 

@@ -1,21 +1,22 @@
 import pandas as pd
 import numpy as np
 
+from loguru import logger
 import pickle
 import os
-from loguru import logger
-
 import yaml
 from yaml.loader import SafeLoader
-with open('src/config.yaml') as file:
-    config = yaml.load(file, Loader=SafeLoader)
-
 import sys
-sys.path.append(config['paths']['project_path'])
+sys.path.append(os.getcwd())
+
 from src.data_preparation_pipeline.data_preparation import Preperator
 from src.data_preprocessing_pipeline.feature_engineering import Feature_Engineering
 from src.data_preprocessing_pipeline.data_cleaning import DataCleaner
 from src.utils import read_file
+
+
+with open('src/config.yaml') as file:
+    config = yaml.load(file, Loader=SafeLoader)
 
 class Identifier():
 
@@ -263,12 +264,9 @@ class Identifier():
         y_pred_binary, probs_binary, _  = Identifier.model_predict(model=model_binary, X_test=X_binary, method=binary_method, binary_model=True)
         y_pred_multiclass, probs_multiclass, _ = Identifier.model_predict(model=model_multiclass, X_test=X_multiclass, method=multiclass_method, binary_model=False)
 
-        # Search in logging which dataset is used for training
-        dataset_path_binary = Identifier.search_in_logging(text="Dataset:", model_folder_path=model_folder_path_binary)
-        dataset_path_multiclass = Identifier.search_in_logging(text="Dataset:", model_folder_path=model_folder_path_multiclass)
-
         # Load the LabelEncoder
-        with open(dataset_path_multiclass + 'label_encoder.pkl', 'rb') as f:
+        label_encoder_path = os.path.join(model_folder_path_multiclass, "label_encoder.pkl")
+        with open(label_encoder_path, 'rb') as f:
             le = pickle.load(f) 
 
         y_pred_multiclass_names = le.inverse_transform(y_pred_multiclass) 
@@ -287,48 +285,11 @@ class Identifier():
         df_relevant_parts = df_relevant_parts[df_relevant_parts['Relevant fuer Messung'] == 'Ja']
         logger.success("Relevant car parts are identified!")
         
-        '''
-        logger.info("Load dataset used for training..")
-        trainset = pd.read_csv(dataset_path_binary + "processed_dataset.csv")
-        trainset_relevant_parts = trainset[trainset["Relevant fuer Messung"] == "Ja"]
-        trainset_relevant_parts = trainset_relevant_parts[(trainset_relevant_parts['X-Min_transf'] != 0) & (trainset_relevant_parts['X-Max_transf'] != 0)]    
-        unique_names = trainset_relevant_parts["Einheitsname"].unique().tolist()
-        unique_names.sort()
-        logger.success("Dataset loaded!")
-        
-        logger.info("Valid identified car parts by comparing the position of the new car part to them in the trainset")
-        for index, row in df_relevant_parts.iterrows():
-            for name in unique_names:
-                trainset_name = trainset_relevant_parts[(trainset_relevant_parts["Einheitsname"] == name)].reset_index(drop=True)
-                corners, _, _, _ = Feature_Engineering.find_valid_space(df=trainset_name)
-                x_min = np.min(corners[:, 0])
-                x_max = np.max(corners[:, 0])
-                y_min = np.min(corners[:, 1])
-                y_max = np.max(corners[:, 1])
-                z_min = np.min(corners[:, 2])
-                z_max = np.max(corners[:, 2])
-                valid_volume_min = trainset_name["volume"].min()
-                valid_volume_max = trainset_name["volume"].max()
-                
-                if ((row["X-Min_transf"] == 0) and (row["X-Max_transf"] == 0)):
-                    df_relevant_parts.loc[index,'In Bounding-Box-Position von'] = 'No Bounding-Box information'
-                else:
-                    df_relevant_parts.loc[index,'In Bounding-Box-Position von'] = 'None'
-                    if ((row["X-Min_transf"] > x_min) and (row["X-Max_transf"] < x_max)):
-                        if ((row["Y-Min_transf"] > y_min) and (row["Y-Max_transf"] < y_max)): 
-                                if ((row["Z-Min_transf"] > z_min) and (row["Z-Max_transf"] < z_max)):
-                                    if ((row["volume"] >= valid_volume_min*0.9) and (row["volume"] <= valid_volume_max*1.1)):
-                                        df_relevant_parts.loc[index,'In Bounding-Box-Position von'] = name
-                                        if (row["Wahrscheinlichkeit Relevanz"] > 0.95) and ((row["Einheitsname"] == "Dummy")):
-                                            df_relevant_parts.loc[index,'Einheitsname'] = name
-                                        break
-        logger.success("Validation successfull!")
-        '''
         logger.info("Prepare output...")
         # Load list of the uniform names (classes)
-        with open(model_folder_path_binary + "list_of_uniform_names.pkl", 'rb') as names:
+        with open(model_folder_path_binary + "/list_of_uniform_names.pkl", 'rb') as names:
             uniform_names = pickle.load(names)
-            
+
         # Check which uniform names are not identified
         einheitsname_not_found = []
         for name in uniform_names:        
@@ -347,8 +308,8 @@ class Identifier():
 # %%
 def main():
     
-    data_path = config["paths"]["test_file_path"]
-    df = read_file(data_path)
+    data_path = config["test_file_path"]
+    df, ncar = read_file(data_path, raw=True)
 
     df_preprocessed, df_relevant_parts, einheitsname_not_found, ncar = Identifier.classification_on_new_data(df)
     print(df_relevant_parts)

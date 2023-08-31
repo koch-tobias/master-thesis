@@ -1,15 +1,16 @@
 from loguru import logger
-
+import os
 import yaml
 from yaml.loader import SafeLoader
-with open('src/config.yaml') as file:
-    config = yaml.load(file, Loader=SafeLoader)
-
 import sys
-sys.path.append(config['paths']['project_path'])
+sys.path.append(os.getcwd())
 
 from src.utils import load_data_into_df
 from src.deployment.classification import Identifier
+
+
+with open('src/config.yaml') as file:
+    config = yaml.load(file, Loader=SafeLoader)
 
 def label_data() -> None:
     ''' 

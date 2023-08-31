@@ -4,14 +4,13 @@ import matplotlib.pyplot as plt
 
 from loguru import logger
 import os
-
+import sys
 import yaml
 from yaml.loader import SafeLoader
+sys.path.append(os.getcwd())
+
 with open('src/config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
-
-import sys
-sys.path.append(config['paths']['project_path'])
 
 def analyse_data_split(df_preprocessed: pd.DataFrame, y_train: np.array, y_val: np.array, y_test: np.array, model_folder_path: str, binary_model: bool) -> None:
     '''

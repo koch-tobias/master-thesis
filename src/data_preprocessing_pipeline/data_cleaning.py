@@ -4,11 +4,12 @@ import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
 
 import re
-import pickle
-from loguru import logger
 
+from loguru import logger
+import pickle
 import yaml
 from yaml.loader import SafeLoader
+
 with open('src/config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
 

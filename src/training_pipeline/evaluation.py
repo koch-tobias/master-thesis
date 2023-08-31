@@ -3,13 +3,14 @@ import numpy as np
 
 from sklearn.metrics import accuracy_score, recall_score, f1_score
 
+import os
 import yaml
 from yaml.loader import SafeLoader
 with open('src/config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
 
 import sys
-sys.path.append(config['paths']['project_path'])
+sys.path.append(os.getcwd())
 
 from src.deployment.classification import Identifier
     

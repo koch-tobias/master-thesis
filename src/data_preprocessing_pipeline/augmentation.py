@@ -5,18 +5,19 @@ import openai
 
 import math
 import random
-from loguru import logger
 
+from loguru import logger
+import os
+import sys
 import yaml
 from yaml.loader import SafeLoader
+sys.path.append(os.getcwd())
+
+from src.data_preprocessing_pipeline.feature_engineering import Feature_Engineering
+
 
 with open('src/config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
-
-import sys
-sys.path.append(config['paths']['project_path'])
-
-from src.data_preprocessing_pipeline.feature_engineering import Feature_Engineering
 
 class DataAugmention:
 

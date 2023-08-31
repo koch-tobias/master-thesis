@@ -2,30 +2,29 @@ import warnings
 warnings.filterwarnings('ignore')
 
 import pandas as pd
-from loguru import logger
-import time
-import yaml
-import json
-import os
-
 from sklearn.metrics import accuracy_score, f1_score, recall_score
 
+import tensorflow as tf
 from pytorch_tabular import TabularModel
 from pytorch_tabular.models import CategoryEmbeddingModelConfig, TabNetModelConfig, FTTransformerConfig 
 from pytorch_tabular.config import DataConfig, OptimizerConfig, TrainerConfig, ExperimentConfig
 from pytorch_tabular.categorical_encoders import CategoricalEmbeddingTransformer
 
-import tensorflow as tf
-
+from loguru import logger
+import sys
+import time
+import yaml
+import json
+import os
 import yaml
 from yaml.loader import SafeLoader
-with open('src/config.yaml') as file:
-    config = yaml.load(file, Loader=SafeLoader)
-
-import sys
-sys.path.append(config['paths']['project_path'])
+sys.path.append(os.getcwd())
 
 from src.utils import load_dataset
+
+
+with open('src/config.yaml') as file:
+    config = yaml.load(file, Loader=SafeLoader)
 
 def get_metrics_results(y_true, y_pred):
     if isinstance(y_true, pd.DataFrame) or isinstance(y_true, pd.Series):

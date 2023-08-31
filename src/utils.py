@@ -4,7 +4,6 @@ import pandas as pd
 import os
 import pickle
 import json
-import shutil
 from loguru import logger
 
 import yaml
@@ -40,13 +39,11 @@ def load_training_data(binary_model: bool):
 
     # Create paths to load the datasets
     if binary_model:
-        data_folder = data_folder + "binary/"
-        train_val_test_path = os.path.join(data_folder, "binary_train_test_val_split.pkl")
-        train_val_test_df_paths = os.path.join(data_folder, "binary_train_test_val_dataframes.pkl")
+        train_val_test_path = os.path.join(data_folder, "binary/binary_train_test_val_split.pkl")
+        train_val_test_df_paths = os.path.join(data_folder, "binary/binary_train_test_val_dataframes.pkl")
     else:
-        data_folder = data_folder + "multiclass/"
-        train_val_test_path = os.path.join(data_folder, "multiclass_train_test_val_split.pkl")
-        train_val_test_df_paths = os.path.join(data_folder, "multiclass_train_test_val_dataframes.pkl")
+        train_val_test_path = os.path.join(data_folder, "multiclass/multiclass_train_test_val_split.pkl")
+        train_val_test_df_paths = os.path.join(data_folder, "multiclass/multiclass_train_test_val_dataframes.pkl")
 
     # Load and return the datasets
     with open(train_val_test_path, 'rb') as handle:
