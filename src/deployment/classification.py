@@ -243,7 +243,9 @@ class Identifier():
         logger.info("Dataset successfully prepared!")
 
         logger.info("Preprocess data...")
+        
         df_new_features = Feature_Engineering.add_new_features(df)
+        
         df_preprocessed, df_for_plot = DataCleaner.clean_dataset(df_new_features)
         logger.info("Dataset successfully preprocessed!")
 
@@ -272,6 +274,7 @@ class Identifier():
         y_pred_multiclass_names = le.inverse_transform(y_pred_multiclass) 
 
         df_relevant_parts = df_preprocessed.reset_index(drop=True)
+
         for index, row in df_relevant_parts.iterrows():
             if y_pred_binary[index] == 1: 
                 df_relevant_parts.loc[index,'Relevant fuer Messung'] = 'Ja'
@@ -297,9 +300,13 @@ class Identifier():
                 einheitsname_not_found.append(name)
 
         df_relevant_parts = df_relevant_parts.reset_index(drop=True)
-        df_relevant_parts.loc[df_relevant_parts['Einheitsname'] == "Dummy", 'Einheitsname'] = 'Kein Einheitsname gefunden'
+        #df_relevant_parts.loc[df_relevant_parts['Einheitsname'] == "Dummy", 'Einheitsname'] = 'Kein Einheitsname gefunden'
 
         df_relevant_parts = df_relevant_parts.drop_duplicates(subset=["Sachnummer"])
+
+        df_relevant_parts = df_relevant_parts[df_relevant_parts['Einheitsname'] != 'Dummy'].reset_index(drop=True)
+
+        df_relevant_parts = df_relevant_parts.sort_values(by=['Einheitsname'], ascending=True)
 
         logger.success("Output is prepared!")
 
