@@ -40,10 +40,10 @@ class xAi:
          if os.path.exists(path_feature_importance):
             df_features = pd.read_csv(path_feature_importance)
          else:
-            feature_dict = {vocabulary.shape[0]+index: key for index, key in enumerate(config["general_params"]["features_for_model"])}
+            feature_dict = {vocabulary.shape[0]+index: key for index, key in enumerate(config["dataset_params"]["features_for_model"])}
 
             # Generate the feature importance values
-            if isinstance(model, lgb.Booster):
+            if isinstance(model, lgb.LGBMClassifier):
                boost = model.booster_
                importance = boost.feature_importance()
                column = boost.feature_name()
