@@ -104,8 +104,6 @@ def evaluate_model(model, X_test: np.array, y_test: np.array, evals: dict, hp_in
     train_auc, train_loss, val_auc, val_loss = get_best_metric_results(evals=evals, best_iteration=best_iteration, method=method, binary_model=binary_model)
 
     df_new.loc[num_models_trained, "model_name"] = f"model_{str(val_auc)[2:6]}"
-    for hp in hp_in_iteration:
-        df_new.loc[num_models_trained, hp] = hp_in_iteration[hp]
     df_new.loc[num_models_trained, "train auc"] = train_auc
     df_new.loc[num_models_trained, "train loss"] = train_loss
     df_new.loc[num_models_trained, "validation auc"] = val_auc
@@ -113,7 +111,9 @@ def evaluate_model(model, X_test: np.array, y_test: np.array, evals: dict, hp_in
     df_new.loc[num_models_trained, "test accuracy"] = accuracy
     df_new.loc[num_models_trained, "test sensitivity"] = sensitivity
     df_new.loc[num_models_trained, "test f1_score"] = f1score
-    df_new.loc[num_models_trained, "early stopping (iterations)"] = int(config["train_settings"]["early_stopping"])
     df_new.loc[num_models_trained, "Training Time (s)"] = training_time 
+    df_new.loc[num_models_trained, "patience"] = int(config["train_settings"]["early_stopping"])
+    for hp in hp_in_iteration:
+        df_new.loc[num_models_trained, hp] = hp_in_iteration[hp]
 
     return y_pred, probs, accuracy, sensitivity, val_auc, val_loss, train_auc, train_loss, df_new
