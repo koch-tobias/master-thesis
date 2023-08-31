@@ -110,10 +110,12 @@ class DataCleaner:
         '''
 
         # Initialize the CountVectorizer with the desired settings
-        vectorizer = CountVectorizer(analyzer='char', ngram_range=(3, 8), max_features=8000)
+        vectorizer = CountVectorizer(analyzer='char', ngram_range=(3, 8))
 
         # Convert the text data into a vector representation
-        X_text = vectorizer.fit_transform(data['Benennung (bereinigt)']).toarray()
+        relevant_car_parts = data[data["Relevant fuer Messung"] == "Ja"]
+        vectorizer.fit(relevant_car_parts['Benennung (bereinigt)'])
+        X_text = vectorizer.transform(data['Benennung (bereinigt)']).toarray()
 
         # Store the vocabulary
         vocabulary = vectorizer.get_feature_names_out()
