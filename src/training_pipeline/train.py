@@ -11,6 +11,7 @@ from loguru import logger
 import os
 import shutil
 import time
+from datetime import datetime
 import math
 import pickle
 from statistics import mean
@@ -161,7 +162,7 @@ def create_result_df(hp_dict: dict) -> tuple[pd.DataFrame, int]:
         df (Pandas dataframe): A dataframe to store the results of the model training process.
         total_models (int): An integer representing the total number of models that will be trained using this dataframe.
     '''
-    fix_columns = ["model_name", "train auc", "train loss", "validation auc", "validation loss", "test accuracy", "test sensitivity", "test af1_score", "Training Time (s)"]
+    fix_columns = ["model_name", "train auc", "train loss", "validation auc", "validation loss", "test accuracy", "test sensitivity", "test f1_score", "Training Time (s)"]
 
     total_models = 1
     for hp in hp_dict:
@@ -399,3 +400,26 @@ def train_model(folder_path: str, binary_model: bool, method: str):
         Visualization.plot_metric_custom(evals=evals_final, best_iteration=best_iteration, model_folder_path=model_folder_path, method=method, binary=binary_model, finalmodel=True)
 
     logger.success("Training the model on the entire data was successfull!")
+
+def main():
+    train_binary_model = config["train_settings"]["train_binary_model"]
+    train_multiclass_model = config["train_settings"]["train_multiclass_model"]
+
+    method = config["train_settings"]["ml-method"]
+
+    dateTimeObj = datetime.now()
+    timestamp = dateTimeObj.strftime("%d%m%Y_%H%M")
+
+    folder_path = f"src/training_pipeline/trained_models/{method}_HyperparameterTuning_{timestamp}/"
+    
+    if train_binary_model:
+        logger.info("Start training the binary models...")
+        train_model(folder_path, binary_model=True, method=method)
+
+    if train_multiclass_model:
+        logger.info("Start training the multiclass models...")
+        train_model(folder_path, binary_model=False, method=method)
+    
+if __name__ == "__main__":
+    
+    main()
