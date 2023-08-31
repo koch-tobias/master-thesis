@@ -307,7 +307,7 @@ If you want to run the website locally, run the following command from the root 
 streamlit run src\deployment\website.py
 ```
 
-The REST-API developed with FastAPI and virtualized with docker is developed for production and can be addressed by sending a request to the following url: </br>
+The REST-API developed with FastAPI and virtualized with docker developed for production can be addressed by sending a request to the following url: </br>
 ```
 http://10.3.13.137:7070/api/get_relevant_parts/
 ```
@@ -329,7 +329,7 @@ The input is an excel file of the structure tree of a selected vehicle with all 
   ]
 }
 ```
-You can test the API using the following python code (src/deployment/api_request.py) which sends a excel file to the API and returns the identified car parts:
+You can test the API using the following python script (src/deployment/api_request.py) which sends a excel file to the API and returns the identified car parts:
 ```python
 import requests
 
@@ -355,19 +355,19 @@ print(response.content)
 
 For running the API locally, run the following command from the root directory:
 ```bash
-uvicorn src.deployment.api:app --reload
+uvicorn src.deployment.api:app --reload --port 5000
 ```
 
 Now you can access the local API using:
 ```bash
- http://127.0.0.1:8000/docs
+http://localhost:5000/docs
  ```
 
 If you want to quickly test models locally, add the path of the testing file to the parameter **test_file_path** in the "src/config.yaml" file and run the command from the root directory: </br>
 ```bash
 python src\deployment\classification.py 
 ``` 
-This outputs the dataframe with all identified car parts and a list with all car parts which are not identified by the models (located in the "final_models" folder). The output is only visible in the terminal and is not stored.
+It uses the models in the "final_models" folder and outputs the dataframe with all identified car parts and a list with all car parts which are not identified. The output is only visible in the terminal and is not stored.
 
 ### Unittests
 In order to test functions individually and independently for proper operation, unit tests were developed using the pyTest library. These can be executed in the root folder by using the following command:
@@ -377,6 +377,8 @@ pytest
 
 ## 🚀 Updates
 
+**2023.08.31**
+Update models -> Trained on new vectorizer
 **2023.08.27**
 Update models -> 3 more car parts are added (for interior measures) </br>
 **2023.08.03**
