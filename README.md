@@ -189,8 +189,8 @@ Before running this process, you can specifiy the following settings in the **"s
 - **normalize_numerical_features**:  If true, numerical features will be normalized.
 - **bounding_box_features_original**: List of all features which represent the bounding boxes
 - **features_for_model**: List of all features (except of the designation column) which are used to train the model
-- **train_val_split**: Split into (1-x)*100 % training and x*100 % validation set. (x=[0,1])
-- **val_test_split**: Split into (1-x)*100 % validationset and x*100 % testset. (x=[0,1])
+- **train_val_split**: Split into (1-x)\*100 % training and x\*100 % validation set. (x=[0,1])
+- **val_test_split**: Split into (1-x)\*100 % validationset and x\*100 % testset. (x=[0,1])
 
 Now, to generate a new training, validation, and test split for training the models, run the data preprocessing pipeline from the root directory using the command: </br>
 ```bash
