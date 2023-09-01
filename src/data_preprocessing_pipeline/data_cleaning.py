@@ -123,7 +123,7 @@ class DataCleaner:
         vocabulary = vectorizer.get_feature_names_out()
 
         # Save the vectorizer and vocabulary if a model folder path is provided
-        if model_folder_path.is_dir():
+        if isinstance(model_folder_path, Path):
             with open(os.path.join(model_folder_path, 'vectorizer.pkl'), 'wb') as f:
                 pickle.dump(vectorizer, f)
             with open(os.path.join(model_folder_path, 'vocabulary.pkl'), 'wb') as f:

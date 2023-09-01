@@ -49,7 +49,8 @@ def test_nchar_text_to_vec():
    sample_data = pd.DataFrame({
                                 'Benennung (bereinigt)': [
                                     'DACHANTENNE', 'HECKKLAPPE AUSSENHAUT', 'FRONTSCHEIBE', 'HIMMEL ND'
-                                ]
+                                ],
+                                "Relevant fuer Messung":["Ja", "Ja", "Ja", "Ja"]
                             })
    model_folder = ""
    X = DataCleaner.nchar_text_to_vec(sample_data, model_folder)
