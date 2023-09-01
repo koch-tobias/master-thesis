@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn import preprocessing
+from sklearn.preprocessing import StandardScaler
 
 from datetime import datetime
 
@@ -179,6 +180,19 @@ class DataGenerator:
         return train_val_test_dict, train_val_test_dataframes
 
     @staticmethod
+    def normalize_dataframe(df):
+        # select only numeric columns
+        numeric_cols = df.select_dtypes(include=['float64', 'int64']).columns
+
+        # create StandardScaler object to normalize the numeric columns
+        scaler = StandardScaler()
+
+        # normalize the selected columns
+        df[numeric_cols] = scaler.fit_transform(df[numeric_cols])
+
+        return df
+    
+    @staticmethod
     def generate_dataset() -> None:
         # Create the storage path using the current datetime
         dateTimeObj = datetime.now()
@@ -199,6 +213,10 @@ class DataGenerator:
 
         # Generate the synthetic data (if neccessary)
         df_preprocessed = DataAugmention.data_augmentation(df_preprocessed)
+
+        # Normalize the numerical features
+        if config["dataset_params"]["normalize_numerical_features"]:
+            df_preprocessed = DataGenerator.normalize_dataframe(df_preprocessed)
 
         # Store the processed dataset
         os.makedirs(storage_path + "binary")
