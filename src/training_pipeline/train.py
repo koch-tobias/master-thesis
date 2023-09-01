@@ -210,10 +210,6 @@ def grid_search(X_train: np.array, y_train: np.array, X_val: np.array, y_val: np
                     hp_in_iteration = {hp[0]: hp_0, hp[1]: hp_1, hp[2]: hp_2, hp[3]: hp_3}
                     model_results_dict, df, metrics = fit_eval_model(X_train, y_train, X_val, y_val, X_test, y_test, weight_factor, hp_in_iteration, df, model_results_dict, num_models_trained, total_models, binary_model, method)
                     num_models_trained = num_models_trained + 1
-                    break
-                break
-            break
-        break
 
     logger.success("Grid search hyperparameter tuning was successfull!")
 
