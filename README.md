@@ -185,7 +185,7 @@ Before running this process, you can specifiy the following settings in the **"s
 - **seed**: Seed for the train, val, test split
 - **cut_percent_of_front**: All components located in the front x percent are removed. (For Example: cut_percent_of_front=0.18 means that all car parts up to the windshield will be removed. cut_percent_of_front=0 means that no car parts will be removed)
 - **car_part_designation**: Specify the column which contains the car part designation as text
-- **use_only_text**: If true, only the designation will be used as feature. All other features are not considered.x
+- **use_only_text**: If true, only the car part designation will be used as feature. All other features are not considered.
 - **normalize_numerical_features**:  If true, numerical features will be normalized.
 - **bounding_box_features_original**: List of all features which represent the bounding boxes
 - **features_for_model**: List of features which will be used, in addition to the car part designation, to train the model
@@ -232,7 +232,7 @@ Before running this process, you can specifiy the following settings in the **"s
 - **ml-method**: Choose between lgbm, catboost, or xgboost
 - **k-folds**: Number of folds used for cross validation
 - **early_stopping**: Patience which is used for early stopping
-- **top_x_models_for_cv**: x*100 percent of the trained models with grid search hyperparameter tuning will be used for validation with k-fold crossvalidation
+- **top_x_models_for_cv**: x\*100 percent of the trained models with grid search hyperparameter tuning will be used for validation with k-fold crossvalidation
 - **n_estimators**: Number of iteration the model will be trained
 - **Specific method setting**: Metrics, boosting type, and hyperparamters for each machine learning method
 
