@@ -170,7 +170,7 @@ This file executes the following steps:
 - **Data Preparation**: Keep only the vehicle parts from the relevant modules. All parent folders and not needed modules are removed.
 - **Feature Selection**: Keep only the features defined as relevant in the config file, which should be used for training the models.
 - **Add Label Columns**: Add and initialize the label columns. ("Relevant fuer Messung" with "Nein" and "Einheitsname" with "Dummy")
-- **Prelabeling**: Use the trained models to identify the relevant car parts and classify a uniform name ("Einheitsname") for each relevant car part.
+- **Prelabeling**: Uses the trained models to identify the relevant car parts and classify a uniform name ("Einheitsname") for each relevant car part.
 
 After these steps, the prelabeled datasets are stored in the folder **"data/pre_labeled"**. 
 **Now please check if the samples are labeled correctly.** If not, you have to correct the labels manually.
