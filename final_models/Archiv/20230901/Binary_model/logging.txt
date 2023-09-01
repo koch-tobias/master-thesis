@@ -1,0 +1,22 @@
+Dataset: data/processed/20230831_1251/
+Model folder path: src/training_pipeline/trained_models/lgbm_HyperparameterTuning_31082023_1413/Binary_model/
+use_only_text: False
+Method: lgbm
+_________________________________________________
+Best model after hyperparameter tuning:
+Validation AUC: 0.99837
+Trained Iterations: 212
+Model index in hyperparameter tuning: 79
+Hyperparameter:
+lr: 0.1
+max_depth: 3
+colsample_bytree: 0.7
+min_child_samples: 40
+Metrics: ['auc', 'binary_logloss'] 
+{"folder_processed_dataset": "data/processed/20230831_1251/", "train_binary_model": true, "train_multiclass_model": false, "ml-method": "lgbm", "k-folds": 4, "early_stopping": 50, "top_x_models_for_cv": 0.1, "n_estimators": 10000}
+{"prediction_threshold": 0.4}
+
+_________________________________________________
+Final model:
+Validation AUC (final model): 0.992976986084312
+Trained Iterations: 329

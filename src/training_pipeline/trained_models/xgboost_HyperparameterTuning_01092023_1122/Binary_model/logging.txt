@@ -1,0 +1,22 @@
+Dataset: data/processed/20230901_1031/
+Model folder path: src/training_pipeline/trained_models/xgboost_HyperparameterTuning_01092023_1122/Binary_model/
+use_only_text: False
+Method: xgboost
+_________________________________________________
+Best model after hyperparameter tuning:
+Validation AUC: 0.998999
+Trained Iterations: 224
+Model index in hyperparameter tuning: 73
+Hyperparameter:
+lr: 0.1
+max_depth: 4
+colsample_bytree: 0.5
+gamma: 0
+Metrics: ['auc', 'logloss'] 
+{"folder_processed_dataset": "data/processed/20230901_1031/", "train_binary_model": true, "train_multiclass_model": true, "ml-method": "xgboost", "k-folds": 4, "early_stopping": 50, "top_x_models_for_cv": 0.1, "n_estimators": 10000}
+{"prediction_threshold": 0.4}
+
+_________________________________________________
+Final model:
+Validation AUC (final model): 0.9967133930511008
+Trained Iterations: 232
