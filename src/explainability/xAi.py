@@ -11,6 +11,7 @@ warnings.filterwarnings("ignore", message=".*The 'nopython' keyword.*")
 import shap
 
 from loguru import logger
+from pathlib import Path
 import os
 import pickle
 import yaml
@@ -28,7 +29,7 @@ with open('src/config.yaml') as file:
 class xAi:
 
    @staticmethod
-   def add_feature_importance(model, vocabulary, model_folder_path) -> pd.DataFrame:
+   def add_feature_importance(model, vocabulary, model_folder_path: Path) -> pd.DataFrame:
          ''' 
          This function is used to extract the most important features from a given model. 
          It takes in a trained model and the path of the folder where the model vocabulary is stored. The output of the function is a pandas DataFrame containing the column names, corresponding features, and their importance scores.
@@ -39,7 +40,7 @@ class xAi:
          Return: 
             df_features: a pandas DataFrame containing the column names, corresponding features, and their importance scores.
          '''
-         path_feature_importance = model_folder_path + "feature_importance.csv"
+         path_feature_importance = os.path.join(model_folder_path, "feature_importance.csv")
          if os.path.exists(path_feature_importance):
             df_features = pd.read_csv(path_feature_importance)
          else:
@@ -93,7 +94,7 @@ class xAi:
       return feature_list, topx_important_features
 
    @staticmethod
-   def plot_shap_summary(model, vocabulary, dataset_folder, model_folder_path):
+   def plot_shap_summary(model, vocabulary, dataset_folder, model_folder_path: Path):
 
       df_features = xAi.add_feature_importance(model, vocabulary, model_folder_path)
       feature_list, topx_important_features = xAi.get_features(df_features)
@@ -112,14 +113,14 @@ class xAi:
          shap_values = explainer.shap_values(X, y)
          plt.clf()
          shap.summary_plot(shap_values[1], X, feature_list, show=False)
-         plt.savefig(model_folder_path + "shap_top10_features.png")
+         plt.savefig(os.path.join(model_folder_path, "shap_top10_features.png"))
       except:
           logger.info("Shap plot can not be generated.")
 
       return df_features, X, y
 
    @staticmethod
-   def create_tree(model, X, y, model_path, tree_index: int):
+   def create_tree(model, X, y, model_path: Path, tree_index: int):
       os.environ["PATH"] += os.pathsep + "C:/Program Files/Graphviz/bin"
       plt.clf()
       if isinstance(model, lgb.Booster):
@@ -130,19 +131,19 @@ class xAi:
          pool = cbo.Pool(X, y, feature_names=list(X.columns))
          ax = cbo.plot_tree(model.booster_, orientation='vertical', tree_idx=tree_index, figsize=(20, 8), show_info=['split_gain'])
 
-      plt.savefig(model_path + "/xAi_tree.png")
+      plt.savefig(os.path.join(model_path, "xAi_tree.png"))
 
    @staticmethod
-   def create_path(path):
+   def create_path(path: Path):
       isExist = os.path.exists(path)
       if not isExist:
          os.makedirs(path)
       
 def main():
    logger.info("Store plots to explain the binary model...")
-   model_path_binary = "final_models/Binary_model"
+   model_path_binary = Path("final_models/Binary_model")
    model, vectorizer, vocabulary, bbox_features = Identifier.get_model(model_path_binary)
-   xai_folder_path = model_path_binary + "/xAi/"
+   xai_folder_path = os.path.join(model_path_binary, "xAi")
    xAi.create_path(xai_folder_path)
    dataset_folder = Identifier.search_in_logging(text="Dataset:", model_folder_path=model_path_binary)
    df_features, X, y = xAi.plot_shap_summary(model, vocabulary,dataset_folder, model_folder_path=xai_folder_path)
@@ -151,7 +152,7 @@ def main():
    logger.info("Store plots to explain the multiclass model...")
    model_path_multiclass = "final_models/Multiclass_model/"
    model, vectorizer, vocabulary, bbox_features = Identifier.get_model(model_path_multiclass)
-   xai_folder_path = model_path_multiclass + "/xAi/"
+   xai_folder_path = os.path.join(model_path_multiclass, "xAi")
    xAi.create_path(xai_folder_path)
    dataset_folder = Identifier.search_in_logging(text="Dataset:", model_folder_path=model_path_binary)
    df_features, X, y = xAi.plot_shap_summary(model, vocabulary, dataset_folder, model_folder_path=xai_folder_path)

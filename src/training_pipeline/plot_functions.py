@@ -5,9 +5,10 @@ import matplotlib.pyplot as plt
 import lightgbm as lgb
 from sklearn.metrics import ConfusionMatrixDisplay
 
+from loguru import logger
+from pathlib import Path
 import os
 import pickle
-from loguru import logger
 import yaml
 from yaml.loader import SafeLoader
 with open('src/config.yaml') as file:
@@ -116,7 +117,7 @@ class Visualization:
         plt.close()
 
     @staticmethod
-    def plot_bounding_boxes_one_vehicle(data_path: str) -> None:
+    def plot_bounding_boxes_one_vehicle(data_path: Path) -> None:
         '''
         Description:
         Args:
@@ -133,7 +134,7 @@ class Visualization:
             Visualization.plot_vehicle(df=df_new, add_valid_space=True, preprocessed_data=False, mirrored=False)  
 
     @staticmethod
-    def plot_bounding_boxes_all_vehicle_by_name(data_path: str) -> None:
+    def plot_bounding_boxes_all_vehicle_by_name(data_path: Path) -> None:
         '''
         Description:
         Args:
@@ -145,7 +146,7 @@ class Visualization:
         #plot_vehicle(df_for_plot, add_valid_space=True, preprocessed_data=False, mirrored=False)
 
     @staticmethod
-    def analyse_data(df_preprocessed: pd.DataFrame, y_train: np.array, y_val: np.array, y_test: np.array, model_folder_path: str, binary_model: bool):
+    def analyse_data(df_preprocessed: pd.DataFrame, y_train: np.array, y_val: np.array, y_test: np.array, model_folder_path: Path, binary_model: bool):
         ''' 
         This function analyses a preprocessed dataset by plotting the distribution of car parts among the Training, Validation and Test datasets. 
         If binary_model is True, it plots the distribution of relevant and not relevant car parts. Otherwise, it plots the distribution of all car parts by class name. 
@@ -175,7 +176,7 @@ class Visualization:
             ax.bar(x_labels, y_not_relevant, width, color='teal')
             ax.bar(x_labels, y_relevant, width, color='lightseagreen')
             ax.legend(labels=['Not Relevant', 'Relevant'])
-            fig.savefig(model_folder_path + 'Binary_train_val_test_split.png', dpi=150)
+            fig.savefig(os.path.join(model_folder_path, 'Binary_train_val_test_split.png'), dpi=150)
         else:
             class_names = df_preprocessed['Einheitsname'].unique()
             class_names = sorted(class_names)
@@ -206,14 +207,14 @@ class Visualization:
                 fig.tight_layout()
 
                 if skip_dummy == 0:
-                    fig.savefig(model_folder_path + 'Multiclass_train_val_test_split.png', dpi=150)
+                    fig.savefig(os.path.join(model_folder_path, 'Multiclass_train_val_test_split.png'), dpi=150)
                 else: 
-                    fig.savefig(model_folder_path + 'Multiclass_train_val_test_split_without_dummy.png', dpi=150)
+                    fig.savefig(os.path.join(model_folder_path, 'Multiclass_train_val_test_split_without_dummy.png'), dpi=150)
         plt.close('all')
         logger.success("Dataset analysed!")
 
     @staticmethod
-    def plot_metric_custom(evals: dict, best_iteration: int, model_folder_path: str, method: str, binary: bool, finalmodel: bool):
+    def plot_metric_custom(evals: dict, best_iteration: int, model_folder_path: Path, method: str, binary: bool, finalmodel: bool):
         ''' 
         This function plots the Training and Validation AUC and Loss of a machine learning model, given the evaluation information of the model. 
         It saves the plots in a specified folder. The function also checks whether the model is a binary or multiclass model and whether it is the final model or not, in order to add an appropriate prefix to the resulting plot file names. 
@@ -263,7 +264,7 @@ class Visualization:
         plt.axvline(best_iteration, color='b', label = 'early stopping')
         plt.legend()
         plt.ylim([0, 1])
-        plt.savefig(model_folder_path + add_to_path + 'auc_plot.png')
+        plt.savefig(os.path.join(model_folder_path, add_to_path, 'auc_plot.png'))
         plt.close()
 
         plt.rcParams["figure.figsize"] = (10, 10)
@@ -275,11 +276,11 @@ class Visualization:
         plt.axvline(best_iteration, color='b', label = 'early stopping')
         plt.legend()
         plt.ylim([-0.5, 4])
-        plt.savefig(model_folder_path + add_to_path + 'loss_plot.png')
+        plt.savefig(os.path.join(model_folder_path, add_to_path, 'loss_plot.png'))
         plt.close()
 
     @staticmethod
-    def store_metrics(evals: dict, best_iteration: int, model_folder_path: str, binary_model: bool, finalmodel: bool):
+    def store_metrics(evals: dict, best_iteration: int, model_folder_path: Path, binary_model: bool, finalmodel: bool):
         ''' 
         This function plots the Training and Validation Loss of a machine learning model, given the evaluation information of the model. 
         It saves the plots in a specified folder. The function also checks whether the model is a binary or multiclass model and whether it is the final model or not, in order to add an appropriate prefix to the resulting plot file names. 
@@ -293,7 +294,7 @@ class Visualization:
         '''
 
         if finalmodel:
-            add_to_path = "final_model_"
+            add_to_path = 'final_model_'
         else:
             add_to_path = ""
 
@@ -308,7 +309,8 @@ class Visualization:
             plt.legend(['Training', 'Validation'], fontsize=12)
             plt.axvline(best_iteration, color='b', label = 'early stopping')
             plt.ylim([-0.5, 4])
-            plt.savefig(model_folder_path + add_to_path + 'binary_logloss_plot.png')
+            loss_name = add_to_path + 'binary_logloss_plot.png'
+            plt.savefig(os.path.join(model_folder_path, loss_name))
             plt.close()
 
             plt.rcParams["figure.figsize"] = (10, 10)
@@ -321,7 +323,8 @@ class Visualization:
             plt.legend(['Training', 'Validation'], fontsize=12)
             plt.axvline(best_iteration, color='b', label = 'early stopping')
             plt.ylim([-0.5, 1.2])
-            plt.savefig(model_folder_path + add_to_path + 'auc_plot.png')
+            auc_name = add_to_path + 'auc_plot.png'
+            plt.savefig(os.path.join(model_folder_path, auc_name))
             plt.close()
         else:    
             plt.rcParams["figure.figsize"] = (10, 10)
@@ -334,11 +337,12 @@ class Visualization:
             plt.legend(['Training', 'Validation'], fontsize=12)
             plt.axvline(best_iteration, color='b', label = 'early stopping')
             plt.ylim([-0.5, 4])
-            plt.savefig(model_folder_path + add_to_path + 'multi_logloss_plot.png')
+            mloss_name = add_to_path + 'multi_logloss_plot.png'
+            plt.savefig(os.path.join(model_folder_path, mloss_name))
             plt.close()
 
     @staticmethod
-    def store_confusion_matrix(y_test: np.array, y_pred: np.array, folder_path: str, model_folder_path: str, binary_model: bool):
+    def store_confusion_matrix(y_test: np.array, y_pred: np.array, folder_path: Path, model_folder_path: Path, binary_model: bool):
         ''' 
         This function stores the confusion matrix of a machine learning model, given the test labels and predicted labels.
         It saves the plot in a specified folder. The function also checks whether the model is binary or multiclass, in order to design the plot and the class names. If multiclass, it loads a label encoder from a saved file. 
@@ -358,10 +362,10 @@ class Visualization:
             plt.yticks(fontsize=12)
             plt.xlabel('Predicted Label', fontsize=12 )
             plt.ylabel('True Label', fontsize=12)
-            plt.savefig(model_folder_path + 'confusion_matrix.png')  
+            plt.savefig(os.path.join(model_folder_path, 'confusion_matrix.png'))
 
         else:
-            with open(config["train_settings"]["folder_processed_dataset"] + 'label_encoder.pkl', 'rb') as f:
+            with open(os.path.join(config["train_settings"]["folder_processed_dataset"], 'label_encoder.pkl'), 'rb') as f:
                 le = pickle.load(f)
 
             class_names = []
@@ -378,5 +382,5 @@ class Visualization:
             # Zeige die Konfusionsmatrix an
             cm_display.plot(ax=ax, xticks_rotation='vertical', cmap='Blues', colorbar=False,  text_kw={'fontsize': 12})
             # Speichere das Diagramm
-            plt.savefig(model_folder_path + 'confusion_matrix.png')
+            plt.savefig(os.path.join(model_folder_path, 'confusion_matrix.png'))
         plt.close('all')

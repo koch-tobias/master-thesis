@@ -3,6 +3,7 @@ import numpy as np
 
 from sklearn.metrics import accuracy_score, recall_score, f1_score
 
+from pathlib import Path
 import os
 import yaml
 from yaml.loader import SafeLoader
@@ -66,6 +67,50 @@ def get_best_metric_results(evals: dict, best_iteration: int, method: str, binar
     train_auc = evals[training_name][auc][best_iteration]
     train_loss = evals[training_name][loss][best_iteration]
     return train_auc, train_loss, val_auc, val_loss
+
+def store_predictions(y_test: np.array, y_pred: np.array, probs: np.array, df_preprocessed: pd.DataFrame, df_test: pd.DataFrame, model_folder_path: Path, binary_model: bool) -> None:
+    ''' 
+    Stores wrong predictions, true labels, predicted labels, probabilities, and additional information based on the input parameters in a CSV file.
+    Args:
+        y_test: true labels
+        y_pred: predicted labels
+        probs: probability values
+        df_preprocessed: preprocessed DataFrame
+        df_test: test DataFrame
+        model_folder_path: path to store the wrong_predictions.csv file
+        binary_model: bool, indicates whether binary classification or multiclass classification is expected
+    Return: None 
+    '''
+    if binary_model:
+        class_names = df_preprocessed['Relevant fuer Messung'].unique()
+    else:
+        class_names = df_preprocessed["Einheitsname"].unique()
+        class_names = sorted(class_names)
+
+    df_wrong_predictions = pd.DataFrame(columns=['Sachnummer', 'Benennung (dt)', 'Derivat', 'Predicted', 'True', 'Probability'])
+
+    try:
+        y_test = y_test.to_numpy()
+    except:
+        pass
+    
+    # Store all wrongly identified car parts in a csv file to analyse the model predictions
+    for i in range(len(y_test)):
+        if y_pred[i] != y_test[i]:
+            df_wrong_predictions.loc[i,"Sachnummer"] = df_test.loc[i, "Sachnummer"]
+            df_wrong_predictions.loc[i,"Benennung (dt)"] = df_test.loc[i, "Benennung (dt)"]
+            df_wrong_predictions.loc[i,"Derivat"] = df_test.loc[i, "Derivat"]
+            df_wrong_predictions.loc[i,"Predicted"] = class_names[y_pred[i]]
+            df_wrong_predictions.loc[i,"True"] = class_names[y_test[i]]
+            if binary_model:
+                if probs[i][1] >= config["prediction_settings"]["prediction_threshold"]:
+                    df_wrong_predictions.loc[i,"Probability"] = probs[i][1]
+                else:
+                    df_wrong_predictions.loc[i,"Probability"] = 1 - probs[i][1]
+            else:
+                df_wrong_predictions.loc[i,"Probability"] = probs[i][1]
+
+    df_wrong_predictions.to_csv(os.path.join(model_folder_path, "wrong_predictions.csv"))
 
 def evaluate_model(model, X_test: np.array, y_test: np.array, evals: dict, hp_in_iteration: dict, num_models_trained: int, training_time: float, df_columns: list, binary_model: bool, method: str) -> tuple[np.array, np.array, float, float, float, float, float, float, pd.DataFrame]:
     ''' 

@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 
 from loguru import logger
+from pathlib import Path
 import pickle
 import os
 import yaml
@@ -21,7 +22,7 @@ with open('src/config.yaml') as file:
 class Identifier():
 
     @staticmethod
-    def search_in_logging(text:str, model_folder_path: str) -> str or None:
+    def search_in_logging(text:str, model_folder_path: Path) -> str or None:
         ''' 
         Description: Returns the value after a searched text by reading the 'logging.txt' file of the given model path.
         Args:
@@ -31,7 +32,7 @@ class Identifier():
             value after the searched string
             None if the string is not found in the 'logging.txt' file 
         '''
-        logging_path = model_folder_path + "/logging.txt"
+        logging_path = os.path.join(model_folder_path, "logging.txt")
         with open(logging_path, 'r') as file:
             for line in file:
                 if text in line:
@@ -39,7 +40,7 @@ class Identifier():
         return None
 
     @staticmethod
-    def get_model(folder_path: str):
+    def get_model(folder_path: Path):
         '''
         Search in the model folder path for the trained models and load the vectorizer, vocabulary, and boundingbox_features used for training.
         Args:
@@ -50,8 +51,8 @@ class Identifier():
             vocabulary = vocabulary used to train the final model
             bbox_features = bounding box features used to train the final model
         '''
-        final_model_path = folder_path + "/final_model.pkl"
-        pretrained_model_path = folder_path + "/model.pkl"
+        final_model_path = os.path.join(folder_path, "final_model.pkl")
+        pretrained_model_path = os.path.join(folder_path, "model.pkl")
 
         if os.path.exists(final_model_path):
             model_path =  final_model_path
@@ -65,24 +66,24 @@ class Identifier():
         dataset_path = Identifier.search_in_logging(text="Dataset:", model_folder_path=folder_path)
 
         # Load the vectorizer from the file
-        vectorizer_path = dataset_path + "vectorizer.pkl"
+        vectorizer_path = os.path.join(dataset_path, "vectorizer.pkl")
         with open(vectorizer_path, 'rb') as f:
             vectorizer = pickle.load(f)
 
         # Get the vocabulary of the training data
-        vocab_path = dataset_path + "vocabulary.pkl"
+        vocab_path = os.path.join(dataset_path, "vocabulary.pkl")
         with open(vocab_path, 'rb') as f:
             vocabulary = pickle.load(f) 
 
         # Get the used boundingbox features
-        bbox_features_path = dataset_path + "boundingbox_features.pkl"
+        bbox_features_path = os.path.join(dataset_path, "boundingbox_features.pkl")
         with open(bbox_features_path, 'rb') as f:
             bbox_features = pickle.load(f)  
 
         return model, vectorizer, vocabulary, bbox_features
 
     @staticmethod
-    def get_X(vocab, vectorizer, bbox_features: list, df_preprocessed: pd.DataFrame, model_folder_path: str) -> np.array:
+    def get_X(vocab, vectorizer, bbox_features: list, df_preprocessed: pd.DataFrame, model_folder_path: Path) -> np.array:
         '''
         Prepare the text data and combine with additional features to generate the dataset to train the model 
         Args:
@@ -177,52 +178,6 @@ class Identifier():
         
         return y_pred, probs, best_iteration
 
-    # %%
-    @staticmethod
-    def store_predictions(y_test: np.array, y_pred: np.array, probs: np.array, df_preprocessed: pd.DataFrame, df_test: pd.DataFrame, model_folder_path: str, binary_model: bool) -> None:
-        ''' 
-        Stores wrong predictions, true labels, predicted labels, probabilities, and additional information based on the input parameters in a CSV file.
-        Args:
-            y_test: true labels
-            y_pred: predicted labels
-            probs: probability values
-            df_preprocessed: preprocessed DataFrame
-            df_test: test DataFrame
-            model_folder_path: path to store the wrong_predictions.csv file
-            binary_model: bool, indicates whether binary classification or multiclass classification is expected
-        Return: None 
-        '''
-        if binary_model:
-            class_names = df_preprocessed['Relevant fuer Messung'].unique()
-        else:
-            class_names = df_preprocessed["Einheitsname"].unique()
-            class_names = sorted(class_names)
-
-        df_wrong_predictions = pd.DataFrame(columns=['Sachnummer', 'Benennung (dt)', 'Derivat', 'Predicted', 'True', 'Probability'])
-
-        try:
-            y_test = y_test.to_numpy()
-        except:
-            pass
-        
-        # Store all wrongly identified car parts in a csv file to analyse the model predictions
-        for i in range(len(y_test)):
-            if y_pred[i] != y_test[i]:
-                df_wrong_predictions.loc[i,"Sachnummer"] = df_test.loc[i, "Sachnummer"]
-                df_wrong_predictions.loc[i,"Benennung (dt)"] = df_test.loc[i, "Benennung (dt)"]
-                df_wrong_predictions.loc[i,"Derivat"] = df_test.loc[i, "Derivat"]
-                df_wrong_predictions.loc[i,"Predicted"] = class_names[y_pred[i]]
-                df_wrong_predictions.loc[i,"True"] = class_names[y_test[i]]
-                if binary_model:
-                    if probs[i][1] >= config["prediction_settings"]["prediction_threshold"]:
-                        df_wrong_predictions.loc[i,"Probability"] = probs[i][1]
-                    else:
-                        df_wrong_predictions.loc[i,"Probability"] = 1 - probs[i][1]
-                else:
-                    df_wrong_predictions.loc[i,"Probability"] = probs[i][1]
-    
-        df_wrong_predictions.to_csv(model_folder_path + "wrong_predictions.csv")
-
     @staticmethod
     def classification_on_new_data(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, list, str]:
         ''' 
@@ -250,8 +205,8 @@ class Identifier():
         logger.info("Dataset successfully preprocessed!")
 
         logger.info("Load pretrained models...")
-        model_folder_path_binary = "final_models/Binary_model"
-        model_folder_path_multiclass = "final_models/Multiclass_model"
+        model_folder_path_binary = Path("final_models/Binary_model")
+        model_folder_path_multiclass = Path("final_models/Multiclass_model")
         model_binary, vectorizer_binary, vocabulary_binary, boundingbox_features_binary = Identifier.get_model(folder_path=model_folder_path_binary)
         model_multiclass, vectorizer_multiclass, vocabulary_multiclass, boundingbox_features_multiclass = Identifier.get_model(folder_path=model_folder_path_multiclass)       
         logger.success("Pretrained models are loaded!")
@@ -290,7 +245,7 @@ class Identifier():
         
         logger.info("Prepare output...")
         # Load list of the uniform names (classes)
-        with open(model_folder_path_binary + "/list_of_uniform_names.pkl", 'rb') as names:
+        with open(os.path.join(model_folder_path_binary, "list_of_uniform_names.pkl"), 'rb') as names:
             uniform_names = pickle.load(names)
 
         # Check which uniform names are not identified
@@ -315,7 +270,7 @@ class Identifier():
 # %%
 def main():
     
-    data_path = config["test_file_path"]
+    data_path = Path(config["test_file_path"])
     df, ncar = read_file(data_path, raw=True)
 
     df_preprocessed, df_relevant_parts, einheitsname_not_found, ncar = Identifier.classification_on_new_data(df)

@@ -11,6 +11,7 @@ from pytorch_tabular.config import DataConfig, OptimizerConfig, TrainerConfig, E
 from pytorch_tabular.categorical_encoders import CategoricalEmbeddingTransformer
 
 from loguru import logger
+from pathlib import Path
 import sys
 import time
 import yaml
@@ -88,10 +89,10 @@ def model_architecture(lr, dropout, batch_size, epochs, patience, activation, la
     return tabular_model
 
 def create_logfile(model_folder_path, val_auc, best_iteration, index_best_model, metrics, hp):
-    logging_file_path = model_folder_path + "logging.txt"
+    logging_file_path = os.path.join(model_folder_path, "logging.txt")
     if os.path.isfile(logging_file_path):
         log_text = "Validation AUC (final model): {}\n".format(val_auc)
-        f= open(model_folder_path + "logging.txt","a")
+        f= open(logging_file_path,"a")
         f.write("\n_________________________________________________\n")
         f.write("Final model:\n")
         f.write(log_text)
@@ -100,7 +101,7 @@ def create_logfile(model_folder_path, val_auc, best_iteration, index_best_model,
     else:
         dataset_path = "Dataset: {}\n".format(config["paths"]["folder_processed_dataset"])
         model_folder = "Model folder path: {}\n".format(model_folder_path)
-        f= open(model_folder_path + "logging.txt","w+")
+        f= open(logging_file_path,"w+")
         f.write(dataset_path)
         f.write(model_folder)
         f.write("use_only_text: {}".format(config["dataset_params"]["use_only_text"]))

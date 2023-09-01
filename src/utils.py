@@ -4,6 +4,7 @@ import pandas as pd
 import os
 import pickle
 import json
+from pathlib import Path
 from loguru import logger
 
 import yaml
@@ -11,7 +12,7 @@ from yaml.loader import SafeLoader
 with open('src/config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
 
-def load_training_data(data_folder, binary_model: bool):
+def load_training_data(data_folder: Path, binary_model: bool):
     ''' 
     This function loads the preprocessed dataset along with train, validation and test sets from the specified data folder. The binary_model parameter indicates whether the dataset is for a binary classification task or not.
     Args:
@@ -87,7 +88,7 @@ def prepare_columns(df):
     
     return df
 
-def read_file(file_path, raw: bool):
+def read_file(file_path: Path, raw: bool):
     if raw:
         # Load the excel into a pandas dataframe, delete the header and declare the second row as new header
 
@@ -102,10 +103,10 @@ def read_file(file_path, raw: bool):
         ncar = df.iloc[0]['Code']
 
         df = prepare_columns(df)
-    
     else:
         df = pd.read_csv(file_path)
-        ncar = file_path.split("_")[0]
+        filename = os.path.split(file_path)[1]
+        ncar = filename.split("_")[0]
         df["Derivat"] = ncar
     
     return df, ncar
@@ -122,9 +123,9 @@ def load_data_into_df(raw: bool) -> tuple[list, str]:
     '''
 
     if raw:
-        folder_name = "data/raw_for_labeling"
+        folder_name = Path("data/raw_for_labeling")
     else:
-        folder_name = "data/labeled"
+        folder_name = Path("data/labeled")
 
     # Check if the folder exists   
     if not os.path.exists(folder_name):
@@ -206,7 +207,7 @@ def combine_dataframes(dataframes: list, relevant_features: list, ncars: list) -
     
     return merged_df    
 
-def store_trained_model(model, metrics: str, best_iteration: int, val_auc: float, hp: dict, index_best_model: int, model_folder_path: str, finalmodel: bool) -> None:
+def store_trained_model(model, metrics: str, best_iteration: int, val_auc: float, hp: dict, index_best_model: int, model_folder_path: Path, finalmodel: bool) -> None:
     ''' 
     This function stores the trained model, hyperparameters, metrics and best iteration information in a pickled file at the provided model folder path and logs the validation AUC and training information in a txt file.
     Args:
@@ -222,17 +223,17 @@ def store_trained_model(model, metrics: str, best_iteration: int, val_auc: float
     '''
     # save model
     if finalmodel:
-            model_path = model_folder_path + f"final_model.pkl"
+            model_path = os.path.join(model_folder_path, "final_model.pkl")
     else:
-            model_path = model_folder_path + f"model.pkl"
+            model_path = os.path.join(model_folder_path, "model.pkl")
 
     with open(model_path, "wb") as filestore:
         pickle.dump(model, filestore)
 
-    logging_file_path = model_folder_path + "logging.txt"
+    logging_file_path = os.path.join(model_folder_path, "logging.txt")
     if os.path.isfile(logging_file_path):
         log_text = "Validation AUC (final model): {}\n".format(val_auc)
-        f= open(model_folder_path + "logging.txt","a")
+        f= open(logging_file_path,"a")
         f.write("\n_________________________________________________\n")
         f.write("Final model:\n")
         f.write(log_text)
@@ -241,7 +242,7 @@ def store_trained_model(model, metrics: str, best_iteration: int, val_auc: float
     else:
         dataset_path = "Dataset: {}\n".format(config["train_settings"]["folder_processed_dataset"])
         model_folder = "Model folder path: {}\n".format(model_folder_path)
-        f= open(model_folder_path + "logging.txt","w+")
+        f= open(logging_file_path,"w+")
         f.write(dataset_path)
         f.write(model_folder)
         f.write("use_only_text: {}\n".format(config["dataset_params"]["use_only_text"]))

@@ -6,6 +6,8 @@ from sklearn.feature_extraction.text import CountVectorizer
 import re
 
 from loguru import logger
+from pathlib import Path
+import os
 import pickle
 import yaml
 from yaml.loader import SafeLoader
@@ -99,7 +101,7 @@ class DataCleaner:
 
     # PyTest exist
     @staticmethod
-    def nchar_text_to_vec(data: pd.DataFrame, model_folder_path: str) -> tuple:
+    def nchar_text_to_vec(data: pd.DataFrame, model_folder_path: Path) -> tuple:
         '''
         This function converts text data into vector representation using the n-gram approach.
         Args:
@@ -121,10 +123,10 @@ class DataCleaner:
         vocabulary = vectorizer.get_feature_names_out()
 
         # Save the vectorizer and vocabulary if a model folder path is provided
-        if model_folder_path != "":
-            with open(model_folder_path + 'vectorizer.pkl', 'wb') as f:
+        if model_folder_path.is_dir():
+            with open(os.path.join(model_folder_path, 'vectorizer.pkl'), 'wb') as f:
                 pickle.dump(vectorizer, f)
-            with open(model_folder_path + 'vocabulary.pkl', 'wb') as f:
+            with open(os.path.join(model_folder_path, 'vocabulary.pkl'), 'wb') as f:
                 pickle.dump(vocabulary, f)
 
         # Return the vectorized text data

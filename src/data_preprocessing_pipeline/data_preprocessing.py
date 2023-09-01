@@ -7,6 +7,7 @@ from sklearn.preprocessing import StandardScaler
 from datetime import datetime
 
 from loguru import logger
+from pathlib import Path
 import pickle
 import os
 import sys
@@ -59,7 +60,7 @@ class DataGenerator:
         return weight_factor
 
     @staticmethod
-    def train_test_val(df: pd.DataFrame, model_folder_path: str, binary_model: bool):
+    def train_test_val(df: pd.DataFrame, model_folder_path: Path, binary_model: bool):
         '''
         This function splits the input dataframe into training, validation and test sets for binary or multiclass task. 
         The function also stores the generated sets in dictionaries. This prepares the data for the model training process.
@@ -85,7 +86,7 @@ class DataGenerator:
         # Combine text features with bounding box features
         features = config["dataset_params"]["features_for_model"]
         bbox_features_dict = {"features_for_model": features}
-        with open(model_folder_path + 'boundingbox_features.pkl', 'wb') as fp:
+        with open(os.path.join(model_folder_path, 'boundingbox_features.pkl'), 'wb') as fp:
             pickle.dump(bbox_features_dict, fp)
 
         # Use only the text or additionally the bounding box information to generate the datasets 
@@ -102,7 +103,7 @@ class DataGenerator:
             le = preprocessing.LabelEncoder()
             y = le.fit_transform(y)
 
-            with open(model_folder_path + 'label_encoder.pkl', 'wb') as f: 
+            with open(os.path.join(model_folder_path, 'label_encoder.pkl'), 'wb') as f: 
                 pickle.dump(le, f)  
 
         # Get the weight factor to deal with the unbalanced dataset
@@ -123,7 +124,7 @@ class DataGenerator:
         return X_train, y_train, X_val, y_val, X_test, y_test, df_train, df_val, df_test, weight_factor
 
     @staticmethod
-    def generate_dataset_dict(df: pd.DataFrame, storage_path: str, binary_model: bool) -> None:
+    def generate_dataset_dict(df: pd.DataFrame, storage_path: Path, binary_model: bool) -> None:
         '''
         This function takes a pandas DataFrame containing the dataset, path of the folder where the train, validation and test splits will be stored, and a boolean value indicating whether the model is binary or not. 
         The function does the following:
@@ -163,16 +164,16 @@ class DataGenerator:
         })
 
         if binary_model:
-            with open(storage_path + 'binary/binary_train_test_val_split.pkl', 'wb') as handle:
+            with open(os.path.join(storage_path, 'binary/binary_train_test_val_split.pkl'), 'wb') as handle:
                 pickle.dump(train_val_test_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
             
-            with open(storage_path + 'binary/binary_train_test_val_dataframes.pkl', 'wb') as handle:
+            with open(os.path.join(storage_path, 'binary/binary_train_test_val_dataframes.pkl'), 'wb') as handle:
                 pickle.dump(train_val_test_dataframes, handle, protocol=pickle.HIGHEST_PROTOCOL)
         else:
-            with open(storage_path + 'multiclass/multiclass_train_test_val_split.pkl', 'wb') as handle:
+            with open(os.path.join(storage_path, 'multiclass/multiclass_train_test_val_split.pkl'), 'wb') as handle:
                 pickle.dump(train_val_test_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-            with open(storage_path + 'multiclass/multiclass_train_test_val_dataframes.pkl', 'wb') as handle:
+            with open(os.path.join(storage_path, 'multiclass/multiclass_train_test_val_dataframes.pkl'), 'wb') as handle:
                 pickle.dump(train_val_test_dataframes, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
         logger.success("Splitted datasets are successfully stored!")
@@ -197,7 +198,7 @@ class DataGenerator:
         # Create the storage path using the current datetime
         dateTimeObj = datetime.now()
         timestamp = dateTimeObj.strftime("%Y%m%d_%H%M")
-        storage_path = f"data/processed/{timestamp}/"
+        storage_path = Path(f"data/processed/{timestamp}/")
 
         # Load the labeled data into a list of dataframes
         dataframes_list, ncars = load_data_into_df(raw=False)
@@ -219,9 +220,9 @@ class DataGenerator:
             df_preprocessed = DataGenerator.normalize_dataframe(df_preprocessed)
 
         # Store the processed dataset
-        os.makedirs(storage_path + "binary")
-        os.makedirs(storage_path + "multiclass")
-        df_preprocessed.to_csv(storage_path + "processed_dataset.csv")
+        os.makedirs(os.path.join(storage_path, "binary"))
+        os.makedirs(os.path.join(storage_path, "multiclass"))
+        df_preprocessed.to_csv(os.path.join(storage_path, "processed_dataset.csv"))
 
         # Generate the training, validation, and test split
         train_val_test_dict_binary, train_val_test_dataframes_binary = DataGenerator.generate_dataset_dict(df_preprocessed, storage_path, binary_model=True)
@@ -230,10 +231,10 @@ class DataGenerator:
         logger.info("Generate and store the class distribution plots...")
         label_column_binary = config['labels']['binary_column']
         label_column_multiclass = config['labels']['multiclass_column']
-        store_class_distribution(df_preprocessed, label_column_binary, storage_path + "binary/")
-        store_class_distribution(df_preprocessed, label_column_multiclass, storage_path + "multiclass/")
+        store_class_distribution(df_preprocessed, label_column_binary, os.path.join(storage_path, "binary"))
+        store_class_distribution(df_preprocessed, label_column_multiclass, os.path.join(storage_path, "multiclass"))
         filtered_df = df_preprocessed[df_preprocessed[label_column_multiclass] != "Dummy"]
-        store_class_distribution(filtered_df, label_column_multiclass, storage_path + "multiclass/")
+        store_class_distribution(filtered_df, label_column_multiclass, os.path.join(storage_path, "multiclass"))
 
         logger.info("Generate and store plots for feature distributions...")
         store_feature_distribution(df_preprocessed, storage_path)

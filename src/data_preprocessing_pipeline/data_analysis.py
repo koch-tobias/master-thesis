@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from loguru import logger
+from pathlib import Path
 import os
 import sys
 import yaml
@@ -12,7 +13,7 @@ sys.path.append(os.getcwd())
 with open('src/config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
 
-def analyse_data_split(df_preprocessed: pd.DataFrame, y_train: np.array, y_val: np.array, y_test: np.array, model_folder_path: str, binary_model: bool) -> None:
+def analyse_data_split(df_preprocessed: pd.DataFrame, y_train: np.array, y_val: np.array, y_test: np.array, model_folder_path: Path, binary_model: bool) -> None:
     '''
     Create plots for the class distribution
     Args:
@@ -41,7 +42,7 @@ def analyse_data_split(df_preprocessed: pd.DataFrame, y_train: np.array, y_val: 
         ax.bar(x_labels, y_not_relevant, width, color='teal')
         ax.bar(x_labels, y_relevant, width, color='lightseagreen')
         ax.legend(labels=['Not Relevant', 'Relevant'])
-        fig.savefig(model_folder_path + 'binary/Binary_train_val_test_split.png', dpi=150)
+        fig.savefig(os.path.join(model_folder_path, 'binary/Binary_train_val_test_split.png'), dpi=150)
     else:
         class_names = df_preprocessed[config['labels']['multiclass_column']].unique()
         class_names = sorted(class_names)
@@ -72,12 +73,12 @@ def analyse_data_split(df_preprocessed: pd.DataFrame, y_train: np.array, y_val: 
             fig.tight_layout()
 
             if skip_dummy == 0:
-                fig.savefig(model_folder_path + 'multiclass/Multiclass_train_val_test_split.png', dpi=150)
+                fig.savefig(os.path.join(model_folder_path, 'multiclass/Multiclass_train_val_test_split.png'), dpi=150)
             else: 
-                fig.savefig(model_folder_path + 'multiclass/Multiclass_train_val_test_split_without_dummy.png', dpi=150)
+                fig.savefig(os.path.join(model_folder_path, 'multiclass/Multiclass_train_val_test_split_without_dummy.png'), dpi=150)
     logger.success("Dataset analysed!")
 
-def store_class_distribution(df: pd.DataFrame, class_column: list, storage_path: str) -> None:
+def store_class_distribution(df: pd.DataFrame, class_column: list, storage_path: Path) -> None:
     '''
     Create a bar plot with the class label distribution and save the plot in the storage_path
     Args:
@@ -95,9 +96,9 @@ def store_class_distribution(df: pd.DataFrame, class_column: list, storage_path:
     plt.xlabel(class_column)
     plt.ylabel('Number of Car Parts')
     plt.title('Class Distribution')
-    plt.savefig(storage_path + f'Distribution_{class_column}_{len(class_counts)}.png', dpi=150)
+    plt.savefig(os.path.join(storage_path, f'Distribution_{class_column}_{len(class_counts)}.png'), dpi=150)
 
-def store_feature_distribution(df, storage_path: str):
+def store_feature_distribution(df, storage_path: Path):
     '''
     Create a distribution plot for each numeric feature and save the plot in the storage_path
     Args:
@@ -108,12 +109,12 @@ def store_feature_distribution(df, storage_path: str):
     numerics = ['int16', 'int32', 'int64', 'float16', 'float32', 'float64']
     numerics_columns = list(df.select_dtypes(include=numerics).columns)
     plt. close('all')
-    os.makedirs(storage_path + "Feature_distributions")
+    os.makedirs(os.path.join(storage_path, "Feature_distributions"))
     for col in numerics_columns:
         plt.figure(figsize=(8,6))
         plt.hist(df[col], bins=30)
         plt.xlabel(col)
         plt.ylabel("Frequency")
         plt.title(f"Distribution of {col}")
-        plt.savefig(storage_path + f"Feature_distributions/Distribution_of_{col}.png")
+        plt.savefig(os.path.join(storage_path, f"Feature_distributions/Distribution_of_{col}.png"))
         plt. close('all')
