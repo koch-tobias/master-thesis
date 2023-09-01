@@ -159,7 +159,7 @@ def load_data_into_df(raw: bool) -> tuple[list, str]:
 
         return dataframes, ncars
     
-def check_nan_values(df: pd.DataFrame, relevant_features: list, ncar: str) -> list:
+def check_nan_values(data: pd.DataFrame, relevant_features: list, ncar: str) -> list:
     '''
     The function takes a pandas DataFrame as input and checks for the existence of any NaN values. It returns a list of columns that contain NaN values. 
     Args: 
@@ -167,8 +167,12 @@ def check_nan_values(df: pd.DataFrame, relevant_features: list, ncar: str) -> li
     Return: 
         columns_with_nan: A list of columns that contain NaN values in the input DataFrame. If no NaN values are present, an empty list is returned.
     '''
-    df = df[relevant_features]
-    columns_with_nan = df.columns[df.isna().any()].tolist()
+    data = data[relevant_features]
+
+    if 'Wert' in data.columns:
+        data = data.drop('Wert', axis=1)
+        
+    columns_with_nan = data.columns[data.isna().any()].tolist()
     if len(columns_with_nan) > 0:
         logger.error(f"{ncar}: There are car parts in the dataset with NaN values in the following columns: {columns_with_nan}")
     
@@ -189,7 +193,7 @@ def combine_dataframes(dataframes: list, relevant_features: list, ncars: list) -
     columns_set = set(dataframes[0].columns)
     # Check if all dataframes have the same columns 
     for df, ncar in zip(dataframes, ncars):
-        cols_with_nan_values = check_nan_values(df=df, relevant_features=relevant_features, ncar=ncar)
+        cols_with_nan_values = check_nan_values(data=df, relevant_features=relevant_features, ncar=ncar)
         if set(df.columns) != columns_set:
             logger.info(df.columns)
             logger.info(columns_set)
