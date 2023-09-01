@@ -114,7 +114,7 @@ This pipeline is used to train and evaluate new binary/multiclass models using g
 This pipeline is used to generate insights about the predictions of the final models.
 
 ## 🐍 Usage in Python
-Since there is no data provided in this repository, the first step is to add the data to the root folder by using the following folder structure:</br>
+Since there is no data provided in this repository, the first step is to **add the data to the root folder** by using the following folder structure:</br>
 master-thesis/ </br>
 ├─ data/ </br>
 │  ├─ labeled/ </br>
@@ -124,7 +124,7 @@ master-thesis/ </br>
 │  ├─ raw_for_labeling/ </br>
 
 ### Prelabeling New Data
-For prelabeling new data, the first step is to add all new, raw datasets (excel files) to the folder "data/raw_for_labeling". 
+For prelabeling new data, the first step is to **add all new, raw datasets** (excel files) to the folder "data/raw_for_labeling". 
 Each excel file must contain the structure tree of a vehicle and needs at least the following attributes:
 - Sachnummer
 - Benennung (dt)
@@ -155,7 +155,7 @@ Each excel file must contain the structure tree of a vehicle and needs at least 
 - zy
 - zz
 
-After adding all files, you can specify some of the following settings in the **src/config.yaml** file: 
+After adding all files, you can specify the following settings in the **src/config.yaml** file: 
 - **binary_column** and **multiclass_column**: Names of the label columns
 - **binary_label_1** and **binary_label_0**: The labels for the binary classification
 - **keep_modules**: Modules which should be kept
@@ -183,12 +183,12 @@ After reviewing the pre-labeled datasets, move the labeled datasets to the **"da
 
 Before running this process, you can specifiy the following settings in the **"src/config.yaml"** file:
 - **seed**: Seed for the train, val, test split
-- **cut_percent_of_front**: All components located in the front x percent are removed. (For Example: 0.18 are all car parts up to the windshield)
+- **cut_percent_of_front**: All components located in the front x percent are removed. (For Example: cut_percent_of_front=0.18 means that all car parts up to the windshield will be removed. cut_percent_of_front=0 means that no car parts will be removed)
 - **car_part_designation**: Specify the column which contains the car part designation as text
 - **use_only_text**: If true, only the designation will be used as feature. All other features are not considered.x
 - **normalize_numerical_features**:  If true, numerical features will be normalized.
 - **bounding_box_features_original**: List of all features which represent the bounding boxes
-- **features_for_model**: List of all features (except of the designation column) which are used to train the model
+- **features_for_model**: List of features which will be used, in addition to the car part designation, to train the model
 - **train_val_split**: Split into (1-x)\*100 % training and x\*100 % validation set. (x=[0,1])
 - **val_test_split**: Split into (1-x)\*100 % validationset and x\*100 % testset. (x=[0,1])
 
@@ -236,7 +236,7 @@ Before running this process, you can specifiy the following settings in the **"s
 - **n_estimators**: Number of iteration the model will be trained
 - **Specific method setting**: Metrics, boosting type, and hyperparamters for each machine learning method
 
-If train_binary_model and train_multiclass_model are both declared true, the process executes first the training of the binary model and then the training of the multiclass model, but both are stored in the same main folder
+If train_binary_model and train_multiclass_model are both declared true, the process executes first the training of the binary model and then the training of the multiclass model, but both are stored in the same main folder.
 
 After setting the desired training parameters, the training process can be started by executing the **train.py** file from the root directory by using the comand: </br>
 ```bash
