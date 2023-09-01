@@ -107,11 +107,14 @@ class xAi:
       X = np.concatenate((X_train, X_val), axis=0)
       y = np.concatenate((y_train, y_val), axis=0)
 
-      # Get shap values for all features
-      shap_values = explainer.shap_values(X, y)
-      plt.clf()
-      shap.summary_plot(shap_values[1], X, feature_list, show=False)
-      plt.savefig(model_folder_path + "shap_top10_features.png")
+      try:
+         # Get shap values for all features
+         shap_values = explainer.shap_values(X, y)
+         plt.clf()
+         shap.summary_plot(shap_values[1], X, feature_list, show=False)
+         plt.savefig(model_folder_path + "shap_top10_features.png")
+      except:
+          logger.info("Shap plot can not be generated.")
 
       return df_features, X, y
 
