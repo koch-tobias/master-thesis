@@ -370,7 +370,7 @@ pytest
 ## 🚀 Updates
 
 **2023.08.31**
-Update models -> Trained on new vectorizer
+Update models -> Trained on new vectorizer </br>
 **2023.08.27**
 Update models -> 3 more car parts are added (for interior measures) </br>
 **2023.08.03**
