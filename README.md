@@ -1,7 +1,7 @@
 # Component Identification for Geometric Measurements in the Vehicle Development Process Using Machine Learning
 
 ## 🚘🔍 CaPI 
-CaPI (Car-Part-Identifier) is a service developed as part of my master's thesis and is based on two machine learning models. CaPI identifies car parts that are relevant for geometric measurements during the vehicle development process.It is one of three components of a tool that automates the process of determining various dimensions and comparing them to guidelines and targets. </br>
+CaPI (Car-Part-Identifier) is a service developed as part of my master's thesis and is based on two machine learning models. CaPI identifies car parts that are relevant for geometric measurements during the vehicle development process. It is one of three components of a tool that automates the process of determining various dimensions and comparing them to guidelines and targets. </br>
 The input for the models is an excel file which contains a list of car parts (structure tree) including their metadata, for example:
 ![Sample excerpt input](images/sample_input.png)
 
@@ -49,7 +49,7 @@ This output is used by a CATIA macro to load the car parts into a CATIA parametr
 
 The part number is used to load the parts from the database, the uniform name to assign the parts to the various measurements, and the original part designation to manually check whether the uniform name was correctly assigned by the machine learning model.
 
-CaPI is accessible via a ([REST-API](http://10.3.13.137:7070/docs#/default/post_relevant_parts_api_get_relevant_parts__post)) or a ([website](https://car-part-identification.streamlit.app/)). The REST-API is implemented for production to integrate the measurement tool and the website is set up for the development process to test the models and to get quick feedback from the department/users.
+CaPI is accessible via a ([REST-API](http://10.3.13.137:7070/docs#/default/post_relevant_parts_api_get_relevant_parts__post)) or a ([website](https://car-part-identification.streamlit.app/)). The REST-API is implemented for production to integrate the measurement tool and the website is set up for the development process to test models and to get quick feedback from the department/users.
 
 ## 📖 Quick Index
 
@@ -64,25 +64,16 @@ CaPI is accessible via a ([REST-API](http://10.3.13.137:7070/docs#/default/post_
 ```bash
 conda create -n envMesstool python=3.10
 ```
-</br>or go to the root directory of the project and execute:
-```bash
-python3.10 -m venv envMesstool
-```
 3. Activate the created environment 
 ```bash 
 conda activate envMesstool 
-```
-</br>or
-```bash
-source env/bin/activate
 ```
 4. Go to the root directory of the project
 5. Install the requirements
 ```bash 
 pip install -r requirements.txt
 ``` 
-6. Go to the **src/config.yaml** file and change the variable **project_path** to the path to your root project folder path.
-7. DONE, the code is ready to use! 
+6. DONE, the code is ready to use! 
 
 ## ⛏️ Architecture
 ![architecture](images/pipelines/architecture.svg)
@@ -97,7 +88,7 @@ The training process, highlighted in blue, uses the labeled data as input to the
 
 **DEPLOYMENT** </br>
 The deployment process, highlighted in green, has two options - website and REST-API.
-The website is used only for testing purposes, allowing developers to quickly test new models and receive feedback from the department/ users.
+The website is used only for testing purposes, allowing developers to quickly test new models and receive feedback from the department/users.
 The REST-API is developed for production usage, allowing users to send data as a request and to receive the identiefied car parts of the machine learning models in a json-format.
 
 To better understand the structure of the code, the devoloped piplines to implement these processes are explained in the following briefly:
@@ -184,9 +175,9 @@ This file executes the following steps:
 After these steps, the prelabeled datasets are stored in the folder **"data/pre_labeled"**. 
 **Now please check if the samples are labeled correctly.** If not, you have to correct the labels manually.
 This is a critical part, because incorrectly labeled data can lead to a significant drop in the model performance.
-As an assistance to correctly label the datasets and to quickly detect possible errors, a checklist with all vehicles and the determined relevant components is available in the data folder.
+As an assistance to correctly label the datasets and to quickly detect possible errors, a checklist (excel) with all vehicles and the determined relevant components is available in the data folder.
 
-After reviewing the pre-labeled datasets, move the labeld datasets to the **"data/labeled"** folder and move the raw datasets from "data/raw_for_labeling" to the folder "data/raw" (add the derivat to the file name).
+After reviewing the pre-labeled datasets, move the labeled datasets to the **"data/labeled"** folder and move the raw datasets from "data/raw_for_labeling" to the folder "data/raw" (add the derivat to the file name).
 
 ### Generate the Training Data
 
@@ -195,6 +186,7 @@ Before running this process, you can specifiy the following settings in the **"s
 - **cut_percent_of_front**: All components located in the front x percent are removed. (For Example: 0.18 are all car parts up to the windshield)
 - **car_part_designation**: Specify the column which contains the car part designation as text
 - **use_only_text**: If true, only the designation will be used as feature. All other features are not considered.x
+- **normalize_numerical_features**:  If true, numerical features will be normalized.
 - **bounding_box_features_original**: List of all features which represent the bounding boxes
 - **features_for_model**: List of all features (except of the designation column) which are used to train the model
 - **train_val_split**: Split into (1-x)*100 % training and x*100 % validation set. (x=[0,1])
@@ -213,7 +205,7 @@ Here, this information is used to transform them into length, width, height, the
 - **Data Augmentation**: The synthetic designations are generated by adding random mistakes, switching words or generating new names using GPT3.5. The synthetic bounding box information is randomly generated, however, it must be within a validated range in terms of position, length, width, height, and volume in reference to the original components of the same class.
 - **Training, Validation, and Test Split**: To ensure that the datasets are balanced across classes a stratified training, valiadation, test split is performed with additional help of data augmentation techniques to create synthetic car parts. The goal here is to have at least 2 / (1 - percentage trainset/100) car parts, so that each split has at least one car part for each class (uniform name). </br> 
  
-The following outputs of this process are then stored in a newly created folder with the naming convention "YYYYMMDD_Time" in the folder **"data/processed"**:
+The outputs of this process are then stored in a newly created folder with the naming convention "YYYYMMDD_Time" inside the folder **"data/processed"**:
 - binary folder:
   - Dict with train, validation, and test split in dataframes (pickle file)
   - Dict with train, validation, and test split in numpy arrays (pickle file)
@@ -244,17 +236,17 @@ Before running this process, you can specifiy the following settings in the **"s
 - **n_estimators**: Number of iteration the model will be trained
 - **Specific method setting**: Metrics, boosting type, and hyperparamters for each machine learning method
 
-If train_binary_model and train_multiclass_model are both declared true, the process is executed first for the binary case and then for the multiclass case, but stored in the same main folder
+If train_binary_model and train_multiclass_model are both declared true, the process executes first the training of the binary model and then the training of the multiclass model, but both are stored in the same main folder
 
-After setting the desired training parameters, the training process can be started by executing the **main.py** file from the root directory by using the comand: </br>
+After setting the desired training parameters, the training process can be started by executing the **train.py** file from the root directory by using the comand: </br>
 ```bash
-python src\training_pipeline\main.py 
+python src\training_pipeline\train.py 
 ``` 
 
 This file executes the following steps:
 - **Hyperparameter Tuning**: The first step after loading the datasets is the tuning of the hyperparameters via grid search. Here, 81 models are trained iteratively by varying over 4 hyperparameters. 
 - **Cross-Validation**: After grid search, the top x % [default = 10] of the models are selected by the highest area under the curve (auc) score on the validation set and then validated using k-fold cross-validation.
-- **Train the Final Model**: The model with the highest auc score after cross-validation on the validation set is then selected as the "best" model. Then, the hyperparameter of the "best" model are used to train the final model on a larger trainset that combines the previous train set and the test set to use the entire available data for training. The validation of the final model is still performed on the validation set as before. 
+- **Train the Final Model**: The model with the highest auc score after cross-validation on the validation set is then selected as the "best" model. Then, the hyperparameter of this model are used to train the final model on a larger trainset that combines the previous train set and the test set to use the entire available data for training. The validation of the final model is still performed on the validation set as before. 
 
 The trained models and its files to validate and compare the models are stored in following folder: </br>
 master-thesis/ </br>
@@ -275,7 +267,7 @@ If the new trained models have a better performance, update the final models in 
 master-thesis/ </br>
 ├─ final_models/ </br>
 
-The "final_models" folder is used in production for the classification tasks.
+**The models in the "final_models" folder are used for production.**
 
 **Explainability**
 
@@ -307,7 +299,7 @@ If you want to run the website locally, run the following command from the root 
 streamlit run src\deployment\website.py
 ```
 
-The REST-API developed with FastAPI and virtualized with docker developed for production can be addressed by sending a request to the following url: </br>
+The REST-API developed with FastAPI and virtualized with docker is developed for production and can be addressed by sending a request to the following url: </br>
 ```
 http://10.3.13.137:7070/api/get_relevant_parts/
 ```
@@ -363,7 +355,7 @@ Now you can access the local API using:
 http://localhost:5000/docs
  ```
 
-If you want to quickly test models locally, add the path of the testing file to the parameter **test_file_path** in the "src/config.yaml" file and run the command from the root directory: </br>
+If you want to quickly test models locally, add the path of the testing file to the parameter **test_file_path** in the "src/config.yaml" file and run the following command from the root directory: </br>
 ```bash
 python src\deployment\classification.py 
 ``` 
