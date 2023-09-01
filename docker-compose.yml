@@ -1,0 +1,12 @@
+version: '1'
+services:
+  website:
+    # will build ./docker/web/Dockerfile
+    build: ./docker/website
+    ports:
+     - "7071:7071"
+  api:
+    # will build ./docker/db/Dockerfile
+    build: ./docker/api
+    ports:
+      - "7070:7070"
