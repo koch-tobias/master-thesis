@@ -2,12 +2,18 @@ credentials:
   usernames:
     admin:
       name: admin
-      password: admin
+      password: $2b$12$FQJlqdF4OZVuAYCI5iC/ku5VyVAYFq72lz4Aj5P/5q.og7LSo.OvW #admin
     bmwuser:
       name: bmwuser
-      password: user
+      password: $2b$12$yyk72tPkCdPHLd/qHo.YYeW7PWknZ2XwBT/9gzuiWgEkicdYQFfwG #user
 
 cookie:
   expiry_days: 30
   key: some_signature_key # Must be string
   name: some_cookie_name
+
+
+
+# The passwords are generated with the following algorithm:
+# import streamlit_authenticator as stauth
+# hashed_passwords = stauth.Hasher(['admin', 'user']).generate()

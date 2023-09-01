@@ -56,6 +56,7 @@ dataset_params:
   cut_percent_of_front: 0.18               # All car parts which are in the X percent of the front of the car will be deleted (no relevant car parts in the front of the car)
   car_part_designation: Benennung (dt)     # Column of the designation (text) which will be used for training
   use_only_text: False                     # True = Generate the dataset with only car part designation as feature
+  normalize_numerical_features: False      # If true, numerical features will be normalized 
   bounding_box_features_original:          # List of all features which represent the bounding boxes
     - X-Min
     - X-Max
@@ -96,22 +97,22 @@ dataset_params:
 ##########################################
 
 prediction_settings:
-  prediction_threshold: 0.60              # The probality of the prediction must be higer than X*100 percent that a car part will be classified as relevant (1=relevant, 0=not relevant)
+  prediction_threshold: 0.40              # The probality of the prediction must be higer than X*100 percent that a car part will be classified as relevant (1=relevant, 0=not relevant)
 
 ##########################################
 ##             TEST SETTINGS            ##
 ##########################################
-test_file_path: data/raw/G20_prismaexport-20230621-143916.xls  # Path to a file which should be used to test the API
+test_file_path: data/raw_for_labeling/G60_prismaexport-20230731-163448.xls  # Path to a file which should be used to test the API
 
 ##########################################
 ##        GENERAL TRAIN SETTINGS        ##
 ##########################################
 
 train_settings:
-  folder_processed_dataset: data/processed/24082023_1721/    # Path to the proprocessed data folder which will be used to train the model
-  train_binary_model: False                # True = Training a binary model
+  folder_processed_dataset: data/processed/20230901_1031/    # Path to the proprocessed data folder which will be used to train the model
+  train_binary_model: True                # True = Training a binary model
   train_multiclass_model: True             # True = Training a multiclass model
-  ml-method: xgboost                       # Choose lgbm, catboost, or xgboost
+  ml-method: lgbm                       # Choose lgbm, catboost, or xgboost
   k-folds: 4                               # Number of folds used for cross validation -> [default = 4]
   early_stopping: 50                       # Patience which is used for early stopping -> [default = 50]
   top_x_models_for_cv: 0.10                # X*100 percent of the trained models with grid search hyperparameter tuning will be used for validation with k-fold crossvalidation [default = 10]
