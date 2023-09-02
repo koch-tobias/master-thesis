@@ -30,49 +30,47 @@ class xAi:
 
    @staticmethod
    def add_feature_importance(model, vocabulary, model_folder_path: Path) -> pd.DataFrame:
-         ''' 
-         This function is used to extract the most important features from a given model. 
-         It takes in a trained model and the path of the folder where the model vocabulary is stored. The output of the function is a pandas DataFrame containing the column names, corresponding features, and their importance scores.
-         Args:
-            model: a trained model object
-            vocabulary: vocabulary used to train the model
-            model_folder_path: a string representing the path to the folder where the model is stored
-         Return: 
-            df_features: a pandas DataFrame containing the column names, corresponding features, and their importance scores.
-         '''
-         path_feature_importance = os.path.join(model_folder_path, "feature_importance.csv")
-         if os.path.exists(path_feature_importance):
-            df_features = pd.read_csv(path_feature_importance)
+      ''' 
+      This function is used to extract the most important features from a given model. 
+      It takes in a trained model and the path of the folder where the model vocabulary is stored. The output of the function is a pandas DataFrame containing the column names, corresponding features, and their importance scores.
+      Args:
+         model: a trained model object
+         vocabulary: vocabulary used to train the model
+         model_folder_path: a string representing the path to the folder where the model is stored
+      Return: 
+         df_features: a pandas DataFrame containing the column names, corresponding features, and their importance scores.
+      '''
+      path_feature_importance = os.path.join(model_folder_path, "feature_importance.csv")
+
+      feature_dict = {vocabulary.shape[0]+index: key for index, key in enumerate(config["dataset_params"]["features_for_model"])}
+
+      # Generate the feature importance values
+      if isinstance(model, lgb.LGBMClassifier):
+         boost = model.booster_
+         importance = boost.feature_importance()
+         column = boost.feature_name()
+      elif isinstance(model, xgb.Booster):
+         importance = model.get_score(importance_type='weight')
+         column = list(importance.keys())
+      elif isinstance(model, cbo.CatBoostClassifier):
+         importance = model.get_feature_importance()
+         column = model.feature_names_
+
+      # Store the feature importance
+      df_features = pd.DataFrame(columns=['Column','Feature','Importance Score'])
+      df_features["Column"] = column
+      df_features["Importance Score"] = importance
+      for j in range(len(column)):
+         if j < vocabulary.shape[0]:
+               df_features.loc[j,"Feature"] = vocabulary[j]
          else:
-            feature_dict = {vocabulary.shape[0]+index: key for index, key in enumerate(config["dataset_params"]["features_for_model"])}
+               df_features.loc[j,"Feature"] = feature_dict[j]
 
-            # Generate the feature importance values
-            if isinstance(model, lgb.LGBMClassifier):
-               boost = model.booster_
-               importance = boost.feature_importance()
-               column = boost.feature_name()
-            elif isinstance(model, xgb.Booster):
-               importance = model.get_score(importance_type='weight')
-               column = list(importance.keys())
-            elif isinstance(model, cbo.CatBoostClassifier):
-               importance = model.get_feature_importance()
-               column = model.feature_names_
+      df_features_sorted = df_features.sort_values(by=['Importance Score'], ascending=False)
 
-            # Store the feature importance
-            df_features = pd.DataFrame(columns=['Column','Feature','Importance Score'])
-            df_features["Column"] = column
-            df_features["Importance Score"] = importance
-            for j in range(len(column)):
-               if j < vocabulary.shape[0]:
-                     df_features.loc[j,"Feature"] = vocabulary[j]
-               else:
-                     df_features.loc[j,"Feature"] = feature_dict[j]
+      df_features_sorted.to_csv(path_feature_importance)
 
-            df_features = df_features.sort_values(by=['Importance Score'], ascending=False)
-
-            df_features.to_csv(path_feature_importance)
-
-         return df_features
+      return df_features
 
    @staticmethod
    def get_features(df_features: pd.DataFrame) -> tuple[list, list]:
@@ -104,34 +102,37 @@ class xAi:
 
       # Load dataset
       X_train, y_train, X_val, y_val, X_test, y_test, df_preprocessed, df_train, df_val, df_test, weight_factor = load_training_data(dataset_folder, binary_model=True)
-
+      logger.info(df_val.head())
       X = np.concatenate((X_train, X_val), axis=0)
       y = np.concatenate((y_train, y_val), axis=0)
-
+ 
       try:
          # Get shap values for all features
-         shap_values = explainer.shap_values(X, y)
+         shap_values = explainer.shap_values(X_val, y_val)
          plt.clf()
-         shap.summary_plot(shap_values[1], X, feature_list, show=False)
+         shap.summary_plot(shap_values[1], X_val, feature_list, max_display=30, show=False)
          plt.savefig(os.path.join(model_folder_path, "shap_top10_features.png"))
       except:
           logger.info("Shap plot can not be generated.")
-
-      return df_features, X, y
+      
+      return df_features, feature_list, X, y
 
    @staticmethod
-   def create_tree(model, X, y, model_path: Path, tree_index: int):
+   def create_tree(model, X, y, model_path: Path, feature_list, tree_index: int):
       os.environ["PATH"] += os.pathsep + "C:/Program Files/Graphviz/bin"
       plt.clf()
-      if isinstance(model, lgb.Booster):
-         ax = lgb.plot_tree(model.booster_, orientation='vertical', tree_index=tree_index, figsize=(20, 8), show_info=['split_gain'])
-      elif isinstance(model, xgb.Booster):
-         ax = xgb.plot_tree(model, num_trees=tree_index)
+      if isinstance(model, lgb.LGBMClassifier):
+         model.booster_.feature_name_ = feature_list
+         booster = model.booster_
+         ax = lgb.plot_tree(booster, orientation='vertical', tree_index=tree_index, figsize=(20, 8), dpi=400, show_info=['split_gain'])
+      elif isinstance(model, xgb.XGBClassifier):
+         model.get_booster().feature_names = feature_list
+         ax = xgb.plot_tree(model, dpi=400, num_trees=tree_index)
       elif isinstance(model, cbo.CatBoostClassifier):
-         pool = cbo.Pool(X, y, feature_names=list(X.columns))
-         ax = cbo.plot_tree(model.booster_, orientation='vertical', tree_idx=tree_index, figsize=(20, 8), show_info=['split_gain'])
+         pool = cbo.Pool(X, y, feature_names=feature_list)
+         ax = cbo.plot_tree(model.booster_, dpi=400, orientation='vertical', tree_idx=tree_index, figsize=(20, 8), show_info=['split_gain'])
 
-      plt.savefig(os.path.join(model_path, "xAi_tree.png"))
+      plt.savefig(os.path.join(model_path, f"xAi_tree_{tree_index}.png"))
 
    @staticmethod
    def create_path(path: Path):
@@ -146,8 +147,8 @@ def main():
    xai_folder_path = os.path.join(model_path_binary, "xAi")
    xAi.create_path(xai_folder_path)
    dataset_folder = Identifier.search_in_logging(text="Dataset:", model_folder_path=model_path_binary)
-   df_features, X, y = xAi.plot_shap_summary(model, vocabulary,dataset_folder, model_folder_path=xai_folder_path)
-   xAi.create_tree(model, X, y, xai_folder_path, tree_index=300)
+   df_features, feature_list, X, y = xAi.plot_shap_summary(model, vocabulary, dataset_folder, model_folder_path=xai_folder_path)
+   xAi.create_tree(model, X, y, xai_folder_path, feature_list, tree_index=20)
 
    logger.info("Store plots to explain the multiclass model...")
    model_path_multiclass = "final_models/Multiclass_model/"
@@ -155,8 +156,8 @@ def main():
    xai_folder_path = os.path.join(model_path_multiclass, "xAi")
    xAi.create_path(xai_folder_path)
    dataset_folder = Identifier.search_in_logging(text="Dataset:", model_folder_path=model_path_binary)
-   df_features, X, y = xAi.plot_shap_summary(model, vocabulary, dataset_folder, model_folder_path=xai_folder_path)
-   xAi.create_tree(model, X, y, xai_folder_path, tree_index=300)
+   df_features, feature_list, X, y = xAi.plot_shap_summary(model, vocabulary, dataset_folder, model_folder_path=xai_folder_path)
+   xAi.create_tree(model, X, y, xai_folder_path, feature_list, tree_index=20)
 
    logger.info("xAi plots successfully stored!")
 
