@@ -49,8 +49,8 @@ class xAi:
          boost = model.booster_
          importance = boost.feature_importance()
          column = boost.feature_name()
-      elif isinstance(model, xgb.Booster):
-         importance = model.get_score(importance_type='weight')
+      elif isinstance(model, xgb.XGBClassifier):
+         importance = model.get_booster().get_score(importance_type='weight')
          column = list(importance.keys())
       elif isinstance(model, cbo.CatBoostClassifier):
          importance = model.get_feature_importance()
@@ -102,18 +102,19 @@ class xAi:
 
       # Load dataset
       X_train, y_train, X_val, y_val, X_test, y_test, df_preprocessed, df_train, df_val, df_test, weight_factor = load_training_data(dataset_folder, binary_model=True)
-      logger.info(df_val.head())
       X = np.concatenate((X_train, X_val), axis=0)
       y = np.concatenate((y_train, y_val), axis=0)
  
+      
+      # Get shap values for all features
+      shap_values = explainer.shap_values(X_val, y_val)
+      plt.clf()
       try:
-         # Get shap values for all features
-         shap_values = explainer.shap_values(X_val, y_val)
-         plt.clf()
          shap.summary_plot(shap_values[1], X_val, feature_list, max_display=30, show=False)
-         plt.savefig(os.path.join(model_folder_path, "shap_top10_features.png"))
       except:
-          logger.info("Shap plot can not be generated.")
+         shap.summary_plot(shap_values, X_val, max_display=30, show=False)
+      plt.savefig(os.path.join(model_folder_path, "shap_top10_features.png"))
+
       
       return df_features, feature_list, X, y
 
@@ -126,8 +127,9 @@ class xAi:
          booster = model.booster_
          ax = lgb.plot_tree(booster, orientation='vertical', tree_index=tree_index, figsize=(20, 8), dpi=400, show_info=['split_gain'])
       elif isinstance(model, xgb.XGBClassifier):
-         model.get_booster().feature_names = feature_list
          ax = xgb.plot_tree(model, dpi=400, num_trees=tree_index)
+         #fig = plt.pyplot.gcf()
+         #fig.set_size_inches(150, 100)
       elif isinstance(model, cbo.CatBoostClassifier):
          pool = cbo.Pool(X, y, feature_names=feature_list)
          ax = cbo.plot_tree(model.booster_, dpi=400, orientation='vertical', tree_idx=tree_index, figsize=(20, 8), show_info=['split_gain'])
