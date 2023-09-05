@@ -1,12 +1,19 @@
-version: '1'
+version: '3.8'
 services:
-  website:
-    # will build ./docker/web/Dockerfile
-    build: ./docker/website
-    ports:
-     - "7071:7071"
   api:
-    # will build ./docker/db/Dockerfile
-    build: ./docker/api
+    build: 
+      context: ./
+      dockerfile: ./docker/api/Dockerfile
     ports:
       - "7070:7070"
+    restart: on-failure
+    
+  website:
+    build: 
+      context: ./
+      dockerfile: ./docker/website/Dockerfile
+    ports:
+     - "7071:7071"
+    restart: on-failure
+    depends_on:
+      - api
