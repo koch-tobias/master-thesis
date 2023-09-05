@@ -361,7 +361,7 @@ python src\deployment\classification.py
 ``` 
 It uses the models in the "final_models" folder and outputs the dataframe with all identified car parts and a list with all car parts which are not identified. The output is only visible in the terminal and is not stored.
 
-#### How to deploy api and website on the AWS server
+#### How to deploy API and Website on the AWS-Server
 
 1. Open PuTTY
 2. Add the Host Name: ubuntu@10.3.13.137
