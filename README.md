@@ -361,6 +361,30 @@ python src\deployment\classification.py
 ``` 
 It uses the models in the "final_models" folder and outputs the dataframe with all identified car parts and a list with all car parts which are not identified. The output is only visible in the terminal and is not stored.
 
+#### How to deploy api and website on the AWS server
+
+1. Open PuTTY
+2. Add the Host Name: ubuntu@10.3.13.137
+3. Go to Connection - SSH - Auth: Add the private key (.ppk file)
+4. Open the Session
+5. Rename the current master-thesis folder that it will not overwritten: (X = Version)
+```bash
+mv ~/master-thesis ~/master-thesis_X-X
+```  
+5. Open the Powershell (local): Send the directory of the projekt to the Server
+```bash
+scp -r -i master-thesis/vm_bauteilvermessung.pem master-thesis ubuntu@10.3.13.137:~
+```
+6. Stop running containers (Server):
+```bash
+sudo docker stop <container-name>
+```
+7. Create the new docker container (Server):
+```bash
+docker compose up 
+``` 
+
+
 ### Unittests
 In order to test functions individually and independently for proper operation, unit tests were developed using the pyTest library. These can be executed in the root folder by using the following command:
 ``` 
