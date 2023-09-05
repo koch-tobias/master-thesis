@@ -1,3 +1,0 @@
-Dataset: data/processed/31072023_1319/
-Method: lgbm
-use_only_text: False
