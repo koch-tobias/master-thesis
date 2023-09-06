@@ -7,7 +7,7 @@ with open('src/config.yaml') as file:
 
 url = "http://10.3.13.137:7070/api/get_relevant_parts/" 
 
-file_path = config["paths"]["test_file_path"]
+file_path = config["test_file_path"]
 files = {"file": open(file_path, "rb")}
 headers = {"accept": "application/json"}
 
