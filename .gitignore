@@ -135,6 +135,7 @@ Development/df_test.xlsx
 
 # Folder
 plots_images/
+src/deep_learning_pipeline/trained_models
 
 # Secure
 pw_hash_generator.ipynb
