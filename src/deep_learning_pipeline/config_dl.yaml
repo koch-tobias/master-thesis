@@ -1,0 +1,49 @@
+folder_processed_dataset: data/processed/20230901_1031/ 
+
+earlystopping_metric: valid_loss        # default = valid_f1_score 
+early_stopping_min_delta: 0.00001           # default = 0.00001
+early_stopping_mode: min                    # default = max   -   For valid_f1_score, higher is better
+early_stopping_patience: 10                 # default = 10    -   No. of epochs of degradation training will wait before terminating
+max_epochs: 100                             # default = 100
+
+task: classification                        # default = classification
+weight_init: kaiming                        # default = kaiming
+loss: CrossEntropyLoss                      # default = CrossEntropyLoss
+hyperparameter:
+  layers:
+    - 32-16-8
+    - 64-32-16
+    - 128-64-32
+  activation_functions:
+    - LeakyReLU
+    - ReLU
+    - sigmoid
+  batch_size: 
+    - 64
+    - 32
+    - 16
+  dropout: 
+    - 0
+    - 0.01
+    - 0.1
+target:                                                 #target should always be a list. Multi-targets are only supported for regression. Multi-Task Classification is not implemented
+  - Relevant fuer Messung                               # classes: Ja and Nein
+continuous_cols: 
+  - volume
+  - Wert
+  - center_x
+  - center_y
+  - center_z
+  - length
+  - width
+  - height
+  - theta_x
+  - theta_y
+  - theta_z
+categorical_cols:
+  - Benennung (bereinigt)
+continuous_feature_transform: quantile_normal
+normalize_continuous_features: True
+
+k-folds: 4
+top_x_models_for_cv: 0.10
