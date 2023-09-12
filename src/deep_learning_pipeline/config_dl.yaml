@@ -1,10 +1,10 @@
 folder_processed_dataset: data/processed/20230901_1031/ 
 
-earlystopping_metric: valid_loss        # default = valid_f1_score 
+earlystopping_metric: valid_loss            # default = valid_f1_score 
 early_stopping_min_delta: 0.00001           # default = 0.00001
 early_stopping_mode: min                    # default = max   -   For valid_f1_score, higher is better
-early_stopping_patience: 10                 # default = 10    -   No. of epochs of degradation training will wait before terminating
-max_epochs: 100                             # default = 100
+early_stopping_patience: 30                 # default = 10    -   No. of epochs of degradation training will wait before terminating
+max_epochs: 200                             # default = 100
 
 task: classification                        # default = classification
 weight_init: kaiming                        # default = kaiming
@@ -26,8 +26,11 @@ hyperparameter:
     - 0
     - 0.01
     - 0.1
-target:                                                 #target should always be a list. Multi-targets are only supported for regression. Multi-Task Classification is not implemented
+target:                                                 # target should always be a list. Multi-targets are only supported for regression. Multi-Task Classification is not implemented
   - Relevant fuer Messung                               # classes: Ja and Nein
+target_classes:
+  - Nein                                                # Class will be mapped to 0
+  - Ja                                                  # Class will be mapped to 1
 continuous_cols: 
   - volume
   - Wert

@@ -148,3 +148,4 @@ notes.txt
 catboost_info/
 to_dos.txt
 .vscode/settings.json
+.pt_tmp/exp_version_manager.yml
