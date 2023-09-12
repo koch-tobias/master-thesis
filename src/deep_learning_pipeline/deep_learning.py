@@ -285,10 +285,6 @@ def grid_search(df_train, df_val, df_test, experiment_path, timestamp):
                     df_gridsearch.loc[model_nr, hp_columns[3]] = hp_3
 
                     model_nr = model_nr + 1
-                    break
-                break
-            break
-        break
     
     # Store the results of the trained models after grid search
     model_folder = os.path.join(experiment_path, f"{timestamp}")
