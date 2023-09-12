@@ -292,7 +292,7 @@ master-thesis/ </br>
 The current options to deploy the models are a streamlit website, and a REST-API, which are both hosted on an AWS server. </br>
 The streamlit website is used for testing, debugging, and getting feedback of the department/users and can be adressed by the following url:
 ```
-URL zur Website
+http://10.3.13.137:7071/
 ```
 If you want to run the website locally, run the following command from the root folder:
 ```bash
@@ -375,9 +375,9 @@ mv ~/master-thesis ~/master-thesis_X-X
 ```bash
 scp -r -i master-thesis/vm_bauteilvermessung.pem master-thesis ubuntu@10.3.13.137:~
 ```
-6. Stop running containers (Server):
+6. Build images (Server):
 ```bash
-sudo docker stop <container-name>
+sudo docker compose build
 ```
 7. Create the new docker container (Server):
 ```bash
