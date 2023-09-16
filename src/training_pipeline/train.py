@@ -355,7 +355,7 @@ def train_model(folder_path: Path, binary_model: bool, method: str):
 
     df.to_csv(os.path.join(model_folder_path, "hyperparametertuning_results.csv"))
 
-    # K-Fold Cross-Validation with the 5 best model trained with the hold out method 
+    # K-Fold Cross-Validation with the 5 best model according to the validation auc after grid search 
     df = df.sort_values(by=["validation auc"], ascending=False)
 
     X = np.concatenate((X_train, X_val), axis=0)
