@@ -4,7 +4,7 @@ warnings.filterwarnings('ignore')
 import pandas as pd
 import math
 from statistics import mean
-from sklearn.metrics import accuracy_score, f1_score, recall_score
+from sklearn.metrics import accuracy_score, f1_score, recall_score, auc, roc_curve
 
 import matplotlib.pyplot as plt
 from sklearn.metrics import ConfusionMatrixDisplay
@@ -17,6 +17,7 @@ from pytorch_tabular import TabularModel
 from pytorch_tabular.models import CategoryEmbeddingModelConfig, TabNetModelConfig, FTTransformerConfig 
 from pytorch_tabular.config import DataConfig, OptimizerConfig, TrainerConfig, ExperimentConfig
 from pytorch_tabular.categorical_encoders import CategoricalEmbeddingTransformer
+from pytorch_lightning.callbacks import EarlyStopping
 
 from loguru import logger
 from pathlib import Path
@@ -44,9 +45,11 @@ def get_metrics_results(y_true, y_pred):
     if isinstance(y_pred, pd.DataFrame) or isinstance(y_pred, pd.Series):
         y_pred = y_pred.values
 
-    result_dict["test_accuracy"] = accuracy_score(y_true, y_pred)
-    result_dict["test_sensitivity"] = recall_score(y_true, y_pred, average='macro')
-    result_dict["test_f1_score"] = f1_score(y_true, y_pred, average='macro')
+    result_dict["accuracy"] = accuracy_score(y_true, y_pred)
+    result_dict["sensitivity"] = recall_score(y_true, y_pred, average='binary')
+    result_dict["f1_score"] = f1_score(y_true, y_pred, average='binary')
+    fpr, tpr, thresholds = roc_curve(y_true, y_pred)
+    result_dict["auc"] = auc(fpr, tpr)
 
     return result_dict
 
@@ -69,13 +72,14 @@ def model_architecture(lr, dropout, batch_size, activation, layers, experiment_p
                                     early_stopping_min_delta=config["early_stopping_min_delta"],
                                     early_stopping_mode=config["early_stopping_mode"], 
                                     early_stopping_patience=config["early_stopping_patience"], 
+                                    #early_stopping_kwargs={"verbose": True},
                                     checkpoints=config["earlystopping_metric"], 
                                     checkpoints_path=experiment_path,
                                     load_best=True,                                                   # After training, load the best checkpoint
                                 )
 
     # Setting up optimizer configs
-    optimizer_config = OptimizerConfig()
+    optimizer_config = OptimizerConfig(optimizer='Adam')
 
     # Setting up model configs
     model_config = CategoryEmbeddingModelConfig(
@@ -86,9 +90,9 @@ def model_architecture(lr, dropout, batch_size, activation, layers, experiment_p
                                                     dropout=dropout,
                                                     initialization = config["weight_init"],
                                                     loss= config["loss"],
-                                                    metrics=["accuracy", "f1_score"],
-                                                    metrics_params=[{},{"average":"macro"}],
-                                                    metrics_prob_input=[True, True]
+                                                    metrics = ["accuracy", "f1_score"],
+                                                    #metrics_params=[{},{"average":"binary"}],
+                                                    #metrics_prob_input=[True, True]
                                                 )
 
     experiment_config = ExperimentConfig(project_name=experiment_path, 
@@ -136,7 +140,7 @@ def results_from_experiment(model_path, metric):
     for e in tf.compat.v1.train.summary_iterator(model_path):
         for v in e.summary.value:
             if v.tag == metric:
-                results_list.append(v.simple_value)
+                results_list.append( round(v.simple_value, 5) )
     
     return results_list
 
@@ -209,18 +213,36 @@ def get_training_validation_results(experiment_path, run_name):
 
 def get_best_iteration(results, metric):
     metric = config["earlystopping_metric"]
-    if config["early_stopping_mode"] == "min":
-        best_iteration = results[metric].index(min(results[metric]))
-    else:
-        best_iteration = results[metric].index(max(results[metric]))
+    min_value = 1000
+    max_value = -1
+    best_iteration = 0
+    for i in range(len(results[metric])):
+        if config["early_stopping_mode"] == "min":
+            if results[metric][i] < min_value-config["early_stopping_min_delta"]:
+                min_value = results[metric][i]
+                best_iteration = i   
+        else:
+            if results[metric][i] > max_value+config["early_stopping_min_delta"]:
+                max_value = results[metric][i]
+                best_iteration = i
 
     return best_iteration
+
+
+def convert_numerical_columns(df):
+    # Get the list of numerical columns
+    numerical_columns = df.select_dtypes(include=[float, int]).columns
+
+    # Convert numerical columns to float with 5 digits after the decimal point
+    df[numerical_columns] = df[numerical_columns].apply(lambda x: round(x, 5))
+
+    return df
 
 def grid_search(df_train, df_val, df_test, experiment_path, timestamp):
     # Set hyperparameter
     hp_dict = config["hyperparameter"]
     # Declare the column names to generate the dataframe which stores the results and the hyperparameter of the models using grid search
-    fix_columns = ["Model", "Train loss",  "Train accuracy", "Train f1-score", "Validation loss", "Validation accuracy", "Validation f1-score", "Test accuracy", "Test sensitivity", "Test f1-score", "Training time (s)", "Trained epochs"]
+    fix_columns = ["Model", "Train loss", "Train accuracy", "Train f1-score", "Validation loss", "Validation accuracy", "Validation sensitivity", "Validation f1-score", "Validation auc", "Test accuracy", "Test sensitivity", "Test f1-score", "Test auc", "Training time (s)", "Trained epochs"]
     hp_columns = list(hp_dict.keys())
     columns = fix_columns + hp_columns
 
@@ -233,10 +255,13 @@ def grid_search(df_train, df_val, df_test, experiment_path, timestamp):
     # Grid search hyperparameter tuning
     model_nr = 1
     hp = list(hp_dict.keys())
+    logger.info("Start grid search hyperparameter tuning...")
     for hp_0 in hp_dict[hp[0]]:
         for hp_1 in hp_dict[hp[1]]:
             for hp_2 in hp_dict[hp[2]]:
                 for hp_3 in hp_dict[hp[3]]:   
+                    logger.info(f"Start grid search hyperparameter tuning for model {model_nr}:")
+                    logger.info(f"Used hyperparameter: Layers ({hp_0}), activation functions ({hp_1}), batch size ({hp_2}), dropout ({hp_3}) ")
                     # Define the name for the run
                     run_name = f"{timestamp}/grid_search/model_{model_nr}/layer_{hp_0}_activaten_{hp_1}_batch_{hp_2}_dr_{hp_3}"
 
@@ -251,9 +276,13 @@ def grid_search(df_train, df_val, df_test, experiment_path, timestamp):
 
                     # Get training and validation results
                     train_val_results_dict = get_training_validation_results(experiment_path, run_name)
-                    
-                    # Get predictions on the testset
-                    pred_df = tabular_model.predict(df_test)
+
+                    # Get predictions and results on the validation set
+                    pred_df = tabular_model.predict(df_val)
+                    validation_results = get_metrics_results(y_true=pred_df["Relevant fuer Messung"], y_pred=pred_df["prediction"])
+                                        
+                    # Get predictions and results on the testset
+                    pred_df = tabular_model.predict(df_val)
                     test_results = get_metrics_results(y_true=pred_df["Relevant fuer Messung"], y_pred=pred_df["prediction"])
                     
                     # Get the index of the best iteration 
@@ -267,38 +296,60 @@ def grid_search(df_train, df_val, df_test, experiment_path, timestamp):
                     trained_models[str_model_nr].append(best_iteration)
 
                     # Store the model results in a dataframe
+                    epochs_trained = len(train_val_results_dict["valid_loss"])-1
                     df_gridsearch.loc[model_nr, "Model"] = model_nr
-                    df_gridsearch.loc[model_nr, "Train loss"] = round(train_val_results_dict["train_loss"][best_iteration], 5)
-                    df_gridsearch.loc[model_nr, "Train accuracy"] = round(train_val_results_dict["train_accuracy"][best_iteration], 5)
-                    df_gridsearch.loc[model_nr, "Train f1-score"] = round(train_val_results_dict["train_f1_score"][best_iteration], 5)
-                    df_gridsearch.loc[model_nr, "Validation loss"] = round(train_val_results_dict["valid_loss"][best_iteration], 5)
-                    df_gridsearch.loc[model_nr, "Validation accuracy"] = round(train_val_results_dict["valid_accuracy"][best_iteration], 5)
-                    df_gridsearch.loc[model_nr, "Validation f1-score"] = round(train_val_results_dict["valid_f1_score"][best_iteration], 5)
-                    df_gridsearch.loc[model_nr, "Test accuracy"] = round(test_results["test_accuracy"], 5)
-                    df_gridsearch.loc[model_nr, "Test sensitivity"] = round(test_results["test_sensitivity"], 5)
-                    df_gridsearch.loc[model_nr, "Test f1-score"] = round(test_results["test_f1_score"], 5)                  
+
+                    # Try except, because an error in saving the train loss. The number of train loss results are less than epochs are trained
+                    try:
+                        df_gridsearch.loc[model_nr, "Train loss"] = train_val_results_dict["train_loss"][best_iteration]
+                    except:
+                        df_gridsearch.loc[model_nr, "Train loss"] = train_val_results_dict["train_loss"][-1]
+                    df_gridsearch.loc[model_nr, "Train accuracy"] = train_val_results_dict["train_accuracy"][best_iteration]
+                    df_gridsearch.loc[model_nr, "Train f1-score"] = train_val_results_dict["train_f1_score"][best_iteration]
+                    
+                    df_gridsearch.loc[model_nr, "Validation loss"] = train_val_results_dict["valid_loss"][best_iteration]
+                    df_gridsearch.loc[model_nr, "Validation accuracy"] = validation_results["accuracy"]
+                    df_gridsearch.loc[model_nr, "Validation sensitivity"] = validation_results["sensitivity"]
+                    df_gridsearch.loc[model_nr, "Validation f1-score"] = validation_results["f1_score"]            
+                    df_gridsearch.loc[model_nr, "Validation auc"] = validation_results["auc"]    
+
+                    df_gridsearch.loc[model_nr, "Test accuracy"] = test_results["accuracy"]
+                    df_gridsearch.loc[model_nr, "Test sensitivity"] = test_results["sensitivity"]
+                    df_gridsearch.loc[model_nr, "Test f1-score"] = test_results["f1_score"]            
+                    df_gridsearch.loc[model_nr, "Test auc"] = test_results["auc"]     
+
                     df_gridsearch.loc[model_nr, "Training time (s)"] = training_time
                     df_gridsearch.loc[model_nr, "Trained epochs"] = int(train_val_results_dict["epoch"][-1])
-                    df_gridsearch.loc[model_nr, hp_columns[0]] = hp_0
-                    df_gridsearch.loc[model_nr, hp_columns[1]] = hp_1
+
+                    df_gridsearch.loc[model_nr, hp_columns[0]] = str(hp_0)
+                    df_gridsearch.loc[model_nr, hp_columns[1]] = str(hp_1)
                     df_gridsearch.loc[model_nr, hp_columns[2]] = hp_2
                     df_gridsearch.loc[model_nr, hp_columns[3]] = hp_3
 
+                    valid_loss = train_val_results_dict["valid_loss"][best_iteration]
+                    valid_f1_score = train_val_results_dict["valid_f1_score"][best_iteration]
+                    logger.info(f"Model {model_nr} successfully trained. Early stopping in epoch {best_iteration}/{epochs_trained} - with {valid_loss} valid loss and {valid_f1_score} valid f1-score \n")
                     model_nr = model_nr + 1
-    
-    # Store the results of the trained models after grid search
-    model_folder = os.path.join(experiment_path, f"{timestamp}")
-    df_gridsearch.to_csv(os.path.join(model_folder, "grid_search/results_grid_search.csv"))
+
+    logger.success("Hyperparametertuning was successfull!")
 
     # Sort the results by the validation f1-score in descening order 
-    df_gridsearch_sorted = df_gridsearch.sort_values(by=["Validation f1-score"], ascending=False)
+    df_gridsearch_sorted = df_gridsearch.sort_values(by=["Validation f1-score", "Validation loss"], ascending=[False, True])
 
-    return trained_models, model_folder, df_gridsearch_sorted
+    # Assuming you have a DataFrame called 'df'
+    df_gridsearch_sorted_converted = convert_numerical_columns(df_gridsearch_sorted)
+
+    # Store the results of the trained models after grid search
+    model_folder = os.path.join(experiment_path, f"{timestamp}")
+    df_gridsearch_sorted_converted.to_csv(os.path.join(model_folder, "grid_search/results_grid_search.csv"))
+
+    return trained_models, model_folder, df_gridsearch_sorted_converted
 
 def k_fold_crossvalidation(df_train_cv, df_gridsearch_sorted, experiment_path, timestamp):
     
     # Declare the column names to generate the dataframe which stores the results and the hyperparameter of the models using grid search
-    fix_columns = ["Model", "avg train loss", "avg train accuracy", "avg train f1_score", "avg validation loss", "avg validation accuracy", "avg validation f1_score"]
+    fix_columns = ["Model", "Avg train loss", "Avg train accuracy", "Avg train f1_score", "Avg validation loss", "Avg validation accuracy", "Avg validation sensitivity", "Avg validation f1-score", "Avg validation auc"]
+ 
     hp_columns = list(config["hyperparameter"].keys())
     columns = fix_columns + hp_columns
 
@@ -324,6 +375,8 @@ def k_fold_crossvalidation(df_train_cv, df_gridsearch_sorted, experiment_path, t
     valid_loss = []
     valid_accuracy = []
     valid_f1_score = []
+    valid_sensitivity = []
+    valid_auc = []
 
     # Cross-Validation
     logger.info(f"Start to validate the top {top_x_models} models by using {number_of_folds}-fold cross-validation... ")
@@ -335,12 +388,12 @@ def k_fold_crossvalidation(df_train_cv, df_gridsearch_sorted, experiment_path, t
         layers = df_gridsearch_sorted.iloc[i]["layers"]
 
         # K-Fold Cross-Validation for each fold
-        logger.info(f"Start {number_of_folds}-fold cross-validation for model {i+1}/{total_cv_models}:")
+        logger.info(f"Start {number_of_folds}-fold cross-validation for model {i+1}/{top_x_models}:")
         for fold, (train_idx, val_idx) in enumerate(kfold.split(df_train_cv, df_train_cv[config["target"]])):
             logger.info(f"Fold: {fold+1}/{number_of_folds}")
             
             # Define the name for the run
-            run_name = f"{timestamp}/cross_validation/model_{i+1}/version{fold+1}_layer_{layers}_activaten_{activation}_batch_{batch}_dr_{dropout}"
+            run_name = f"{timestamp}/cross_validation/model_{i+1}/fold{fold+1}_layer_{layers}_activaten_{activation}_batch_{batch}_dr_{dropout}"
 
             # Get the train and validaiton data for the current fold
             train_fold = df_train_cv.iloc[train_idx]
@@ -357,35 +410,54 @@ def k_fold_crossvalidation(df_train_cv, df_gridsearch_sorted, experiment_path, t
 
             # Get index of best iteration 
             best_iteration = get_best_iteration(results=train_val_results_dict, metric=config["earlystopping_metric"])
-            
+
+            # Get predictions and results on the validation set
+            pred_df = tabular_model.predict(val_fold)
+            validation_results = get_metrics_results(y_true=pred_df["Relevant fuer Messung"], y_pred=pred_df["prediction"])
+
+            # Store confusion matrix
+            binary_model_path = os.path.join(experiment_path, run_name)
+            store_confusion_matrix(df_test=pred_df["Relevant fuer Messung"], df_pred=pred_df["prediction"], model_folder_path=binary_model_path)
+
             # Append metric results of the current fold
-            train_loss.append(train_val_results_dict["train_loss"][best_iteration])
+            try:
+                train_loss.append(train_val_results_dict["train_loss"][best_iteration])
+            except:
+                train_loss.append(train_val_results_dict["train_loss"][-1])
             train_accuracy.append(train_val_results_dict["train_accuracy"][best_iteration])
             train_f1_score.append(train_val_results_dict["train_f1_score"][best_iteration])
             valid_loss.append(train_val_results_dict["valid_loss"][best_iteration])
-            valid_accuracy.append(train_val_results_dict["valid_accuracy"][best_iteration])
-            valid_f1_score.append(train_val_results_dict["valid_f1_score"][best_iteration])
+            valid_accuracy.append(validation_results["accuracy"])
+            valid_sensitivity.append(validation_results["sensitivity"])
+            valid_f1_score.append(validation_results["f1_score"])
+            valid_auc.append(validation_results["auc"])
         
         # Store results in a dataframe
         results_cv.loc[i, "Model"] = df_gridsearch_sorted.iloc[i]["Model"]
-        results_cv.loc[i, "avg train loss"] = round(mean(train_loss), 6)
-        results_cv.loc[i, "avg train accuracy"] = round(mean(train_accuracy), 6)
-        results_cv.loc[i, "avg train f1_score"] = round(mean(train_f1_score), 6)
-        results_cv.loc[i, "avg validation loss"] = round(mean(valid_loss), 6)
-        results_cv.loc[i, "avg validation accuracy"] = round(mean(valid_accuracy), 6)
-        results_cv.loc[i, "avg validation f1_score"] = round(mean(valid_f1_score), 6)
-        results_cv.loc[i, "layers"] = layers
+        results_cv.loc[i, "Avg train loss"] = round(mean(train_loss), 6)
+        results_cv.loc[i, "Avg train accuracy"] = round(mean(train_accuracy), 6)
+        results_cv.loc[i, "Avg train f1_score"] = round(mean(train_f1_score), 6)
+        results_cv.loc[i, "Avg validation loss"] = round(mean(valid_loss), 6)
+        results_cv.loc[i, "Avg validation accuracy"] = round(mean(valid_accuracy), 6)
+        results_cv.loc[i, "Avg validation sensitivity"] = round(mean(valid_sensitivity), 6)
+        results_cv.loc[i, "Avg validation f1-score"] = round(mean(valid_f1_score), 6)
+        results_cv.loc[i, "Avg validation auc"] = round(mean(valid_auc), 6)
+        
+        results_cv.loc[i, "layers"] = str(layers)
         results_cv.loc[i, "dropout"] = dropout
         results_cv.loc[i, "batch_size"] = batch
-        results_cv.loc[i, "activation_functions"] = activation
+        results_cv.loc[i, "activation_functions"] = str(activation)
     
+    # Sort results by the average validation f1-score
+    results_cv_sorted = results_cv.sort_values(by=["Avg validation f1-score", "Avg validation loss"], ascending=[False, True])
+    best_model_index = results_cv_sorted.iloc[0]["Model"]
+
+    # Assuming you have a DataFrame called 'df'
+    df_cv_sorted_converted = convert_numerical_columns(results_cv_sorted)
+
     # Store results in a csv file
     model_folder = os.path.join(experiment_path, f"{timestamp}")
-    results_cv.to_csv(os.path.join(model_folder, "cross_validation/results_cross_validation.csv"))
-
-    # Sort results by the average validation f1-score
-    results_cv_sorted = results_cv.sort_values(by=["avg validation f1_score"], ascending=False)
-    best_model_index = results_cv_sorted.iloc[0]["Model"]
+    df_cv_sorted_converted.to_csv(os.path.join(model_folder, "cross_validation/results_cross_validation.csv"))
         
     logger.success("Cross-Validation was successfull!")
 
@@ -441,7 +513,7 @@ def train():
     best_model_after_crossvalidation = trained_models[model_name][0]
 
     # Store the best model after hyperparameter tuning and crossvalidation
-    binary_model_path = os.path.join(model_folder, "binary_model")
+    binary_model_path = os.path.join(model_folder, "best_binary_model_after_cv")
     best_model_after_crossvalidation.save_model(binary_model_path)
 
     best_iteration = trained_models[model_name][2]
@@ -490,19 +562,12 @@ def train():
     # Train and evaluate the final model
     final_model.fit(train=df_train_final_model, validation=df_val)
 
-    # Get the results of training and validation 
-    model_path = os.path.join(experiment_path, run_name) 
-    model_path = os.path.join(model_path, "version_1")
-    event_path = find_event_file(model_path)
-    train_val_results_dict = get_model_results(event_path)
+    # Get results after training
+    train_val_results_dict = get_training_validation_results(experiment_path, run_name)
 
-    # Get the index of best iteration 
-    metric = config["earlystopping_metric"]
-    if config["early_stopping_mode"] == "min":
-        best_iteration = train_val_results_dict[metric].index(min(train_val_results_dict[metric]))
-    else:
-        best_iteration = train_val_results_dict[metric].index(max(train_val_results_dict[metric]))
-
+    # Get index of best iteration 
+    best_iteration = get_best_iteration(results=train_val_results_dict, metric=config["earlystopping_metric"])
+    
     # Get the metric results of the best iteration to store them in a logfile
     train_loss = train_val_results_dict["train_loss"][best_iteration]
     train_accuracy = train_val_results_dict["train_accuracy"][best_iteration]
