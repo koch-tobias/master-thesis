@@ -1,23 +1,23 @@
 folder_processed_dataset: data/processed/20230901_1031/ 
 
-earlystopping_metric: valid_loss            # default = valid_f1_score 
-early_stopping_min_delta: 0.00001           # default = 0.00001
-early_stopping_mode: min                    # default = max   -   For valid_f1_score, higher is better
-early_stopping_patience: 30                 # default = 10    -   No. of epochs of degradation training will wait before terminating
-max_epochs: 200                             # default = 100
+earlystopping_metric: valid_loss            # default = valid_loss 
+early_stopping_min_delta: 0.0001           # default = 0.0001
+early_stopping_mode: min                    # default = min   -   For valid_loss, lower is better
+early_stopping_patience: 30                 # default = 30    -   No. of epochs of degradation training will wait before terminating
+max_epochs: 1000                             # default = 200
 
 task: classification                        # default = classification
 weight_init: kaiming                        # default = kaiming
 loss: CrossEntropyLoss                      # default = CrossEntropyLoss
 hyperparameter:
   layers:
+    - 16-8-4
     - 32-16-8
     - 64-32-16
-    - 128-64-32
   activation_functions:
     - LeakyReLU
     - ReLU
-    - sigmoid
+    - Sigmoid
   batch_size: 
     - 64
     - 32
@@ -48,5 +48,5 @@ categorical_cols:
 continuous_feature_transform: quantile_normal
 normalize_continuous_features: True
 
-k-folds: 4
+k-folds: 2
 top_x_models_for_cv: 0.10
