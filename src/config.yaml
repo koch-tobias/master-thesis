@@ -13,6 +13,10 @@ keep_modules:                            # This modules are used, all other modu
 relevant_features:                       # List of all relevant features from the raw data which will be kept in the labeled data                   
   - Sachnummer
   - Benennung (dt)
+  - Zeichnungsindex
+  - Doku-Teil
+  - Alternative
+  - Dok-Format
   - X-Min
   - X-Max
   - Y-Min
