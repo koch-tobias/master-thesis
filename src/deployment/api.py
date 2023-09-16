@@ -31,7 +31,11 @@ def dataframe_to_dict(df, einheitsname_not_found):
         sachnummer = row['Sachnummer']
         designation = row['Benennung (dt)']
         einheitsname = row['Einheitsname']
-        result_dict[sachnummer] = [designation, einheitsname]
+        zi = row['Zeichnungsindex']
+        doku = row['Doku-Teil']
+        alternative = row['Alternative']
+        dok_format = row['Dok-Format']
+        result_dict[sachnummer] = [designation, zi, doku, alternative, dok_format, einheitsname]
     
     result_dict["Fehlende Bauteile"] = einheitsname_not_found
 
