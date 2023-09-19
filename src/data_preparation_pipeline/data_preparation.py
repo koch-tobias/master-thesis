@@ -168,7 +168,7 @@ class Preperator:
         missing_columns = Preperator.check_if_columns_available(dataframe=dataframe, relevant_features=config["relevant_features"])
         if len(missing_columns) > 0:
             logger.exit(f"Please check your dataset. The following attributes are missing: {missing_columns}")
-
+        
         # Get the derivat of the selected car
         ncar = dataframe.iloc[1]['Code']
 

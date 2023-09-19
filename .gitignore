@@ -135,6 +135,7 @@ Development/df_test.xlsx
 
 # Folder
 plots_images/
+src/deep_learning_pipeline/trained_models
 
 # Secure
 pw_hash_generator.ipynb
@@ -147,3 +148,4 @@ notes.txt
 catboost_info/
 to_dos.txt
 .vscode/settings.json
+.pt_tmp/exp_version_manager.yml

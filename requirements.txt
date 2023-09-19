@@ -37,7 +37,7 @@ openai==0.27.4
 
 # Deep Learning
 # Install Pytorch from: https://pytorch.org/
-# pip install pytorch_tabular[all]
-
+pytorch-tabular==1.0.2
+tensorflow==2.13.0
 
 

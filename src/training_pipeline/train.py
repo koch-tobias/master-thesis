@@ -355,7 +355,7 @@ def train_model(folder_path: Path, binary_model: bool, method: str):
 
     df.to_csv(os.path.join(model_folder_path, "hyperparametertuning_results.csv"))
 
-    # K-Fold Cross-Validation with the 5 best model trained with the hold out method 
+    # K-Fold Cross-Validation with the 5 best model according to the validation auc after grid search 
     df = df.sort_values(by=["validation auc"], ascending=False)
 
     X = np.concatenate((X_train, X_val), axis=0)
@@ -413,7 +413,9 @@ def main():
     dateTimeObj = datetime.now()
     timestamp = dateTimeObj.strftime("%d%m%Y_%H%M")
 
-    folder_path = Path(f"src/training_pipeline/trained_models/{method}_HyperparameterTuning_{timestamp}/")
+    model_folder = Path(config["train_settings"]["model_folder_dir"])
+    folder_path = Path(f"{method}_HyperparameterTuning_{timestamp}")
+    folder_path = os.path.join(model_folder, folder_path)
     
     if train_binary_model:
         logger.info("Start training the binary models...")

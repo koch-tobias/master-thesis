@@ -13,6 +13,10 @@ keep_modules:                            # This modules are used, all other modu
 relevant_features:                       # List of all relevant features from the raw data which will be kept in the labeled data                   
   - Sachnummer
   - Benennung (dt)
+  - Zeichnungsindex
+  - Doku-Teil
+  - Alternative
+  - Dok-Format
   - X-Min
   - X-Max
   - Y-Min
@@ -110,6 +114,7 @@ test_file_path: data/raw_for_labeling/G60_prismaexport-20230731-163448.xls  # Pa
 
 train_settings:
   folder_processed_dataset: data/processed/20230901_1031/    # Path to the proprocessed data folder which will be used to train the model
+  model_folder_dir: src/training_pipeline/trained_models
   train_binary_model: True                # True = Training a binary model
   train_multiclass_model: True             # True = Training a multiclass model
   ml-method: lgbm                       # Choose lgbm, catboost, or xgboost

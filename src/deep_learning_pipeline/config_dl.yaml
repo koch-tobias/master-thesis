@@ -1,0 +1,53 @@
+folder_processed_dataset: data/processed/20230901_1031/ 
+experiment_path: src/deep_learning_pipeline/trained_models
+
+earlystopping_metric: valid_loss            # default = valid_loss 
+early_stopping_min_delta: 0.0001           # default = 0.0001
+early_stopping_mode: min                    # default = min   -   For valid_loss, lower is better
+early_stopping_patience: 30                 # default = 30    -   No. of epochs of degradation training will wait before terminating
+max_epochs: 1000                             # default = 200
+
+task: classification                        # default = classification
+weight_init: kaiming                        # default = kaiming
+loss: CrossEntropyLoss                      # default = CrossEntropyLoss
+hyperparameter:
+  layers:
+    - 16-8-4
+    - 32-16-8
+    - 64-32-16
+  activation_functions:
+    - LeakyReLU
+    - ReLU
+    - Sigmoid
+  batch_size: 
+    - 64
+    - 32
+    - 16
+  dropout: 
+    - 0
+    - 0.01
+    - 0.1
+target:                                                 # target should always be a list. Multi-targets are only supported for regression. Multi-Task Classification is not implemented
+  - Relevant fuer Messung                               # classes: Ja and Nein
+target_classes:
+  - Nein                                                # Class will be mapped to 0
+  - Ja                                                  # Class will be mapped to 1
+continuous_cols: 
+  - volume
+  - Wert
+  - center_x
+  - center_y
+  - center_z
+  - length
+  - width
+  - height
+  - theta_x
+  - theta_y
+  - theta_z
+categorical_cols:
+  - Benennung (bereinigt)
+continuous_feature_transform: quantile_normal
+normalize_continuous_features: True
+
+k-folds: 2
+top_x_models_for_cv: 0.10

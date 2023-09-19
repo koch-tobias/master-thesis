@@ -78,9 +78,9 @@ if authentication_status:
 
 
             if username == "admin":
-                df_prediction = df_relevant_parts.loc[:,["Sachnummer", "Benennung (dt)", "Einheitsname", "Wahrscheinlichkeit Relevanz", "Wahrscheinlichkeit Einheitsname"]]
+                df_prediction = df_relevant_parts.loc[:,["Sachnummer", "Benennung (dt)", "Zeichnungsindex", "Doku-Teil", "Alternative", "Dok-Format", "Einheitsname", "Wahrscheinlichkeit Relevanz", "Wahrscheinlichkeit Einheitsname"]]
             else:
-                df_prediction = df_relevant_parts.loc[:,["Sachnummer", "Benennung (dt)", "Einheitsname"]]
+                df_prediction = df_relevant_parts.loc[:,["Sachnummer", "Benennung (dt)", "Zeichnungsindex", "Doku-Teil", "Alternative", "Dok-Format", "Einheitsname"]]
 
             st.write(f"## Relevant car parts for the {ncar}:")
             st.write(df_prediction)
