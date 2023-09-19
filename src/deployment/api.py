@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 from pyxlsb import open_workbook as open_xlsb
 from io import BytesIO
 
-from src.deployment.classification import Identifier
+from src.deployment.inference import Identifier
 from src.utils import read_file
 
 app = FastAPI() # Initialize api

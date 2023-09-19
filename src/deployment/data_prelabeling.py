@@ -6,7 +6,7 @@ import sys
 sys.path.append(os.getcwd())
 
 from src.utils import load_data_into_df
-from src.deployment.classification import Identifier
+from src.deployment.inference import Identifier
 
 
 with open('src/config.yaml') as file:

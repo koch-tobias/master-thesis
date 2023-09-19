@@ -8,7 +8,7 @@ from yaml.loader import SafeLoader
 from io import BytesIO
 from pyxlsb import open_workbook as open_xlsb
 
-from classification import Identifier
+from inference import Identifier
 from src.utils import read_file
 
 

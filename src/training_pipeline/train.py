@@ -27,7 +27,7 @@ sys.path.append(os.getcwd())
 
 from classifier import Classifier
 from plot_functions import Visualization
-from src.deployment.classification import Identifier 
+from src.deployment.inference import Identifier 
 from evaluation import evaluate_model, get_best_metric_results, store_predictions
 from src.utils import store_trained_model, load_training_data
 

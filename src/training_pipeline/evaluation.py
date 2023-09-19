@@ -13,7 +13,7 @@ with open('src/config.yaml') as file:
 import sys
 sys.path.append(os.getcwd())
 
-from src.deployment.classification import Identifier
+from src.deployment.inference import Identifier
     
 def get_best_metric_results(evals: dict, best_iteration: int, method: str, binary_model: bool) -> tuple[float]:
     ''' 
