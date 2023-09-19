@@ -491,7 +491,7 @@ def train():
     # Define the experiment directory and get the starting date and time 
     dateTimeObj = datetime.now()
     timestamp = dateTimeObj.strftime("%Y%m%d_%H%M")
-    experiment_path = Path(f"src/deep_learning_pipeline/trained_models")
+    experiment_path = Path(config["experiment_path"])
 
     # Load the training, validation and test data
     X_train, y_train, X_val, y_val, X_test, y_test, df_preprocessed, df_train, df_val, df_test, weight_factor = load_training_data(data_folder=config["folder_processed_dataset"], binary_model=True)
