@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.colors import LinearSegmentedColormap
+
 
 import lightgbm as lgb
 from sklearn.metrics import ConfusionMatrixDisplay
@@ -52,7 +54,7 @@ class Visualization:
         return relevant_count
 
     @staticmethod
-    def plot_vehicle(df: pd.DataFrame, add_valid_space: bool, preprocessed_data: bool, mirrored: bool):
+    def plot_vehicle(df: pd.DataFrame, add_valid_space: bool, preprocessed_data: bool, mirrored: bool, name: str):
         ''' 
         This function takes a Pandas dataframe containing information about the bounding boxes of a vehicle and plot them in a 3D space. The plot can be mirrored and can have a valid space bounding box added. 
         It iterates through the dataframe, transforms the bounding box values and plots each. It also counts the relevant parts found and not found, and prints the result. 
@@ -92,7 +94,7 @@ class Visualization:
                 Visualization.plot_bounding_box(ax, corners, 'Valid Space', 'space')
 
         print(f"{count_relevant_parts} relevant parts found")
-        print(f"Still {count_all-count_relevant_parts} not relevant parts found")
+        print(f"Still {count_all-count_relevant_parts} not relevant parts in the data set")
 
         # Set axis labels
         ax.set_xlabel('X')
@@ -110,11 +112,11 @@ class Visualization:
                 ax.invert_xaxis()
 
         plt.subplots_adjust(left=0, right=1, bottom=0, top=1)
-        plt.savefig("../plots_images/bounding_boxes/bounding_box_G65_step00.png", format='png', bbox_inches='tight', pad_inches=0)
+        plt.savefig(f"images/bounding_boxes/{name}.png", format='png', bbox_inches='tight', pad_inches=0)
 
         # Show the plot
-        plt.show()    
-        plt.close()
+        #plt.show()    
+        #plt.close()
 
     @staticmethod
     def plot_bounding_boxes_one_vehicle(data_path: Path) -> None:
@@ -164,16 +166,16 @@ class Visualization:
         logger.info("Start analysing the preprocessed dataset...")
         # Analyze the dataset
         width = 0.25
+        fontsize = 18
         x_labels = ['Training', 'Validation', 'Test']
         if binary_model:
             fig, ax = plt.subplots(figsize=(10, 10))
-            plt.rcParams.update({'font.size': 12})
+            plt.rcParams.update({'font.size': fontsize})
             y_not_relevant = [np.count_nonzero(y_train == 0), np.count_nonzero(y_val == 0), np.count_nonzero(y_test == 0)]
             y_relevant = [np.count_nonzero(y_train == 1), np.count_nonzero(y_val == 1), np.count_nonzero(y_test == 1)]
             ax.set_ylabel('Number of Car Parts')
             ax.set_xlabel('Datasets')
-            ax.set_title('Training, Validation and Test Split')
-            ax.bar(x_labels, y_not_relevant, width, color='teal')
+            ax.bar(x_labels, y_not_relevant, width, color='F4FFFF')
             ax.bar(x_labels, y_relevant, width, color='lightseagreen')
             ax.legend(labels=['Not Relevant', 'Relevant'])
             fig.savefig(os.path.join(model_folder_path, 'Binary_train_val_test_split.png'), dpi=150)
@@ -185,7 +187,7 @@ class Visualization:
             df_count_unique_names = pd.DataFrame(columns=class_names)
             for skip_dummy in range(2):
                 fig, ax = plt.subplots(figsize=(40, 10))
-                plt.rcParams.update({'font.size': 12})
+                plt.rcParams.update({'font.size': fontsize})
 
                 for i in range(len(datasets_name)):
                     df_count_unique_names.loc[i,"Dataset"] = datasets_name[i]
@@ -199,10 +201,10 @@ class Visualization:
                             else:
                                 df_count_unique_names.loc[i, name] = np.count_nonzero(datasets[i] == n)
                         n = n + 1
-                df_count_unique_names.plot(x='Dataset', kind='bar', stacked=True, align='center', title='Training, Validation and Test Split', colormap='tab20b', ax=ax)
+                df_count_unique_names.plot(x='Dataset', kind='bar', stacked=True, align='center', colormap='tab20b', ax=ax)
                 ax.legend(bbox_to_anchor=(1.0,0.5), loc='center left')
                 ax.set_xticklabels(df_count_unique_names['Dataset'], rotation = 'horizontal')
-                ax.set_ylabel('Number of Car Parts')
+                ax.set_ylabel('Number of car parts')
                 ax.set_xlabel('Dataset')
                 fig.tight_layout()
 
@@ -229,54 +231,61 @@ class Visualization:
         '''
         if method == 'catboost':
             if binary:
-                metric_0 = config["cb_params_binary"]["metrics"][0]
-                metric_1 = config["cb_params_binary"]["metrics"][1]
+                #metric_0 = config["cb_params_binary"]["metric"]
+                metric_0 = 'F:beta=2'
+                metric_1 = config["cb_params_binary"]["loss"] 
             else:
-                if config["cb_params_multiclass"]["metrics"][0] == 'AUC':
+                '''
+                if config["cb_params_multiclass"]["metric"] == 'AUC':
                     metric_0 = 'AUC:type=Mu'
                 else:
-                    metric_0 = config["cb_params_multiclass"]["metrics"][0]
-                metric_1 = config["cb_params_multiclass"]["metrics"][1]             
+                    metric_0 = config["cb_params_multiclass"]["metric"]
+                '''
+                metric_1 = config["cb_params_multiclass"]["loss"]          
         else:
             if binary:
-                metric_0 = config["xgb_params_binary"]["metrics"][0]
-                metric_1 = config["xgb_params_binary"]["metrics"][1]
+                #metric_0 = config["xgb_params_binary"]["metric"]
+                metric_0 = 'fbeta'
+                metric_1 = config["xgb_params_binary"]["loss"]
             else:
-                metric_0 = config["xgb_params_multiclass"]["metrics"][0]
-                metric_1 = config["xgb_params_multiclass"]["metrics"][1] 
+                #metric_0 = config["xgb_params_multiclass"]["metric"]
+                metric_1 = config["xgb_params_multiclass"]["loss"]
 
         if finalmodel:
             add_to_path = "final_model_"
         else:
             add_to_path = ""
 
-        val_auc = evals["validation_1"][metric_0]
+        
         val_loss = evals["validation_1"][metric_1]
-        train_auc = evals["validation_0"][metric_0]
         train_loss = evals["validation_0"][metric_1]
 
-        plt.rcParams["figure.figsize"] = (10, 10)
-        plt.plot(train_auc, label='Train AUC')
-        plt.plot(val_auc, label='Validation AUC')
-        plt.xlabel('Number of Iterations')
-        plt.ylabel('AUC')
-        plt.title('Training and Validation AUC')
-        plt.axvline(best_iteration, color='b', label = 'early stopping')
-        plt.legend()
-        plt.ylim([0, 1])
-        plt.savefig(os.path.join(model_folder_path, add_to_path, 'auc_plot.png'))
-        plt.close()
+        if binary:
+            val_auc = evals["validation_1"][metric_0]
+            train_auc = evals["validation_0"][metric_0]
+
+            plt.rcParams["figure.figsize"] = (10, 10)
+            plt.plot(train_auc, label='Train AUC')
+            plt.plot(val_auc, label='Validation AUC')
+            plt.xlabel('Number of Iterations')
+            plt.ylabel('AUC')
+            plt.axvline(best_iteration, color='grey', label = 'early stopping')
+            plt.legend()
+            plt.ylim([0, 1.2])
+            auc_name = add_to_path +  'auc_plot.png'
+            plt.savefig(os.path.join(model_folder_path, auc_name))
+            plt.close()
 
         plt.rcParams["figure.figsize"] = (10, 10)
         plt.plot(train_loss, label='Train Loss')
         plt.plot(val_loss, label='Validation Loss')
         plt.xlabel('Number of Iterations')
         plt.ylabel('Loss')
-        plt.title('Training and Validation Loss')
-        plt.axvline(best_iteration, color='b', label = 'early stopping')
+        plt.axvline(best_iteration, color='grey', label = 'early stopping')
         plt.legend()
-        plt.ylim([-0.5, 4])
-        plt.savefig(os.path.join(model_folder_path, add_to_path, 'loss_plot.png'))
+        plt.ylim([-0.2, 4])
+        loss_name = add_to_path +  'loss_plot.png'
+        plt.savefig(os.path.join(model_folder_path, loss_name))
         plt.close()
 
     @staticmethod
@@ -298,51 +307,70 @@ class Visualization:
         else:
             add_to_path = ""
 
+        fontsize = 18
         if binary_model:
             plt.rcParams["figure.figsize"] = (10, 10)
-            lgb.plot_metric(evals, metric=config["lgbm_params_binary"]["metrics"][1])
+            lgb.plot_metric(evals, metric=config["lgbm_params_binary"]["loss"])
             plt.title("")
-            plt.xlabel('Iterationen', fontsize=12)
-            plt.ylabel('Loss', fontsize=12)
-            plt.xticks(fontsize=12)
-            plt.yticks(fontsize=12)
-            plt.legend(['Training', 'Validation'], fontsize=12)
-            plt.axvline(best_iteration, color='b', label = 'early stopping')
-            plt.ylim([-0.5, 4])
+            plt.xlabel(' Iteration', fontsize=fontsize)
+            plt.ylabel('Loss', fontsize=fontsize)
+            plt.xticks(fontsize=fontsize)
+            plt.yticks(fontsize=fontsize)
+            plt.axvline(best_iteration, color='grey', label = 'Early Stopping')
+            plt.legend(['Training', 'Validation', 'Early Stopping'], fontsize=fontsize)
+            plt.ylim([-0.2, 4])
             loss_name = add_to_path + 'binary_logloss_plot.png'
             plt.savefig(os.path.join(model_folder_path, loss_name))
             plt.close()
 
             plt.rcParams["figure.figsize"] = (10, 10)
-            lgb.plot_metric(evals, metric=config["lgbm_params_binary"]["metrics"][0])
+            lgb.plot_metric(evals, metric='fbeta')
             plt.title("")
-            plt.xlabel('Iterationen', fontsize=12 )
-            plt.ylabel('AUC', fontsize=12)
-            plt.xticks(fontsize=12)
-            plt.yticks(fontsize=12)
-            plt.legend(['Training', 'Validation'], fontsize=12)
-            plt.axvline(best_iteration, color='b', label = 'early stopping')
-            plt.ylim([-0.5, 1.2])
-            auc_name = add_to_path + 'auc_plot.png'
+            plt.xlabel('Iteration', fontsize=fontsize)
+            plt.ylabel('Fbeta', fontsize=fontsize)
+            plt.xticks(fontsize=fontsize)
+            plt.yticks(fontsize=fontsize)
+            plt.axvline(best_iteration, color='grey', label = 'Early Stopping')
+            plt.legend(['Training', 'Validation', 'Early Stopping'], fontsize=fontsize)
+            plt.ylim([0, 1.2])
+            auc_name = add_to_path + 'fbeta_plot.png'
             plt.savefig(os.path.join(model_folder_path, auc_name))
             plt.close()
+            
         else:    
             plt.rcParams["figure.figsize"] = (10, 10)
-            lgb.plot_metric(evals, metric=config["lgbm_params_multiclass"]["metrics"][1])
+            lgb.plot_metric(evals, metric=config["lgbm_params_multiclass"]["loss"])
             plt.title("")
-            plt.xlabel('Iterationen', fontsize=12)
-            plt.ylabel('Loss', fontsize=12)
-            plt.xticks(fontsize=12)
-            plt.yticks(fontsize=12)
-            plt.legend(['Training', 'Validation'], fontsize=12)
-            plt.axvline(best_iteration, color='b', label = 'early stopping')
-            plt.ylim([-0.5, 4])
+            plt.xlabel('Iteration', fontsize=fontsize)
+            plt.ylabel('Loss', fontsize=fontsize)
+            plt.xticks(fontsize=fontsize)
+            plt.yticks(fontsize=fontsize)
+            plt.axvline(best_iteration, color='grey', label = 'Early Stopping')
+            plt.legend(['Training', 'Validation', 'Early Stopping'], fontsize=fontsize)
+            plt.ylim([-0.2, 4])
             mloss_name = add_to_path + 'multi_logloss_plot.png'
             plt.savefig(os.path.join(model_folder_path, mloss_name))
             plt.close()
 
+            '''
+            val_auc = evals["validation_1"]['auc_mu']
+            train_auc = evals["validation_0"]['auc_mu']
+
+            plt.rcParams["figure.figsize"] = (10, 10)
+            plt.plot(train_auc, label='Train AUC')
+            plt.plot(val_auc, label='Validation AUC')
+            plt.xlabel('Number of Iterations')
+            plt.ylabel('AUC')
+            plt.axvline(best_iteration, color='b', label = 'early stopping')
+            plt.legend()
+            plt.ylim([0, 1.2])
+            auc_name = add_to_path +  'auc_plot.png'
+            plt.savefig(os.path.join(model_folder_path, auc_name))
+            plt.close()
+            '''
+
     @staticmethod
-    def store_confusion_matrix(y_test: np.array, y_pred: np.array, folder_path: Path, model_folder_path: Path, binary_model: bool):
+    def store_confusion_matrix(y_test: np.array, y_pred: np.array, model_folder_path: Path, binary_model: bool):
         ''' 
         This function stores the confusion matrix of a machine learning model, given the test labels and predicted labels.
         It saves the plot in a specified folder. The function also checks whether the model is binary or multiclass, in order to design the plot and the class names. If multiclass, it loads a label encoder from a saved file. 
@@ -354,18 +382,23 @@ class Visualization:
             binary_model: boolean variable indicating whether the model is binary or not. 
         Return: None 
         '''
+        fontsize = 18
+        colors = ['#F4FFFF', '#BBFFFF', '#00FFFF', '#00E6E6', '#00BFBF', '#009999', '#007F7F'] 
+        cmap = LinearSegmentedColormap.from_list('custom_cmap', colors)
+
         if binary_model:
-            class_names = ["Not relevant", "Relevant"]
-            plt.rcParams["figure.figsize"] = (15, 15)
-            ConfusionMatrixDisplay.from_predictions(y_test, y_pred, display_labels=class_names, cmap='Blues', colorbar=False,  text_kw={'fontsize': 12})
-            plt.xticks(fontsize=12)
-            plt.yticks(fontsize=12)
-            plt.xlabel('Predicted Label', fontsize=12 )
-            plt.ylabel('True Label', fontsize=12)
+            class_names = ["Relevant", "Not relevant"]
+            plt.rcParams["figure.figsize"] = (20, 20)
+            ConfusionMatrixDisplay.from_predictions(y_true=y_test, y_pred=y_pred, display_labels=class_names, cmap=cmap, colorbar=False,  text_kw={'fontsize': fontsize})
+
+            plt.xticks(fontsize=fontsize)
+            plt.yticks(fontsize=fontsize)
+            plt.xlabel('Predicted', fontsize=fontsize)
+            plt.ylabel('Actual', fontsize=fontsize)
             plt.savefig(os.path.join(model_folder_path, 'confusion_matrix.png'))
 
         else:
-            with open(os.path.join(config["train_settings"]["folder_processed_dataset"], 'label_encoder.pkl'), 'rb') as f:
+            with open(os.path.join(model_folder_path, 'label_encoder.pkl'), 'rb') as f:
                 le = pickle.load(f)
 
             class_names = []
@@ -376,11 +409,10 @@ class Visualization:
                 if (name in classes_pred) or (name in classes_true):
                     class_names.append(name)
 
-            cm_display = ConfusionMatrixDisplay.from_predictions(y_test, y_pred, display_labels=class_names)
-            # Passe die Größe des Diagramms an
-            fig, ax = plt.subplots(figsize=(40, 20))
-            # Zeige die Konfusionsmatrix an
-            cm_display.plot(ax=ax, xticks_rotation='vertical', cmap='Blues', colorbar=False,  text_kw={'fontsize': 12})
-            # Speichere das Diagramm
+            cm_display = ConfusionMatrixDisplay.from_predictions(y_test, y_pred, display_labels=class_names, text_kw={'fontsize': fontsize})
+            fig, ax = plt.subplots(figsize=(40, 40))
+            cm_display.plot(ax=ax, xticks_rotation='vertical', cmap=cmap, colorbar=False,  text_kw={'fontsize': fontsize})
+            plt.xlabel('Predicted', fontsize=fontsize)
+            plt.ylabel('Actual', fontsize=fontsize)
             plt.savefig(os.path.join(model_folder_path, 'confusion_matrix.png'))
         plt.close('all')
