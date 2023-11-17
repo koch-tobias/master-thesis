@@ -1,7 +1,10 @@
 import pandas as pd
 import numpy as np
 
-from sklearn.metrics import accuracy_score, recall_score, f1_score
+from sklearn.metrics import accuracy_score, recall_score, f1_score, fbeta_score, precision_score
+
+from loguru import logger
+
 
 from pathlib import Path
 import os
@@ -29,44 +32,48 @@ def get_best_metric_results(evals: dict, best_iteration: int, method: str, binar
         val_auc: the validation set AUC score of the best iteration
         val_loss: the validation set loss of the best iteration
     '''
+    valid_name = "validation_1"
+    training_name = "validation_0"
+
     if method == "lgbm":
-        valid_name = "valid_1"
-        training_name = "training"
         if binary_model:
-            auc = config["lgbm_params_binary"]["metrics"][0] 
-            loss = config["lgbm_params_binary"]["metrics"][1] 
+            loss = config["lgbm_params_binary"]["loss"] 
+            val_metric = 'fbeta'
         else:
-            auc = config["lgbm_params_multiclass"]["metrics"][0] 
-            loss = config["lgbm_params_multiclass"]["metrics"][1] 
+            loss = config["lgbm_params_multiclass"]["loss"] 
+            #val_metric = 'auc_mu'
 
     elif method == "xgboost":
-        valid_name = "validation_1"
-        training_name = "validation_0"
         if binary_model:
-            auc = config["xgb_params_binary"]["metrics"][0]
-            loss = config["xgb_params_binary"]["metrics"][1] 
+            loss = config["xgb_params_binary"]["loss"] 
+            val_metric = 'xgb_custom_fbeta_score'
         else:
-            auc = config["xgb_params_multiclass"]["metrics"][0]
-            loss = config["xgb_params_multiclass"]["metrics"][1]
+            loss = config["xgb_params_multiclass"]["loss"] 
 
     elif method == "catboost":
-        valid_name = "validation_1"
-        training_name = "validation_0"
         if binary_model:
-            auc = config["cb_params_binary"]["metrics"][0]
-            loss = config["cb_params_binary"]["metrics"][1] 
+            val_metric = 'F:beta=2'
+            loss = config["cb_params_binary"]["loss"] 
         else:
-            if config["cb_params_multiclass"]["metrics"][0] == 'AUC':
-                auc = 'AUC:type=Mu'
+            '''
+            if config["cb_params_multiclass"]["metric"] == 'AUC':
+                val_metric = 'AUC:type=Mu'
             else:
-                auc = config["cb_params_multiclass"]["metrics"][0]
-            loss = config["cb_params_multiclass"]["metrics"][1]        
+                val_metric = config["cb_params_multiclass"]["metric"]
+            '''
+            loss = config["cb_params_multiclass"]["loss"]    
 
-    val_auc = evals[valid_name][auc][best_iteration]
+    if binary_model:
+        val_fbeta = evals[valid_name][val_metric][best_iteration]
+        train_fbeta = evals[training_name][val_metric][best_iteration]
+    else:
+        val_fbeta = 0
+        train_fbeta = 0
+
     val_loss = evals[valid_name][loss][best_iteration]
-    train_auc = evals[training_name][auc][best_iteration]
     train_loss = evals[training_name][loss][best_iteration]
-    return train_auc, train_loss, val_auc, val_loss
+
+    return train_fbeta, train_loss, val_fbeta, val_loss
 
 def store_predictions(y_test: np.array, y_pred: np.array, probs: np.array, df_preprocessed: pd.DataFrame, df_test: pd.DataFrame, model_folder_path: Path, binary_model: bool) -> None:
     ''' 
@@ -82,9 +89,10 @@ def store_predictions(y_test: np.array, y_pred: np.array, probs: np.array, df_pr
     Return: None 
     '''
     if binary_model:
-        class_names = df_preprocessed['Relevant fuer Messung'].unique()
+        class_names = ["Relevant", "Not relevant"]
     else:
-        class_names = df_preprocessed["Einheitsname"].unique()
+        df_only_relevants = df_preprocessed[df_preprocessed["Relevant fuer Messung"] == "Ja"]
+        class_names = df_only_relevants["Einheitsname"].unique()
         class_names = sorted(class_names)
 
     df_wrong_predictions = pd.DataFrame(columns=['Sachnummer', 'Benennung (dt)', 'Derivat', 'Predicted', 'True', 'Probability'])
@@ -112,7 +120,21 @@ def store_predictions(y_test: np.array, y_pred: np.array, probs: np.array, df_pr
 
     df_wrong_predictions.to_csv(os.path.join(model_folder_path, "wrong_predictions.csv"))
 
-def evaluate_model(model, X_test: np.array, y_test: np.array, evals: dict, hp_in_iteration: dict, num_models_trained: int, training_time: float, df_columns: list, binary_model: bool, method: str) -> tuple[np.array, np.array, float, float, float, float, float, float, pd.DataFrame]:
+def calculate_metrics(y, y_pred, binary):
+
+    if binary:
+        sensitivity = recall_score(y, y_pred)
+        precision = precision_score(y, y_pred)
+        fbeta = fbeta_score(y, y_pred, beta=2)
+    else:
+        fbeta = fbeta_score(y, y_pred, beta=2, average='weighted')
+        sensitivity = recall_score(y, y_pred, average='weighted')
+        precision = precision_score(y, y_pred, average='weighted')
+
+    return precision, sensitivity, fbeta
+
+
+def evaluate_model(model, X_test: np.array, y_test: np.array, X_val: np.array, y_val: np.array, X_train: np.array, y_train: np.array, evals: dict, hp_in_iteration: dict, num_models_trained: int, training_time: float, df_columns: list, binary_model: bool, method: str) -> tuple[np.array, np.array, float, float, float, float, float, float, pd.DataFrame]:
     ''' 
     This function evaluates a trained machine learning model. It does this by predicting the test set labels and probabilities.
     Args:
@@ -137,28 +159,36 @@ def evaluate_model(model, X_test: np.array, y_test: np.array, evals: dict, hp_in
         train_loss: Train set's log loss score of the best model iteration
         df_new: a pandas dataframe containing the results of the evaluation process.
     '''
-    
-    y_pred, probs, best_iteration  = Identifier.model_predict(model=model, X_test=X_test, method=method, binary_model=binary_model)
+    y_pred_train, probs_train, best_iteration_train  = Identifier.model_predict(model=model, X_test=X_train, method=method, binary_model=binary_model)
+    y_pred_val, probs_val, best_iteration_val  = Identifier.model_predict(model=model, X_test=X_val, method=method, binary_model=binary_model)
+    y_pred_test, probs_test, best_iteration_test  = Identifier.model_predict(model=model, X_test=X_test, method=method, binary_model=binary_model)
 
-    accuracy = accuracy_score(y_test, y_pred)
-    sensitivity = recall_score(y_test, y_pred, average='macro')
-    f1score = f1_score(y_test, y_pred, average='macro')
+    fbeta_train, train_loss, fbeta_val, val_loss = get_best_metric_results(evals=evals, best_iteration=best_iteration_train, method=method, binary_model=binary_model)
+    
+    if binary_model:
+        precision_val, sensitivity_val, _ = calculate_metrics(y_val, y_pred_val, binary_model)
+    else:
+        precision_train, sensitivity_train, fbeta_train = calculate_metrics(y_train, y_pred_train, binary_model)
+        precision_val, sensitivity_val, fbeta_val = calculate_metrics(y_val, y_pred_val, binary_model)
+    
+    precision_test, sensitivity_test, fbeta_test = calculate_metrics(y_test, y_pred_test, binary_model)
 
     df_new = pd.DataFrame(columns=df_columns)
 
-    train_auc, train_loss, val_auc, val_loss = get_best_metric_results(evals=evals, best_iteration=best_iteration, method=method, binary_model=binary_model)
-
-    df_new.loc[num_models_trained, "model_name"] = f"model_{str(val_auc)[2:6]}"
-    df_new.loc[num_models_trained, "train auc"] = train_auc
+    df_new.loc[num_models_trained, "model_name"] = f"model_{str(fbeta_val)[2:6]}"
     df_new.loc[num_models_trained, "train loss"] = train_loss
-    df_new.loc[num_models_trained, "validation auc"] = val_auc
+    df_new.loc[num_models_trained, "train fbeta_score"] = fbeta_train
     df_new.loc[num_models_trained, "validation loss"] = val_loss
-    df_new.loc[num_models_trained, "test accuracy"] = accuracy
-    df_new.loc[num_models_trained, "test sensitivity"] = sensitivity
-    df_new.loc[num_models_trained, "test f1_score"] = f1score
+    df_new.loc[num_models_trained, "validation precision"] = precision_val
+    df_new.loc[num_models_trained, "validation sensitivity"] = sensitivity_val
+    df_new.loc[num_models_trained, "validation fbeta_score"] = fbeta_val
+    df_new.loc[num_models_trained, "test sensitivity"] = sensitivity_test
+    df_new.loc[num_models_trained, "test precision"] = precision_test
+    df_new.loc[num_models_trained, "test fbeta_score"] = fbeta_test
     df_new.loc[num_models_trained, "Training Time (s)"] = training_time 
     df_new.loc[num_models_trained, "patience"] = int(config["train_settings"]["early_stopping"])
+    df_new.loc[num_models_trained, "Trained iterations"] = int(best_iteration_train)
     for hp in hp_in_iteration:
         df_new.loc[num_models_trained, hp] = hp_in_iteration[hp]
 
-    return y_pred, probs, accuracy, sensitivity, val_auc, val_loss, train_auc, train_loss, df_new
+    return train_loss, fbeta_train, val_loss, precision_val, sensitivity_val, fbeta_val, sensitivity_test, precision_test, fbeta_test, df_new
