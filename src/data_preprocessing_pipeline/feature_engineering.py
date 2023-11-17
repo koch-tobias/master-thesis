@@ -366,8 +366,12 @@ class Feature_Engineering:
             # Calculate and add new features to represent the bounding boxes
             transformed_boundingbox, rotation_matrix = Feature_Engineering.transform_boundingbox(row['X-Min'], row['X-Max'], row['Y-Min'], row['Y-Max'], row['Z-Min'], row['Z-Max'],row['ox'],row['oy'],row['oz'],row['xx'],row['xy'],row['xz'],row['yx'],row['yy'],row['yz'],row['zx'],row['zy'],row['zz'])
             center_x, center_y, center_z = Feature_Engineering.calculate_center_point(transformed_boundingbox)
-            length, width, height = Feature_Engineering.calculate_lwh(transformed_boundingbox=transformed_boundingbox)
             theta_x, theta_y, theta_z = Feature_Engineering.rotation_to_orientation(rotation_matrix)
+            #length, width, height = Feature_Engineering.calculate_lwh(transformed_boundingbox=transformed_boundingbox)
+            length = row['X-Max'] - row['X-Min']
+            width =  row['Y-Max'] - row['Y-Min'] 
+            height = row['Z-Max'] - row['Z-Min']
+
             x_coords = transformed_boundingbox[:, 0]
             y_coords = transformed_boundingbox[:, 1]
             z_coords = transformed_boundingbox[:, 2]
@@ -399,5 +403,13 @@ class Feature_Engineering:
             
         df.loc[df['Wert'].isnull(), ['Wert']] = 0
         df.loc[df['density'].isnull(), ['density']] = 0
+
+        convert_dict = {
+                        "Wert": float,
+                        "density": float,
+                        "volume": float
+                    }           
+
+        df = df.astype(convert_dict)
             
         return df
