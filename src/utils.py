@@ -75,18 +75,36 @@ def prepare_columns(df):
     Return:
         df: The modified DataFrame with the desired modifications.
     '''
+
+    df = df.apply(lambda x: x.str.replace(',', '.'))
+    df = df.apply(lambda x: x.str.replace('"', ''))
+    '''
     # Iterate over the columns in the DataFrame
     for column in df.columns:
         # Iterate over the values in the specified column
         for i, value in enumerate(df[column]):
-            # Check if the value starts with a double quote
-            if str(value).startswith('"'):
-                # Remove the double quotes and replace commas with dots
-                modified_value = str(value).replace('"', '').replace(',', '.')
-                # Update the value in the DataFrame
-                df.at[i+1, column] = modified_value
+            # Remove the double quotes and replace commas with dots
+            modified_value = str(value).replace('"', '').replace(',', '.')
+            # Update the value in the DataFrame
+            df.at[i+1, column] = modified_value
+    '''
     
     return df
+
+def add_labels(dataframe: pd.DataFrame) -> pd.DataFrame:
+    '''
+    This function adds the label columns to the dataframe.
+    Args:
+        dataframe: The initial dataframe containing possibly irrelevant features.
+    Return:
+        dataframe_new: A new dataframe with the added labels.
+    '''
+    # Add and initialize the label columns "Relevant für Messung" and "Einheitsname"
+    dataframe.insert(len(dataframe.columns), config['labels']['binary_column'], config['labels']['binary_label_1']) 
+    dataframe.insert(len(dataframe.columns), config['labels']['multiclass_column'], 'Dummy') 
+
+    return dataframe
+
 
 def read_file(file_path: Path, raw: bool):
     if raw:
@@ -97,12 +115,18 @@ def read_file(file_path: Path, raw: bool):
         df = df.iloc[1:]
 
         # Drop all empty columns
-        df = df.dropna(how= "all", axis=1, inplace=False)
+        df.dropna(how= "all", axis=1, inplace=True)
+
+        df.replace(',','.', regex=True, inplace=True)
+
+        df.replace('"','', regex=True, inplace=True)
+
+        df.replace(';','', regex=True, inplace=True)
 
         # Store the ncar abbreviation for file paths
         ncar = df.iloc[0]['Code']
 
-        df = prepare_columns(df)
+        #df = prepare_columns(df)
     else:
         df = pd.read_csv(file_path)
         filename = os.path.split(file_path)[1]
@@ -132,7 +156,7 @@ def load_data_into_df(raw: bool) -> tuple[list, str]:
         logger.error(f"The path {folder_name} does not exist.")
         exit()
     else:
-        logger.info("Loading the labeled datasets...")
+        logger.info("Loading the datasets...")
 
         # Create an empty list to store all dataframes
         dataframes = []
@@ -142,6 +166,7 @@ def load_data_into_df(raw: bool) -> tuple[list, str]:
                 try:
                     file_path = os.path.join(folder_name, file)
                     df, ncar = read_file(file_path, raw)
+                    df['Derivat'] = ncar 
                 except:
                     logger.info(f"Error reading file {file}. Skipping...")
                     continue
@@ -207,7 +232,7 @@ def combine_dataframes(dataframes: list, relevant_features: list, ncars: list) -
     
     return merged_df    
 
-def store_trained_model(model, metrics: str, best_iteration: int, val_auc: float, hp: dict, index_best_model: int, model_folder_path: Path, finalmodel: bool) -> None:
+def store_trained_model(model, metrics: str, best_iteration: int, val_fbeta: float, hp: dict, index_best_model: int, model_folder_path: Path, finalmodel: bool) -> None:
     ''' 
     This function stores the trained model, hyperparameters, metrics and best iteration information in a pickled file at the provided model folder path and logs the validation AUC and training information in a txt file.
     Args:
@@ -232,7 +257,7 @@ def store_trained_model(model, metrics: str, best_iteration: int, val_auc: float
 
     logging_file_path = os.path.join(model_folder_path, "logging.txt")
     if os.path.isfile(logging_file_path):
-        log_text = "Validation AUC (final model): {}\n".format(val_auc)
+        log_text = "Validation Fbeta (final model): {}\n".format(val_fbeta)
         f= open(logging_file_path,"a")
         f.write("\n_________________________________________________\n")
         f.write("Final model:\n")
@@ -249,7 +274,7 @@ def store_trained_model(model, metrics: str, best_iteration: int, val_auc: float
         f.write("Method: {}".format(config["train_settings"]["ml-method"]))
         f.write("\n_________________________________________________\n")
         f.write("Best model after hyperparameter tuning:\n")
-        f.write("Validation AUC: {}\n".format(val_auc))
+        f.write("Validation Fbeta: {}\n".format(val_fbeta))
         f.write("Trained Iterations: {}\n".format(best_iteration))
         f.write("Model index in hyperparameter tuning: {}\n".format(index_best_model+1))
         f.write("Hyperparameter:\n")

@@ -27,3 +27,15 @@ def test_combine_dataframes():
 
     expected_result = pd.DataFrame({'A': [1, 2, 3, 7, 8, 9], 'B': [4, 5, 6, 10, 11, 12]}) 
     assert utils.combine_dataframes(dataframes, relevant_features=relevant_features, ncars=ncars).equals(expected_result)
+
+'''
+def test_add_labels():
+    # Define a mock dataframe for testing
+    data = {'feature1': [1, 2, 3, 4, 5], 'feature2': [0.1, 0.2, 0.3, 0.4, 0.5], 'feature3': ['string1', 'string2', 'string3', 'string4', 'string5']}
+    data_target = {'feature1': [1, 2, 3, 4, 5], 'feature2': [0.1, 0.2, 0.3, 0.4, 0.5], 'feature3': ['string1', 'string2', 'string3', 'string4', 'string5'], "Relevant fuer Messung": ['Nein', 'Nein', 'Nein', 'Nein', 'Nein'], "Einheitsname": ['Dummy', 'Dummy', 'Dummy', 'Dummy', 'Dummy']}
+    mock_dataframe = pd.DataFrame(data)
+    expected_outcome = pd.DataFrame(data_target)
+
+    # Test the function against the expected outcome
+    assert expected_outcome.equals(Preperator.add_labels(mock_dataframe))
+'''
