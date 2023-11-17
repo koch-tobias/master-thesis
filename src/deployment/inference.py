@@ -13,7 +13,7 @@ sys.path.append(os.getcwd())
 from src.data_preparation_pipeline.data_preparation import Preperator
 from src.data_preprocessing_pipeline.feature_engineering import Feature_Engineering
 from src.data_preprocessing_pipeline.data_cleaning import DataCleaner
-from src.utils import read_file
+from src.utils import read_file, add_labels
 
 
 with open('src/config.yaml') as file:
@@ -24,7 +24,7 @@ class Identifier():
     @staticmethod
     def search_in_logging(text:str, model_folder_path: Path) -> str or None:
         ''' 
-        Description: Returns the value after a searched text by reading the 'logging.txt' file of the given model path.
+        Returns the value after a searched text by reading the 'logging.txt' file of the given model path.
         Args:
             text: string which should be searched in the logging file
             model_folder_path: path of folder containing the model
@@ -196,6 +196,11 @@ class Identifier():
         logger.info("Prepare dataset...")
         df, ncar = Preperator.data_preparation(dataframe=df)
         logger.info("Dataset successfully prepared!")
+
+        logger.info("Add label columns...")
+        dataframe_new = add_labels(dataframe_new)
+        dataframe_new = dataframe_new.reset_index(drop=True)
+        logger.info("Labels added successfully!")
 
         logger.info("Preprocess data...")
         
