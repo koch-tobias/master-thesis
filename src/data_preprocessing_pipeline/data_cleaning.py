@@ -2,6 +2,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
+import matplotlib.pyplot as plt
 
 import re
 
@@ -12,8 +13,14 @@ import pickle
 import yaml
 from yaml.loader import SafeLoader
 
+import sys
+sys.path.append(os.getcwd())
+
+from src.training_pipeline.plot_functions import Visualization
+
 with open('src/config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
+
 
 class DataCleaner:
         
@@ -58,11 +65,11 @@ class DataCleaner:
         Return:
             designation: The function returns a string which is the cleaned version of the original input string. 
         '''
-        # transform to lower case
+        # transform to upper case
         text = str(designation).upper()
 
         # Removing punctations
-        text = re.sub(r"[^\w\s]", " ", text)
+        text = re.sub(r"[^\w\s]", "", text)
 
         # Removing numbers
         text = ''.join([i for i in text if not i.isdigit()])
@@ -73,9 +80,6 @@ class DataCleaner:
         # Remove predefined words
         predefined_words = ["ZB", "AF", "LI", "RE", "MD", "LL", "TAB", "TB"]
         text = [word for word in text if word not in predefined_words]
-
-        # Remove words with only one letter
-        text = [word for word in text if len(word) > 1]
 
         # remove empty tokens
         text = [word for word in text if len(word) > 0]
@@ -112,7 +116,7 @@ class DataCleaner:
         '''
 
         # Initialize the CountVectorizer with the desired settings
-        vectorizer = CountVectorizer(analyzer='char', ngram_range=(3, 8))
+        vectorizer = CountVectorizer(analyzer='char', ngram_range=(3, 8), lowercase=False)
 
         # Convert the text data into a vector representation
         relevant_car_parts = data[data["Relevant fuer Messung"] == "Ja"]
@@ -171,6 +175,45 @@ class DataCleaner:
         df.drop(unnamed_cols, axis=1, inplace=True)
         return df
     
+    '''
+    @staticmethod
+    def visualize_volume(df):
+
+        # Filter the dataframe for components labeled as "Ja"
+        ja_components = df[df["Relevant fuer Messung"] == "Ja"]
+
+        # Filter the dataframe for components labeled as "Nein"
+        nein_components = df[df["Relevant fuer Messung"] == "Nein"]
+
+        ja_min = min(ja_components["volume"])
+        ja_max = max(ja_components["volume"])
+        nein_min = min(nein_components["volume"])
+        nein_max = max(nein_components["volume"])
+        logger.info(f"{ja_min}, {ja_max}")
+        logger.info(f"{nein_min}, {nein_max}")
+
+        # Plotting the histogram
+        plt.hist(ja_components["volume"]/1000000, bins=100, label="Ja")
+
+        # Adding labels and legend
+        plt.xlabel("Volume")
+        plt.ylabel("Frequency")
+        plt.legend()
+
+        # Display the plot
+        plt.show()
+
+        plt.hist(nein_components["volume"]/1000000, bins=100, label="Nein")
+
+        # Adding labels and legend
+        plt.xlabel("Volume")
+        plt.ylabel("Frequency")
+        plt.legend()
+
+        # Display the plot
+        plt.show()
+    '''
+
     @staticmethod
     def clean_dataset(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
         '''
@@ -212,20 +255,34 @@ class DataCleaner:
 
         df_new_features = df_new_features.astype(convert_dict)
 
-        # Select only car parts with bounding box information
+        # Select only car parts where the bounding box information are no system errors
         df_new_features = df_new_features[(df_new_features['X-Min'] != 0) & (df_new_features['X-Max'] != 0)]
 
-        # Save the samples without/wrong bounding box information in a new df, as they will need to be added back later
+        # Save the records with system errors in the bounding box information in a new df, as they will need to be added back later
         df_temp = df[(df["X-Min"] == 0.0) & (df["X-Max"] == 0.0)]
 
-        # Delete all samples which have less volume than 500,000 mm^3
-        df_relevants = df_new_features[(df_new_features['volume'] > 500000)].reset_index(drop=True)
+        #DataCleaner.visualize_volume(df_new_features)
+
+        #Visualization.plot_vehicle(df_new_features, add_valid_space=False, preprocessed_data=True, mirrored=False, name = "bounding_box_step0")
+        print(f"Data set shape before preprocessing: {df_new_features.shape}")
+
+        # Delete all samples which have a lower volume than 450,000 mm^3
+        df_relevants = df_new_features[df_new_features['volume'] > 400000].reset_index(drop=True)
+
+        # Delete all samples which have a higher volume than 4,000,000,000 mm^3
+        df_relevants = df_relevants[df_relevants['volume'] < 4000000000].reset_index(drop=True)
+
+        #Visualization.plot_vehicle(df_relevants, add_valid_space=False, preprocessed_data=True, mirrored=False, name = "bounding_box_step1_volume")
+        print(f"Data set shape after filtering by volume: {df_relevants.shape}")
 
         # Delete all samples where the parts are in the front area of the car
         x_min_transf, x_max_transf = df_relevants["X-Min_transf"].min(), df_relevants["X-Max_transf"].max()
         car_length = x_max_transf - x_min_transf
         cut_point_x = x_min_transf + car_length*config["dataset_params"]["cut_percent_of_front"]
         df_relevants = df_relevants[df_relevants["X-Min_transf"] > cut_point_x]
+
+        #Visualization.plot_vehicle(df_relevants, add_valid_space=False, preprocessed_data=True, mirrored=False, name = "bounding_box_step2_postion")
+        print(f"Data set shape after filtering front car parts: {df_relevants.shape}")
 
         # Concatenate the two dataframes
         df_relevants = pd.concat([df_relevants, df_temp], ignore_index=True).reset_index(drop=True)
@@ -238,7 +295,7 @@ class DataCleaner:
         df_filtered = df_relevants[df_relevants.duplicated(subset='Sachnummer', keep=False)]
         df_filtered = df_filtered[df_filtered['yy'].astype(float) >= 0]
         df_relevants = pd.concat([df_new, df_filtered], ignore_index=True).reset_index(drop=True)
-
+    
         # Drop the mirrored car parts (on the right sight) which have not the same part number 
         df_relevants = df_relevants.loc[~(df_relevants.duplicated(subset='Kurzname', keep=False) & (df_relevants['L/R-Kz.'] == 'R'))]
 
@@ -246,10 +303,16 @@ class DataCleaner:
 
         df_relevants = DataCleaner.drop_unnamed_columns(df_relevants)
 
+        #Visualization.plot_vehicle(df_relevants, add_valid_space=False, preprocessed_data=True, mirrored=False, name = "bounding_box_step3_mirrored")
+        print(f"Data set shape after removing mirrored car parts: {df_relevants.shape}")
+
         # Reset the index of the merged data frame
         df_relevants = df_relevants.reset_index(drop=True)
 
         df_relevants = df_relevants.drop_duplicates().reset_index(drop=True)
+
+        #Visualization.plot_vehicle(df_relevants, add_valid_space=False, preprocessed_data=True, mirrored=False, name = "bounding_box_step4_duplicates")
+        print(f"Data set shape after removing duplicates: {df_relevants.shape}")
 
         logger.success(f"The dataset is successfully preprocessed. The new dataset contains {df_relevants.shape[0]} samples")
 

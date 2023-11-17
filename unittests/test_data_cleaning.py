@@ -21,12 +21,12 @@ def test_outlier_detection():
     assert DataCleaner.outlier_detection(df).empty
 
 def test_prepare_text(): 
-    input_text = "ZB-34232/RE LI9090/TAB HIMMEL SHD." 
+    input_text = "ZB-34232/  RE LI9090/ TAB HIMMEL SHD." 
     expected_output = "HIMMEL SHD" 
     assert DataCleaner.prepare_text(input_text) == expected_output
 
-    input_text = "This is a test A.F.-51232/AF designation." 
-    expected_output = "THIS IS TEST DESIGNATION" 
+    input_text = "This is a test A.F. -51232/AF designation." 
+    expected_output = "THIS IS A TEST DESIGNATION" 
     assert DataCleaner.prepare_text(input_text) == expected_output
 
 def test_clean_text():
@@ -39,7 +39,7 @@ def test_clean_text():
    df_cleaned = DataCleaner.clean_text(df)
    
    # Test the transformed text of the first row
-   assert df_cleaned['Benennung (bereinigt)'][0] == 'THIS IS TEST TEXT'
+   assert df_cleaned['Benennung (bereinigt)'][0] == 'THIS IS A TEST TEXT'
 
    # Test the transformed text of the second row
    assert df_cleaned['Benennung (bereinigt)'][1] == ''
