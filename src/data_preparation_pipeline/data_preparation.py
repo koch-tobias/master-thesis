@@ -9,7 +9,7 @@ with open('src/config.yaml') as file:
 
 class Preperator:
     """
-    This class creates a instance to prepare raw data.
+    This class creates a instance to select the pre-defined modules and keep only components of the labeled data (structural part lists).
     """
 
     # PyTest exist
@@ -34,11 +34,10 @@ class Preperator:
     @staticmethod
     def get_endindex(lst: list, value):
         """
-        This function takes a list and a value as input, and returns the next value
-        after the given one.
+        This function searches the index of the last record in a pre-defined module.
         Args:
-            lst: list 
-            value: value which will be searched in the list
+            lst: list which contains all records which are on the same level
+            value: index of the record where the desired module starts
         Return: 
             Next value in list or None (if not found or last element in list)
         """
@@ -59,21 +58,20 @@ class Preperator:
     @staticmethod
     def car_part_selection(dataframe: pd.DataFrame) -> pd.DataFrame:
         '''
-        This function selects the car parts from a dataframe of car structure and returns a new dataframe with only the selected modules.
+        This function gets a dataframe- (structural part list) as input and returns a new dataframe with only pre-defined modules.
         Args:
-            dataframe: The initial dataframe containing the car structure with all car parts and the metadata.
+            dataframe: The initial dataframe containing the structural part list with all car parts the hierachical structures and the metadata.
         Return:
-            dataframe_new: A new dataframe containing only the car parts on the last level of the car structure with "Dok-Format" equals to "5P" and the selected modules.
+            dataframe_new: A new dataframe containing only component of pre-defined modules.
         '''
         # Initialize an empty dataframe with the same columns as the given one
         dataframe_new = pd.DataFrame(columns=dataframe.columns)
 
-        # Iterate over each module which should be kept
+        # Iterate over each module which should be kept in the data
         for module in config["keep_modules"]:
             endindex = -1
             try: 
-                # Iterate over each sample where the module number equals the module which should be kept.
-                # It stores all car parts which are in the module to the new dataframe
+                # Iterate over each record to find the start and endindex of the pre-defined modules. Then, store  the record in a new dataframe
                 for i in range(dataframe[dataframe["Modul (Nr)"] == module].shape[0]):
                     level = dataframe[dataframe["Modul (Nr)"] == module]["Ebene"].values[i]
                     startindex = dataframe[dataframe["Modul (Nr)"] == module].index[i]
@@ -89,7 +87,7 @@ class Preperator:
             except:
                 logger.info(f"Module {module} not found in the structure tree!")
 
-        # Keep only the relevant samples with Dok-Format=5P. These are on the last level of the car structure and contains only car parts
+        # Keep only components and remove all records which represent the hierarchical structure
         dataframe_new = dataframe_new[dataframe_new["Dok-Format"]=='5P'].reset_index(drop=True)
 
         return dataframe_new
@@ -104,10 +102,12 @@ class Preperator:
         Return:
             dataframe_new: A new dataframe with only relevant features and converted datatypes.
         '''
+        features = config["relevant_features"] + [config["labels"]["binary_column"]] + [config["labels"]["multiclass_column"]] + ['Derivat']
+
         # Keep only features which are identified as relevant for the preprocessing, the predictions or for the users' next steps
-        dataframe_new = dataframe[config["relevant_features"]]
+        dataframe_new = dataframe[features]
         
-        # Dict which is used to transform the data types of the bounding box features 
+        # Convert the data types of the numerical features 
         convert_dict = {
                         "X-Min": float,
                         "X-Max": float,
@@ -134,35 +134,18 @@ class Preperator:
 
         return dataframe_new
 
-    # PyTest exist
-    @staticmethod
-    def add_labels(dataframe: pd.DataFrame) -> pd.DataFrame:
-        '''
-        This function adds the label columns to the dataframe.
-        Args:
-            dataframe: The initial dataframe containing possibly irrelevant features.
-        Return:
-            dataframe_new: A new dataframe with the added labels.
-        '''
-        # Add and initialize the label columns "Relevant für Messung" and "Einheitsname"
-        dataframe.insert(len(dataframe.columns), config['labels']['binary_column'], config['labels']['binary_label_0']) 
-        dataframe.insert(len(dataframe.columns), config['labels']['multiclass_column'], 'Dummy') 
-
-        return dataframe
-
     @staticmethod
     def data_preparation(dataframe: pd.DataFrame) -> tuple[pd.DataFrame, str]:
         '''
-        The function takes a pandas DataFrame as input and prepares the data by performing several data preprocessing steps. 
-        It drops all empty columns, checks if all relevant features are available, stores the NCAR abbreviation for file paths, retains only the relevant samples with Dok-Format=5P and only keep relevant features. 
-        It then creates and adds two new columns "Relevant fuer Messung" and "Einheitsname". Finally, it returns a tuple with the preprocessed DataFrame object and the NCAR abbreviation. 
+        The function takes a pandas DataFrame as input and prepares the data. 
+        It drops all empty columns, checks if all relevant features are available, stores the NCAR abbreviation for file paths, retains only the relevant modules and only keep relevant features. 
+        Finally, it returns a tuple with the preprocessed DataFrame object and the NCAR abbreviation. 
         Args: 
             dataframe: A pandas DataFrame object. 
         Return: 
             dataframe: preprocessed pandas DataFrame object 
             ncar: string (NCAR abbreviation) which is used for file paths.
         '''
-        logger.info("Start preparing the data...")
 
         # Check if all necassary columns are available in the dataset
         missing_columns = Preperator.check_if_columns_available(dataframe=dataframe, relevant_features=config["relevant_features"])
@@ -170,23 +153,15 @@ class Preperator:
             logger.exit(f"Please check your dataset. The following attributes are missing: {missing_columns}")
         
         # Get the derivat of the selected car
-        ncar = dataframe.iloc[1]['Code']
+        ncar = dataframe.iloc[1]['Derivat']
 
-        # Select specified modules 
+        # Select pre-defined modules 
         dataframe_new = Preperator.car_part_selection(dataframe)
 
-        # Delete the NCAR abbreviation due to data security
+        # Delete the NCAR abbreviation due to data privacy
         dataframe_new[config["dataset_params"]["car_part_designation"]] = dataframe_new[config["dataset_params"]["car_part_designation"]].apply(lambda x: x.replace(ncar, ""))
         
-        # Select relevant features
+        # Select the pre-defined features, which are relevant for further preprocessing
         dataframe_new = Preperator.feature_selection(dataframe_new)
-
-        # Add label columns
-        dataframe_new = Preperator.add_labels(dataframe_new)
-
-        # Reset and drop index
-        dataframe_new = dataframe_new.reset_index(drop=True)
-
-        logger.success(f"The data is successfully prepared! The features are reduced and formated to the correct data type, subfolders are deleted, and only relevant modules are kept!")
         
         return dataframe_new, ncar
