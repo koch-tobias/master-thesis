@@ -15,6 +15,7 @@ import yaml
 from yaml.loader import SafeLoader
 sys.path.append(os.getcwd())
 
+from src.data_preparation_pipeline.data_preparation import Preperator
 from src.data_preprocessing_pipeline.feature_engineering import Feature_Engineering
 from src.data_preprocessing_pipeline.data_cleaning import DataCleaner
 from src.data_preprocessing_pipeline.augmentation import DataAugmention
@@ -43,19 +44,22 @@ class DataGenerator:
             weight_factor: A dictionary with keys as class labels and values as corresponding weight factors for multi-class classification or a single integer indicating the weight factor for binary classification. If there are no samples labeled "Ja" in the binary classification dataset, the function returns 0.
         '''
         if binary_model == False:
-            unique_einheitsnamen = np.unique(y)
             weight_factor = {}
-            for name in unique_einheitsnamen:
-                weight_factor[name] = round(np.count_nonzero(y != name) / np.count_nonzero(y == name))
-                if weight_factor[name] == 0:
-                    weight_factor[name] = 1
+            if y.size != 0:
+                unique_einheitsnamen, counts = np.unique(y, return_counts=True)
+                max_records_most_common_class = max(counts)
+        
+                for name in unique_einheitsnamen:
+                    weight_factor[name] = round(max_records_most_common_class / np.count_nonzero(y == name))
+                    if weight_factor[name] == 0:
+                        weight_factor[name] = 1
         else:
             binary_label_column = config['labels']['binary_column']
-            if df[df[binary_label_column]==config['labels']['binary_label_1']].shape[0] == 0:
+            if df[df[binary_label_column]==config['labels']['binary_label_0']].shape[0] == 0:
                 weight_factor = 0
                 logger.error("The dataset does not contain any ""Ja"" labeled samples")
             else:
-                weight_factor = round(df[df[binary_label_column]==config['labels']['binary_label_0']].shape[0] / df[df[binary_label_column]==config['labels']['binary_label_1']].shape[0])
+                weight_factor = round(df[df[binary_label_column]==config['labels']['binary_label_1']].shape[0] / df[df[binary_label_column]==config['labels']['binary_label_0']].shape[0])
 
         return weight_factor
 
@@ -94,7 +98,7 @@ class DataGenerator:
             X = np.concatenate((X, df[features].values), axis=1)
 
         if binary_model:
-            # Map relevant features to 1 and not relevant features to 0
+            # Map relevant features to 0 and not relevant features to 1
             y = df[config['labels']['binary_column']]
             y = y.map({config['labels']['binary_label_1']: 1, config['labels']['binary_label_0']: 0})
         else:
@@ -144,6 +148,12 @@ class DataGenerator:
 
         # Analyse the dataset classes 
         analyse_data_split(df, y_train, y_val, y_test, storage_path, binary_model) 
+
+        """
+        print(f"X_train: {X_train.shape}, y_train: {y_train.shape}")
+        print(f"X_val: {X_val.shape}, y_val: {y_val.shape}")
+        print(f"X_test: {X_test.shape}, y_test: {y_test.shape}")
+        """
         
         # Store the train, validation, and test datasets as arrays
         train_val_test_dict = dict({
@@ -200,15 +210,29 @@ class DataGenerator:
         timestamp = dateTimeObj.strftime("%Y%m%d_%H%M")
         storage_path = Path(f"data/processed/{timestamp}/")
 
+        binary_path = os.path.join(storage_path, "binary")
+        multiclass_path = os.path.join(storage_path, "multiclass")
+
+        os.makedirs(binary_path)
+        os.makedirs(multiclass_path)
+
         # Load the labeled data into a list of dataframes
         dataframes_list, ncars = load_data_into_df(raw=False)
 
+        logger.info("Start preparing the data...")
+        for index, dataframe in enumerate(dataframes_list) :
+            dataframes_list[index], ncar = Preperator.data_preparation(dataframe)
+        logger.success(f"The data is successfully prepared! The features are reduced and formated to the correct data type, subfolders are deleted, and only relevant modules are kept!")
+
         # Combine all dataframes to one
         df_combined = combine_dataframes(dataframes_list, relevant_features=config["dataset_params"]["bounding_box_features_original"], ncars=ncars)
-
+    
         # Transdorm and add new features
         df_new_features = Feature_Engineering.add_new_features(df_combined)
-        
+
+        store_class_distribution(df_new_features, config['labels']['binary_column'], binary_path)
+        store_class_distribution(df_new_features, config['labels']['multiclass_column'], multiclass_path)
+
         # Clean the dataset
         df_preprocessed, df_for_plot = DataCleaner.clean_dataset(df_new_features)
 
@@ -220,21 +244,26 @@ class DataGenerator:
             df_preprocessed = DataGenerator.normalize_dataframe(df_preprocessed)
 
         # Store the processed dataset
-        os.makedirs(os.path.join(storage_path, "binary"))
-        os.makedirs(os.path.join(storage_path, "multiclass"))
         df_preprocessed.to_csv(os.path.join(storage_path, "processed_dataset.csv"))
+
+        # Get label column names
+        label_column_binary = config['labels']['binary_column']
+        label_column_multiclass = config['labels']['multiclass_column']
+
+        # Get data with only relevant components
+        df_only_relevants = df_preprocessed[df_preprocessed[label_column_binary] == "Ja"]
+        df_only_relevants.to_csv(os.path.join(storage_path, "processed_dataset_only_relevants.csv"))
 
         # Generate the training, validation, and test split
         train_val_test_dict_binary, train_val_test_dataframes_binary = DataGenerator.generate_dataset_dict(df_preprocessed, storage_path, binary_model=True)
-        train_val_test_dict_multiclass, train_val_test_dataframes_multiclass = DataGenerator.generate_dataset_dict(df_preprocessed, storage_path, binary_model=False)
+        train_val_test_dict_multiclass, train_val_test_dataframes_multiclass = DataGenerator.generate_dataset_dict(df_only_relevants, storage_path, binary_model=False)
 
         logger.info("Generate and store the class distribution plots...")
-        label_column_binary = config['labels']['binary_column']
-        label_column_multiclass = config['labels']['multiclass_column']
-        store_class_distribution(df_preprocessed, label_column_binary, os.path.join(storage_path, "binary"))
-        store_class_distribution(df_preprocessed, label_column_multiclass, os.path.join(storage_path, "multiclass"))
-        filtered_df = df_preprocessed[df_preprocessed[label_column_multiclass] != "Dummy"]
-        store_class_distribution(filtered_df, label_column_multiclass, os.path.join(storage_path, "multiclass"))
+
+        store_class_distribution(df_preprocessed, label_column_binary, binary_path)
+        store_class_distribution(df_only_relevants, label_column_multiclass, multiclass_path)
+        #filtered_df = df_preprocessed[df_preprocessed[label_column_multiclass] != "Dummy"]
+        #store_class_distribution(filtered_df, label_column_multiclass, multiclass_path)
 
         logger.info("Generate and store plots for feature distributions...")
         store_feature_distribution(df_preprocessed, storage_path)
