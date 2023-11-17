@@ -1,4 +1,3 @@
-# %%
 import pandas as pd
 import numpy as np
 import openai
@@ -38,6 +37,7 @@ class DataAugmention:
         # Shuffle the words in the designation
         while new_designation == designation:
             random.shuffle(words)
+            
             # Join the shuffled words back into a string
             new_designation = ' '.join(words)
 
@@ -148,10 +148,14 @@ class DataAugmention:
         '''
         prompt = f'''
                     Task:
-                    Write a modified car component designation based on the given German language input. Your output must be slightly different to the input while retaining the same meaning.
+                    Write a modified car component designation based on the given input. Your output must be slightly different to the input while retaining the same meaning.
 
                     Context:
-                    The original designation is written in German and may contain abbreviations and technical terms. You are not allowed to add or remove words. Abbreviations that often appear in the data set are 'HI' for 'HINTEN', 'VO' for 'VORN', 'HKL' for 'HECKKLAPPE','GPR' for GEPAECKRAUM', 'VKL' for 'VERKLEIDUNG', 'ISP' for 'INNENSPIEGEL', 'TV' for 'TUER VORNE', 'TH' for 'TUER HINTEN', 'HBL' for 'HOCHGESETZTE BREMSLEUCHTE', 'STF' for 'STOSSFAENGER', 'KST' for 'KOPFSTUETZE', 'ND' for 'NORMALDACH', 'DAHAUBE' for DACHANTENNENHAUBE. This abbreviation help you to create designations.
+                    The original designation is written in German and may contain abbreviations and technical terms. 
+                    You are not allowed to add or remove words. 
+                    Abbreviations that often appear in the data set are 'HI' for 'HINTEN', 'VO' for 'VORN', 'HKL' for 'HECKKLAPPE','GPR' for GEPAECKRAUM', 
+                    'VKL' for 'VERKLEIDUNG', 'ISP' for 'INNENSPIEGEL', 'TV' for 'TUER VORNE', 'TH' for 'TUER HINTEN', 'HBL' for 'HOCHGESETZTE BREMSLEUCHTE', 
+                    'STF' for 'STOSSFAENGER', 'KST' for 'KOPFSTUETZE', 'ND' for 'NORMALDACH', 'DAHAUBE' for DACHANTENNENHAUBE. 
 
                     Instructions:
                     1. Carefully examine the input and understand its meaning.
@@ -197,9 +201,9 @@ class DataAugmention:
         while new_response == designation:
             response = openai.ChatCompletion.create(
                 engine="chat-gpt-0301",
-                messages=[{"role":"system","content":"You are an AI assistant that helps to create a car component designation."},{"role":"user","content": prompt}],
+                messages=[{"role":"system","content":"You are an AI assistant that helps to create a synthetic car component designation."},{"role":"user","content": prompt}],
                 temperature = config["gpt_settings"]["temperature"],
-                max_tokens = 200,
+                max_tokens = 10,
                 top_p = 1,
                 n = 1
             )
