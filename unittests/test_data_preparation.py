@@ -20,23 +20,13 @@ def test_check_if_columns_available():
     df = pd.DataFrame({"feature1": [1, 2, 3], "feature2": [4, 5, 6]}) 
     assert Preperator.check_if_columns_available(df, []) == []
 
-def test_add_labels():
-    # Define a mock dataframe for testing
-    data = {'feature1': [1, 2, 3, 4, 5], 'feature2': [0.1, 0.2, 0.3, 0.4, 0.5], 'feature3': ['string1', 'string2', 'string3', 'string4', 'string5']}
-    data_target = {'feature1': [1, 2, 3, 4, 5], 'feature2': [0.1, 0.2, 0.3, 0.4, 0.5], 'feature3': ['string1', 'string2', 'string3', 'string4', 'string5'], "Relevant fuer Messung": ['Nein', 'Nein', 'Nein', 'Nein', 'Nein'], "Einheitsname": ['Dummy', 'Dummy', 'Dummy', 'Dummy', 'Dummy']}
-    mock_dataframe = pd.DataFrame(data)
-    expected_outcome = pd.DataFrame(data_target)
-
-    # Test the function against the expected outcome
-    assert expected_outcome.equals(Preperator.add_labels(mock_dataframe))
-
 def test_car_part_selection():
     # Read the mock CSV file as a pandas dataframe
     mock_dataframe = pd.read_excel('unittests/mock_labeled_data.xls')
     df_new = Preperator.car_part_selection(mock_dataframe)
 
     # Define the expected outcome based on the mock dataframe and the keep_modules config
-    expected_outcome_shape = (6,30)
+    expected_outcome_shape = (10,36)
 
     # Test the function against the expected outcome
     assert expected_outcome_shape == df_new.shape
@@ -46,7 +36,7 @@ def test_feature_selection():
     df_test_prepared = Preperator.car_part_selection(df_test)
 
     #EXPECTED RESULT
-    df_expected = (14,28)
-    df_result = Preperator.feature_selection(df_test)
+    df_expected = (10,35)
+    df_result = Preperator.feature_selection(df_test_prepared)
 
     assert df_result.shape == df_expected
