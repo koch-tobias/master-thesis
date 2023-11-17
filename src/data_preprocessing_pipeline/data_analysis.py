@@ -34,12 +34,11 @@ def analyse_data_split(df_preprocessed: pd.DataFrame, y_train: np.array, y_val: 
     if binary_model:
         fig, ax = plt.subplots(figsize=(10, 10))
         plt.rcParams.update({'font.size': 12})
-        y_not_relevant = [np.count_nonzero(y_train == 0), np.count_nonzero(y_val == 0), np.count_nonzero(y_test == 0)]
-        y_relevant = [np.count_nonzero(y_train == 1), np.count_nonzero(y_val == 1), np.count_nonzero(y_test == 1)]
-        ax.set_ylabel('Number of Car Parts')
+        y_relevant = [np.count_nonzero(y_train == 0), np.count_nonzero(y_val == 0), np.count_nonzero(y_test == 0)]
+        y_not_relevant = [np.count_nonzero(y_train == 1), np.count_nonzero(y_val == 1), np.count_nonzero(y_test == 1)]
+        ax.set_ylabel('Number of car parts')
         ax.set_xlabel('Datasets')
-        ax.set_title('Training, Validation and Test Split')
-        ax.bar(x_labels, y_not_relevant, width, color='teal')
+        ax.bar(x_labels, y_not_relevant, width, color='#007F7F')
         ax.bar(x_labels, y_relevant, width, color='lightseagreen')
         ax.legend(labels=['Not Relevant', 'Relevant'])
         fig.savefig(os.path.join(model_folder_path, 'binary/Binary_train_val_test_split.png'), dpi=150)
@@ -65,10 +64,10 @@ def analyse_data_split(df_preprocessed: pd.DataFrame, y_train: np.array, y_val: 
                         else:
                             df_count_unique_names.loc[i, name] = np.count_nonzero(datasets[i] == n)
                     n = n + 1
-            df_count_unique_names.plot(x='Dataset', kind='bar', stacked=True, align='center', title='Training, Validation and Test Split', colormap='tab20b', ax=ax)
+            df_count_unique_names.plot(x='Dataset', kind='bar', stacked=True, align='center', colormap='tab20b', ax=ax)
             ax.legend(bbox_to_anchor=(1.0,0.5), loc='center left')
             ax.set_xticklabels(df_count_unique_names['Dataset'], rotation = 'horizontal')
-            ax.set_ylabel('Number of Car Parts')
+            ax.set_ylabel('Number of car parts')
             ax.set_xlabel('Dataset')
             fig.tight_layout()
 
@@ -92,11 +91,12 @@ def store_class_distribution(df: pd.DataFrame, class_column: list, storage_path:
 
     # Balkendiagramm erstellen
     plt.figure(figsize=(10, 10))
-    class_counts.plot(kind='bar')
+    plt.rcParams.update({'font.size': 12})
+    class_counts.plot(kind='bar', color='#007F7F')
     plt.xlabel(class_column)
-    plt.ylabel('Number of Car Parts')
-    plt.title('Class Distribution')
-    plt.savefig(os.path.join(storage_path, f'Distribution_{class_column}_{len(class_counts)}.png'), dpi=150)
+    plt.ylabel('Number of car parts')
+    plt.tight_layout()
+    plt.savefig(os.path.join(storage_path, f'Distribution_{class_column}_{len(class_counts)}_{df.shape[0]}.png'), dpi=150)
 
 def store_feature_distribution(df, storage_path: Path):
     '''
