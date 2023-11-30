@@ -232,7 +232,7 @@ class Visualization:
         if method == 'catboost':
             if binary:
                 #metric_0 = config["cb_params_binary"]["metric"]
-                metric_0 = 'F:beta=2'
+                metric_0 = 'F:use_weights=false;beta=2'
                 metric_1 = config["cb_params_binary"]["loss"] 
             else:
                 '''
@@ -244,11 +244,9 @@ class Visualization:
                 metric_1 = config["cb_params_multiclass"]["loss"]          
         else:
             if binary:
-                #metric_0 = config["xgb_params_binary"]["metric"]
-                metric_0 = 'fbeta'
+                metric_0 = 'xgb_custom_fbeta_score'
                 metric_1 = config["xgb_params_binary"]["loss"]
             else:
-                #metric_0 = config["xgb_params_multiclass"]["metric"]
                 metric_1 = config["xgb_params_multiclass"]["loss"]
 
         if finalmodel:
@@ -260,30 +258,44 @@ class Visualization:
         val_loss = evals["validation_1"][metric_1]
         train_loss = evals["validation_0"][metric_1]
 
+        font = 'Calibri'
+        fontsize = 18
+
         if binary:
             val_auc = evals["validation_1"][metric_0]
             train_auc = evals["validation_0"][metric_0]
 
             plt.rcParams["figure.figsize"] = (10, 10)
-            plt.plot(train_auc, label='Train AUC')
-            plt.plot(val_auc, label='Validation AUC')
-            plt.xlabel('Number of Iterations')
-            plt.ylabel('AUC')
-            plt.axvline(best_iteration, color='grey', label = 'early stopping')
-            plt.legend()
+            plt.plot(train_auc, label='Training')
+            plt.plot(val_auc, label='Validation')
+            plt.gca().get_lines()[0].set_color('#007F7F') 
+            plt.gca().get_lines()[1].set_color('#A9D18E') 
+            plt.xticks(fontname=font, fontsize=fontsize)
+            plt.yticks(fontname=font, fontsize=fontsize)
+            plt.xlabel('Number of estimators', fontname=font, fontsize=fontsize)
+            plt.ylabel('F2-Score', fontname=font, fontsize=fontsize)
+            plt.axvline(best_iteration, color='grey', label = 'Early stopping')
+            plt.legend(fontsize=fontsize)
             plt.ylim([0, 1.2])
-            auc_name = add_to_path +  'auc_plot.png'
+            auc_name = add_to_path +  'fbeta_plot.png'
             plt.savefig(os.path.join(model_folder_path, auc_name))
             plt.close()
 
         plt.rcParams["figure.figsize"] = (10, 10)
-        plt.plot(train_loss, label='Train Loss')
-        plt.plot(val_loss, label='Validation Loss')
-        plt.xlabel('Number of Iterations')
-        plt.ylabel('Loss')
-        plt.axvline(best_iteration, color='grey', label = 'early stopping')
-        plt.legend()
-        plt.ylim([-0.2, 4])
+        plt.plot(train_loss, label='Training')
+        plt.plot(val_loss, label='Validation')
+        plt.gca().get_lines()[0].set_color('#007F7F') 
+        plt.gca().get_lines()[1].set_color('#A9D18E') 
+        plt.xticks(fontname=font, fontsize=fontsize)
+        plt.yticks(fontname=font, fontsize=fontsize)
+        plt.xlabel('Number of estimators', fontname=font, fontsize=fontsize)
+        plt.ylabel('Loss', fontname=font, fontsize=fontsize)
+        plt.axvline(best_iteration, color='grey', label = 'Early stopping')
+        plt.legend(fontsize=fontsize)
+        if binary:
+            plt.ylim([0, 1.2])
+        else:
+            plt.ylim([-0.2, 4])
         loss_name = add_to_path +  'loss_plot.png'
         plt.savefig(os.path.join(model_folder_path, loss_name))
         plt.close()
@@ -306,32 +318,37 @@ class Visualization:
             add_to_path = 'final_model_'
         else:
             add_to_path = ""
-
+        
+        font = 'Calibri'
         fontsize = 18
         if binary_model:
             plt.rcParams["figure.figsize"] = (10, 10)
             lgb.plot_metric(evals, metric=config["lgbm_params_binary"]["loss"])
+            plt.gca().get_lines()[0].set_color('#007F7F') 
+            plt.gca().get_lines()[1].set_color('#A9D18E') 
             plt.title("")
-            plt.xlabel(' Iteration', fontsize=fontsize)
-            plt.ylabel('Loss', fontsize=fontsize)
-            plt.xticks(fontsize=fontsize)
-            plt.yticks(fontsize=fontsize)
-            plt.axvline(best_iteration, color='grey', label = 'Early Stopping')
-            plt.legend(['Training', 'Validation', 'Early Stopping'], fontsize=fontsize)
-            plt.ylim([-0.2, 4])
+            plt.xlabel('Number of estimators', fontname=font, fontsize=fontsize)
+            plt.ylabel('Loss', fontname=font, fontsize=fontsize)
+            plt.xticks(fontname=font, fontsize=fontsize)
+            plt.yticks(fontname=font, fontsize=fontsize)
+            plt.axvline(best_iteration, color='grey', label = 'Early stopping')
+            plt.legend(['Training', 'Validation', 'Early stopping'], fontsize=fontsize)
+            plt.ylim([-0.2, 1.2])
             loss_name = add_to_path + 'binary_logloss_plot.png'
             plt.savefig(os.path.join(model_folder_path, loss_name))
             plt.close()
 
             plt.rcParams["figure.figsize"] = (10, 10)
             lgb.plot_metric(evals, metric='fbeta')
+            plt.gca().get_lines()[0].set_color('#007F7F') 
+            plt.gca().get_lines()[1].set_color('#A9D18E') 
             plt.title("")
-            plt.xlabel('Iteration', fontsize=fontsize)
-            plt.ylabel('Fbeta', fontsize=fontsize)
-            plt.xticks(fontsize=fontsize)
-            plt.yticks(fontsize=fontsize)
-            plt.axvline(best_iteration, color='grey', label = 'Early Stopping')
-            plt.legend(['Training', 'Validation', 'Early Stopping'], fontsize=fontsize)
+            plt.xlabel('Number of estimators', fontname=font, fontsize=fontsize)
+            plt.ylabel('F2-score', fontname=font, fontsize=fontsize)
+            plt.xticks(fontname=font, fontsize=fontsize)
+            plt.yticks(fontname=font, fontsize=fontsize)
+            plt.axvline(best_iteration, color='grey', label = 'Early stopping')
+            plt.legend(['Training', 'Validation', 'Early stopping'], fontsize=fontsize)
             plt.ylim([0, 1.2])
             auc_name = add_to_path + 'fbeta_plot.png'
             plt.savefig(os.path.join(model_folder_path, auc_name))
@@ -340,13 +357,15 @@ class Visualization:
         else:    
             plt.rcParams["figure.figsize"] = (10, 10)
             lgb.plot_metric(evals, metric=config["lgbm_params_multiclass"]["loss"])
+            plt.gca().get_lines()[0].set_color('#007F7F') 
+            plt.gca().get_lines()[1].set_color('#A9D18E') 
             plt.title("")
-            plt.xlabel('Iteration', fontsize=fontsize)
-            plt.ylabel('Loss', fontsize=fontsize)
-            plt.xticks(fontsize=fontsize)
-            plt.yticks(fontsize=fontsize)
-            plt.axvline(best_iteration, color='grey', label = 'Early Stopping')
-            plt.legend(['Training', 'Validation', 'Early Stopping'], fontsize=fontsize)
+            plt.xlabel('Number of estimators', fontname=font, fontsize=fontsize)
+            plt.ylabel('Loss', fontname=font, fontsize=fontsize)
+            plt.xticks(fontname=font, fontsize=fontsize)
+            plt.yticks(fontname=font, fontsize=fontsize)
+            plt.axvline(best_iteration, color='grey', label = 'Early stopping')
+            plt.legend(['Training', 'Validation', 'Early stopping'], fontsize=fontsize)
             plt.ylim([-0.2, 4])
             mloss_name = add_to_path + 'multi_logloss_plot.png'
             plt.savefig(os.path.join(model_folder_path, mloss_name))
@@ -382,19 +401,21 @@ class Visualization:
             binary_model: boolean variable indicating whether the model is binary or not. 
         Return: None 
         '''
-        fontsize = 18
+        font_inner = {'family' : 'Calibri', 'size': 30}
+        font_outer = {'family' : 'Calibri', 'size': 18}
+
         colors = ['#F4FFFF', '#BBFFFF', '#00FFFF', '#00E6E6', '#00BFBF', '#009999', '#007F7F'] 
         cmap = LinearSegmentedColormap.from_list('custom_cmap', colors)
 
         if binary_model:
-            class_names = ["Relevant", "Not relevant"]
-            plt.rcParams["figure.figsize"] = (20, 20)
-            ConfusionMatrixDisplay.from_predictions(y_true=y_test, y_pred=y_pred, display_labels=class_names, cmap=cmap, colorbar=False,  text_kw={'fontsize': fontsize})
-
-            plt.xticks(fontsize=fontsize)
-            plt.yticks(fontsize=fontsize)
-            plt.xlabel('Predicted', fontsize=fontsize)
-            plt.ylabel('Actual', fontsize=fontsize)
+            class_names = ["Not relevant", "Relevant"]
+            fig, ax = plt.subplots(figsize=(2, 2))
+            ConfusionMatrixDisplay.from_predictions(y_true=y_test, y_pred=y_pred, display_labels=class_names, cmap=cmap, colorbar=False, text_kw=font_inner)
+            plt.xticks(fontsize=font_outer['size'], fontname=font_outer['family'])
+            plt.yticks(fontsize=font_outer['size'], fontname=font_outer['family'], rotation=90, va="center")
+            plt.xlabel('Predicted', font=font_outer)
+            plt.ylabel('Actual', font=font_outer)
+            plt.tight_layout()
             plt.savefig(os.path.join(model_folder_path, 'confusion_matrix.png'))
 
         else:
@@ -409,10 +430,12 @@ class Visualization:
                 if (name in classes_pred) or (name in classes_true):
                     class_names.append(name)
 
-            cm_display = ConfusionMatrixDisplay.from_predictions(y_test, y_pred, display_labels=class_names, text_kw={'fontsize': fontsize})
+            cm_display = ConfusionMatrixDisplay.from_predictions(y_test, y_pred, display_labels=class_names)
+            plt.rc('font', **font_outer)
             fig, ax = plt.subplots(figsize=(40, 40))
-            cm_display.plot(ax=ax, xticks_rotation='vertical', cmap=cmap, colorbar=False,  text_kw={'fontsize': fontsize})
-            plt.xlabel('Predicted', fontsize=fontsize)
-            plt.ylabel('Actual', fontsize=fontsize)
+            cm_display.plot(ax=ax, xticks_rotation='vertical', cmap=cmap, colorbar=False)
+            plt.xlabel('Predicted', fontsize=font_outer['size'])
+            plt.ylabel('Actual', fontsize=font_outer['size'])
+            plt.tight_layout()
             plt.savefig(os.path.join(model_folder_path, 'confusion_matrix.png'))
         plt.close('all')
