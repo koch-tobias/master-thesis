@@ -55,12 +55,12 @@ class DataGenerator:
                         weight_factor[name] = 1
         else:
             binary_label_column = config['labels']['binary_column']
-            if df[df[binary_label_column]==config['labels']['binary_label_0']].shape[0] == 0:
+            if df[df[binary_label_column]==config['labels']['binary_label_1']].shape[0] == 0:
                 weight_factor = 0
                 logger.error("The dataset does not contain any ""Ja"" labeled samples")
             else:
-                weight_factor = round(df[df[binary_label_column]==config['labels']['binary_label_1']].shape[0] / df[df[binary_label_column]==config['labels']['binary_label_0']].shape[0])
-
+                weight_factor = round(df[df[binary_label_column]==config['labels']['binary_label_0']].shape[0] / df[df[binary_label_column]==config['labels']['binary_label_1']].shape[0])
+        
         return weight_factor
 
     @staticmethod
