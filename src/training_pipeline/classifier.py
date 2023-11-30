@@ -89,7 +89,7 @@ class Classifier:
             metrics: a list of strings representing the performance metrics to be used for training the model.
         '''
         
-        class_weight = {0: weight_factor, 1: 1}
+        class_weight = {0: 1, 1: weight_factor}
 
         if method == "lgbm":
             model = LGBMClassifier(boosting_type=config["lgbm_params_binary"]["boosting_type"],
@@ -128,9 +128,10 @@ class Classifier:
                                         l2_leaf_reg=hp["l2_regularization"],
                                         bagging_temperature=hp["bagging_temperature"],        
                                         loss_function=config["cb_params_binary"]["loss"],
-                                        eval_metric='F:beta=2',
+                                        eval_metric='F:beta=2;use_weights=false',
                                         early_stopping_rounds=config["train_settings"]["early_stopping"],
                                         use_best_model=True,
+                                        class_weights=class_weight,
                                         random_seed=42
                                     )
             metrics = [config["cb_params_binary"]["loss"], 'F:beta=2']
@@ -190,6 +191,7 @@ class Classifier:
                                         loss_function=config["cb_params_multiclass"]["loss"],
                                         eval_metric=config["cb_params_multiclass"]["loss"],
                                         early_stopping_rounds=config["train_settings"]["early_stopping"],
+                                        class_weights=weight_factor,
                                         use_best_model=True,
                                         random_seed=42
                                     )
