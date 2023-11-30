@@ -6,6 +6,8 @@ import lightgbm as lgb
 import xgboost as xgb
 import catboost as cbo
 
+from matplotlib.colors import LinearSegmentedColormap
+
 import warnings
 warnings.filterwarnings("ignore", message=".*The 'nopython' keyword.*")
 import shap
@@ -92,7 +94,7 @@ class xAi:
       return feature_list, topx_important_features
 
    @staticmethod
-   def plot_shap_summary(model, vocabulary, dataset_folder, model_folder_path: Path):
+   def plot_shap_summary(model, vocabulary, dataset_folder, res, model_folder_path: Path):
 
       df_features = xAi.add_feature_importance(model, vocabulary, model_folder_path)
       feature_list, topx_important_features = xAi.get_features(df_features)
@@ -105,15 +107,17 @@ class xAi:
       X = np.concatenate((X_train, X_val), axis=0)
       y = np.concatenate((y_train, y_val), axis=0)
  
-      
+      colors = ['#A9D18E', '#007F7F'] 
+      cmap = LinearSegmentedColormap.from_list('custom_cmap', colors)
       # Get shap values for all features
-      shap_values = explainer.shap_values(X_val, y_val)
+      shap_values = explainer.shap_values(X_test, y_test)
+      max_display = 30
       plt.clf()
       try:
-         shap.summary_plot(shap_values[1], X_val, feature_list, max_display=30, show=False)
+         shap.summary_plot(shap_values[1], X_val, feature_list, class_names=res, max_display=max_display, show=False, cmap=cmap)
       except:
-         shap.summary_plot(shap_values, X_val, max_display=30, show=False)
-      plt.savefig(os.path.join(model_folder_path, "shap_top10_features.png"))
+         shap.summary_plot(shap_values, X_val, feature_list, class_names=res, max_display=max_display, show=False, cmap=cmap)
+      plt.savefig(os.path.join(model_folder_path, f"shap_top{max_display}_features_test.png"))
 
       
       return df_features, feature_list, X, y
@@ -132,7 +136,8 @@ class xAi:
          #fig.set_size_inches(150, 100)
       elif isinstance(model, cbo.CatBoostClassifier):
          pool = cbo.Pool(X, y, feature_names=feature_list)
-         ax = cbo.plot_tree(model.booster_, dpi=400, orientation='vertical', tree_idx=tree_index, figsize=(20, 8), show_info=['split_gain'])
+         #ax = cbo.plot_tree(model.booster_, dpi=400, orientation='vertical', tree_idx=tree_index, figsize=(20, 8), show_info=['split_gain'])
+         ax = model.plot_tree(tree_idx=tree_index,pool=pool, figsize=(20, 8))
 
       plt.savefig(os.path.join(model_path, f"xAi_tree_{tree_index}.png"))
 
@@ -144,22 +149,33 @@ class xAi:
       
 def main():
    logger.info("Store plots to explain the binary model...")
-   model_path_binary = Path("final_models/Binary_model")
+   model_path_binary = Path("src/training_pipeline/trained_models/20231119_0357_lgbm_HyperparameterTuning/Binary_model")
    model, vectorizer, vocabulary, bbox_features = Identifier.get_model(model_path_binary)
    xai_folder_path = os.path.join(model_path_binary, "xAi")
    xAi.create_path(xai_folder_path)
    dataset_folder = Identifier.search_in_logging(text="Dataset:", model_folder_path=model_path_binary)
-   df_features, feature_list, X, y = xAi.plot_shap_summary(model, vocabulary, dataset_folder, model_folder_path=xai_folder_path)
-   xAi.create_tree(model, X, y, xai_folder_path, feature_list, tree_index=20)
+   res = {"Relevant": 1, "Not relevant": 0}
+   df_features, feature_list, X, y = xAi.plot_shap_summary(model, vocabulary, dataset_folder, res, model_folder_path=xai_folder_path)
+   #xAi.create_tree(model, X, y, xai_folder_path, feature_list, tree_index=10)
+
 
    logger.info("Store plots to explain the multiclass model...")
-   model_path_multiclass = "final_models/Multiclass_model/"
+   model_path_multiclass = Path("src/training_pipeline/trained_models/20231119_0357_lgbm_HyperparameterTuning/Multiclass_model")
+
+   # Load the LabelEncoder
+   label_encoder_path = os.path.join(model_path_multiclass, "label_encoder.pkl")
+   with open(label_encoder_path, 'rb') as f:
+      le = pickle.load(f) 
+   res = {}
+   for cl in le.classes_:
+      res.update({cl:le.transform([cl])[0]})
+
    model, vectorizer, vocabulary, bbox_features = Identifier.get_model(model_path_multiclass)
    xai_folder_path = os.path.join(model_path_multiclass, "xAi")
    xAi.create_path(xai_folder_path)
-   dataset_folder = Identifier.search_in_logging(text="Dataset:", model_folder_path=model_path_binary)
-   df_features, feature_list, X, y = xAi.plot_shap_summary(model, vocabulary, dataset_folder, model_folder_path=xai_folder_path)
-   xAi.create_tree(model, X, y, xai_folder_path, feature_list, tree_index=20)
+   dataset_folder = Identifier.search_in_logging(text="Dataset:", model_folder_path=model_path_multiclass)
+   df_features, feature_list, X, y = xAi.plot_shap_summary(model, vocabulary, dataset_folder, res, model_folder_path=xai_folder_path)
+   #xAi.create_tree(model, X, y, xai_folder_path, feature_list, tree_index=10)
 
    logger.info("xAi plots successfully stored!")
 
