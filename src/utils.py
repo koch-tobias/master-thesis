@@ -100,7 +100,7 @@ def add_labels(dataframe: pd.DataFrame) -> pd.DataFrame:
         dataframe_new: A new dataframe with the added labels.
     '''
     # Add and initialize the label columns "Relevant für Messung" and "Einheitsname"
-    dataframe.insert(len(dataframe.columns), config['labels']['binary_column'], config['labels']['binary_label_1']) 
+    dataframe.insert(len(dataframe.columns), config['labels']['binary_column'], config['labels']['binary_label_0']) 
     dataframe.insert(len(dataframe.columns), config['labels']['multiclass_column'], 'Dummy') 
 
     return dataframe
@@ -232,7 +232,7 @@ def combine_dataframes(dataframes: list, relevant_features: list, ncars: list) -
     
     return merged_df    
 
-def store_trained_model(model, metrics: str, best_iteration: int, val_fbeta: float, hp: dict, index_best_model: int, model_folder_path: Path, finalmodel: bool) -> None:
+def store_trained_model(model, metrics: str, best_iteration: int, val_fbeta: float, val_sensitivity: float, val_precision: float, hp: dict, index_best_model: int, model_folder_path: Path, finalmodel: bool) -> None:
     ''' 
     This function stores the trained model, hyperparameters, metrics and best iteration information in a pickled file at the provided model folder path and logs the validation AUC and training information in a txt file.
     Args:
@@ -258,10 +258,14 @@ def store_trained_model(model, metrics: str, best_iteration: int, val_fbeta: flo
     logging_file_path = os.path.join(model_folder_path, "logging.txt")
     if os.path.isfile(logging_file_path):
         log_text = "Validation Fbeta (final model): {}\n".format(val_fbeta)
+        log_text2 = "Validation sensitivity (final model): {}\n".format(val_sensitivity)
+        log_text3 = "Validation precision (final model): {}\n".format(val_precision)
         f= open(logging_file_path,"a")
         f.write("\n_________________________________________________\n")
         f.write("Final model:\n")
         f.write(log_text)
+        f.write(log_text2)
+        f.write(log_text3)
         f.write("Trained Iterations: {}\n".format(best_iteration))
         f.close()
     else:
@@ -275,8 +279,10 @@ def store_trained_model(model, metrics: str, best_iteration: int, val_fbeta: flo
         f.write("\n_________________________________________________\n")
         f.write("Best model after hyperparameter tuning:\n")
         f.write("Validation Fbeta: {}\n".format(val_fbeta))
+        f.write("Validation sensitivity: {}\n".format(val_sensitivity))
+        f.write("Validation precision: {}\n".format(val_precision))
         f.write("Trained Iterations: {}\n".format(best_iteration))
-        f.write("Model index in hyperparameter tuning: {}\n".format(index_best_model+1))
+        f.write("Model index in hyperparameter tuning: {}\n".format(index_best_model))
         f.write("Hyperparameter:\n")
         for key in hp:
             f.write("{}: {}\n".format(key, hp[key]))
