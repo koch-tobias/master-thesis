@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-from sklearn.metrics import accuracy_score, recall_score, f1_score, fbeta_score, precision_score
+from sklearn.metrics import accuracy_score, recall_score, f1_score, fbeta_score, precision_score, log_loss
 
 from loguru import logger
 
@@ -41,7 +41,6 @@ def get_best_metric_results(evals: dict, best_iteration: int, method: str, binar
             val_metric = 'fbeta'
         else:
             loss = config["lgbm_params_multiclass"]["loss"] 
-            #val_metric = 'auc_mu'
 
     elif method == "xgboost":
         if binary_model:
@@ -52,15 +51,9 @@ def get_best_metric_results(evals: dict, best_iteration: int, method: str, binar
 
     elif method == "catboost":
         if binary_model:
-            val_metric = 'F:beta=2'
+            val_metric = 'F:use_weights=false;beta=2'
             loss = config["cb_params_binary"]["loss"] 
         else:
-            '''
-            if config["cb_params_multiclass"]["metric"] == 'AUC':
-                val_metric = 'AUC:type=Mu'
-            else:
-                val_metric = config["cb_params_multiclass"]["metric"]
-            '''
             loss = config["cb_params_multiclass"]["loss"]    
 
     if binary_model:
@@ -89,7 +82,7 @@ def store_predictions(y_test: np.array, y_pred: np.array, probs: np.array, df_pr
     Return: None 
     '''
     if binary_model:
-        class_names = ["Relevant", "Not relevant"]
+        class_names = ["Not relevant", "Relevant"]
     else:
         df_only_relevants = df_preprocessed[df_preprocessed["Relevant fuer Messung"] == "Ja"]
         class_names = df_only_relevants["Einheitsname"].unique()
@@ -101,7 +94,7 @@ def store_predictions(y_test: np.array, y_pred: np.array, probs: np.array, df_pr
         y_test = y_test.to_numpy()
     except:
         pass
-    
+
     # Store all wrongly identified car parts in a csv file to analyse the model predictions
     for i in range(len(y_test)):
         if y_pred[i] != y_test[i]:
@@ -120,18 +113,20 @@ def store_predictions(y_test: np.array, y_pred: np.array, probs: np.array, df_pr
 
     df_wrong_predictions.to_csv(os.path.join(model_folder_path, "wrong_predictions.csv"))
 
-def calculate_metrics(y, y_pred, binary):
+def calculate_metrics(y, y_pred, binary, probs):
 
     if binary:
         sensitivity = recall_score(y, y_pred)
         precision = precision_score(y, y_pred)
         fbeta = fbeta_score(y, y_pred, beta=2)
+        logloss = log_loss(y, y_pred)
     else:
         fbeta = fbeta_score(y, y_pred, beta=2, average='weighted')
         sensitivity = recall_score(y, y_pred, average='weighted')
-        precision = precision_score(y, y_pred, average='weighted')
+        precision = precision_score(y, y_pred, average='weighted')  
+        logloss = log_loss(y, probs)
 
-    return precision, sensitivity, fbeta
+    return precision, sensitivity, fbeta, logloss
 
 
 def evaluate_model(model, X_test: np.array, y_test: np.array, X_val: np.array, y_val: np.array, X_train: np.array, y_train: np.array, evals: dict, hp_in_iteration: dict, num_models_trained: int, training_time: float, df_columns: list, binary_model: bool, method: str) -> tuple[np.array, np.array, float, float, float, float, float, float, pd.DataFrame]:
@@ -166,12 +161,12 @@ def evaluate_model(model, X_test: np.array, y_test: np.array, X_val: np.array, y
     fbeta_train, train_loss, fbeta_val, val_loss = get_best_metric_results(evals=evals, best_iteration=best_iteration_train, method=method, binary_model=binary_model)
     
     if binary_model:
-        precision_val, sensitivity_val, _ = calculate_metrics(y_val, y_pred_val, binary_model)
+        precision_val, sensitivity_val, _, _ = calculate_metrics(y_val, y_pred_val, binary_model, probs_val)
     else:
-        precision_train, sensitivity_train, fbeta_train = calculate_metrics(y_train, y_pred_train, binary_model)
-        precision_val, sensitivity_val, fbeta_val = calculate_metrics(y_val, y_pred_val, binary_model)
+        precision_train, sensitivity_train, fbeta_train, _ = calculate_metrics(y_train, y_pred_train, binary_model, probs_train)
+        precision_val, sensitivity_val, fbeta_val, _ = calculate_metrics(y_val, y_pred_val, binary_model, probs_val)
     
-    precision_test, sensitivity_test, fbeta_test = calculate_metrics(y_test, y_pred_test, binary_model)
+    precision_test, sensitivity_test, fbeta_test, logloss_test = calculate_metrics(y_test, y_pred_test, binary_model, probs_test)
 
     df_new = pd.DataFrame(columns=df_columns)
 
@@ -182,6 +177,7 @@ def evaluate_model(model, X_test: np.array, y_test: np.array, X_val: np.array, y
     df_new.loc[num_models_trained, "validation precision"] = precision_val
     df_new.loc[num_models_trained, "validation sensitivity"] = sensitivity_val
     df_new.loc[num_models_trained, "validation fbeta_score"] = fbeta_val
+    df_new.loc[num_models_trained, "test loss"] = logloss_test
     df_new.loc[num_models_trained, "test sensitivity"] = sensitivity_test
     df_new.loc[num_models_trained, "test precision"] = precision_test
     df_new.loc[num_models_trained, "test fbeta_score"] = fbeta_test
@@ -191,4 +187,4 @@ def evaluate_model(model, X_test: np.array, y_test: np.array, X_val: np.array, y
     for hp in hp_in_iteration:
         df_new.loc[num_models_trained, hp] = hp_in_iteration[hp]
 
-    return train_loss, fbeta_train, val_loss, precision_val, sensitivity_val, fbeta_val, sensitivity_test, precision_test, fbeta_test, df_new
+    return train_loss, fbeta_train, val_loss, precision_val, sensitivity_val, fbeta_val,logloss_test, sensitivity_test, precision_test, fbeta_test, df_new
