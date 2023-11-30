@@ -125,7 +125,7 @@ class Identifier():
         elif method == "xgboost":
             best_iteration = model.get_booster().best_ntree_limit - 1
         elif method == "catboost":
-            best_iteration = model.get_best_iteration() - 1
+            best_iteration = model.get_best_iteration()
 
         return best_iteration
 
