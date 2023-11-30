@@ -31,16 +31,20 @@ def analyse_data_split(df_preprocessed: pd.DataFrame, y_train: np.array, y_val: 
 
     width = 0.25
     x_labels = ['Training', 'Validation', 'Test']
+    font='Calibri'
+    fontsize = 18
     if binary_model:
         fig, ax = plt.subplots(figsize=(10, 10))
-        plt.rcParams.update({'font.size': 12})
-        y_relevant = [np.count_nonzero(y_train == 0), np.count_nonzero(y_val == 0), np.count_nonzero(y_test == 0)]
-        y_not_relevant = [np.count_nonzero(y_train == 1), np.count_nonzero(y_val == 1), np.count_nonzero(y_test == 1)]
-        ax.set_ylabel('Number of car parts')
-        ax.set_xlabel('Datasets')
+        plt.rcParams.update({'font.size': fontsize})
+        y_relevant = [np.count_nonzero(y_train == 1), np.count_nonzero(y_val == 1), np.count_nonzero(y_test == 1)]
+        y_not_relevant = [np.count_nonzero(y_train == 0), np.count_nonzero(y_val == 0), np.count_nonzero(y_test == 0)]
+        ax.set_ylabel('Number of car parts', fontname=font, fontsize=fontsize)
+        ax.set_xlabel('Data sets', fontname=font, fontsize=fontsize)
         ax.bar(x_labels, y_not_relevant, width, color='#007F7F')
         ax.bar(x_labels, y_relevant, width, color='lightseagreen')
-        ax.legend(labels=['Not Relevant', 'Relevant'])
+        plt.xticks(fontname=font, fontsize=fontsize)
+        plt.yticks(fontname=font, fontsize=fontsize)
+        ax.legend(labels=['Not relevant', 'Relevant'])
         fig.savefig(os.path.join(model_folder_path, 'binary/Binary_train_val_test_split.png'), dpi=150)
     else:
         class_names = df_preprocessed[config['labels']['multiclass_column']].unique()
@@ -50,7 +54,7 @@ def analyse_data_split(df_preprocessed: pd.DataFrame, y_train: np.array, y_val: 
         df_count_unique_names = pd.DataFrame(columns=class_names)
         for skip_dummy in range(2):
             fig, ax = plt.subplots(figsize=(40, 10))
-            plt.rcParams.update({'font.size': 12})
+            plt.rcParams.update({'font.size': 18})
 
             for i in range(len(datasets_name)):
                 df_count_unique_names.loc[i,"Dataset"] = datasets_name[i]
@@ -67,8 +71,10 @@ def analyse_data_split(df_preprocessed: pd.DataFrame, y_train: np.array, y_val: 
             df_count_unique_names.plot(x='Dataset', kind='bar', stacked=True, align='center', colormap='tab20b', ax=ax)
             ax.legend(bbox_to_anchor=(1.0,0.5), loc='center left')
             ax.set_xticklabels(df_count_unique_names['Dataset'], rotation = 'horizontal')
-            ax.set_ylabel('Number of car parts')
-            ax.set_xlabel('Dataset')
+            ax.set_ylabel('Number of car parts', fontname=font, fontsize=fontsize)
+            ax.set_xlabel('Data set', fontname=font, fontsize=fontsize)
+            plt.xticks(fontname=font, fontsize=fontsize)
+            plt.yticks(fontname=font, fontsize=fontsize)
             fig.tight_layout()
 
             if skip_dummy == 0:
