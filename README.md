@@ -2,8 +2,7 @@
 
 ## 🚘🔍 CaPI (Car Part Identifier)
 CaPI is an AI system developed as part of my master's thesis and is based on two machine learning models. CaPI identifies car parts that are relevant for geometric measurements during the virtual vehicle development process. CaPI is one of three components of a measurement tool that automates the process of measuring various dimensions and comparing them to guidelines and targets. </br>
-The input for the inference models is an Excel file that contains the structural list of a vehicle model, including components and their metadata. For example:
-![Sample excerpt input](images/sample_input.png)
+The input for the inference models is an Excel file that contains the structural list of a vehicle model, including components and their metadata.
 
 The first goal of the AI system (model 1) is to classify the components of a vehicle as relevant and not relevant for the geometric measurements (binary classification task). The second goal (model 2) is to generate uniformly coded designations for the relevant car components (multi-class classification task).
 
