@@ -1,13 +1,13 @@
 # Component Identification for Geometric Measurements in the Vehicle Development Process Using Machine Learning
 
 ## 🚘🔍 CaPI (Car Part Identifier)
-CaPI is an AI system developed as part of my master's thesis and is based on two machine learning models. CaPI identifies car parts that are relevant for geometric measurements during the virtual vehicle development process. CaPI is one of three components of a measurement tool that automates the process of measuring various dimensions and comparing them to guidelines and targets. </br>
+CaPI is an AI system developed as part of my master's thesis and is based on two machine learning models. CaPI identifies components that are relevant for geometric measurements during the virtual vehicle development process. CaPI is one of three components of a measurement tool that automates the process of measuring various dimensions and comparing them to guidelines and targets. </br>
 The input for the inference models is an Excel file that contains the structural list of a vehicle model, including components and their metadata.
 
-The first goal of the AI system (model 1) is to classify the components of a vehicle as relevant and not relevant for the geometric measurements (binary classification task). The second goal (model 2) is to generate uniformly coded designations for the relevant car components (multi-class classification task).
+The first goal of the AI system (model 1) is to classify the components of a vehicle as relevant and not relevant for the geometric measurements (binary classification task). The second goal (model 2) is to generate uniformly coded designations for the relevant car components (multi-class classification task), which are used in the measurement tool to assign the components to the appropriate dimensions.
 
 The output of the AI system is a list of all relevant components found in the structure list, with the appropriate, uniformly coded name for each component.
-This output is used by a CATIA macro to load the car parts into a CATIA parametric model, which then automatically performs the measurements and the comparisons with the guidelines. 
+This output is used by a CATIA macro to load the car parts into a parametric model, which then automatically performs the measurements and the comparisons with the guidelines. 
 
 CaPI is accessible via a REST API or a website. The REST-API is implemented for production to integrate the AI system in the measurement tool and the website is set up for the development process to test models and to get quick feedback from the users.
 
@@ -16,7 +16,6 @@ A detailed description of the project can be found in the master's thesis.
 ## 📖 Quick Index
 
 * [💻 Installation](#-installation)
-* [⛏️ Architecture](#-architecture)
 * [🐍 Usage](#-usage-in-python)
 * [🚀 Updates](#-updates)
 
@@ -243,7 +242,7 @@ The input is an Excel file of the structural of a selected vehicle with all comp
   ]
 }
 ```
-You can test the API using the following python script (src/deployment/api_request.py), which sends a Excel file to the API and returns the identified car parts:
+You can test the API using the following python script (src/deployment/api_request.py), which sends an Excel file to the API and returns the identified car parts:
 ```python
 import requests
 
