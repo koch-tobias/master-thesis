@@ -1,55 +1,18 @@
 # Component Identification for Geometric Measurements in the Vehicle Development Process Using Machine Learning
 
-## 🚘🔍 CaPI 
-CaPI (Car-Part-Identifier) is a service developed as part of my master's thesis and is based on two machine learning models. CaPI identifies car parts that are relevant for geometric measurements during the vehicle development process. It is one of three components of a tool that automates the process of determining various dimensions and comparing them to guidelines and targets. </br>
-The input for the models is an excel file which contains a list of car parts (structure tree) including their metadata, for example:
+## 🚘🔍 CaPI (Car Part Identifier)
+CaPI is an AI system developed as part of my master's thesis and is based on two machine learning models. CaPI identifies car parts that are relevant for geometric measurements during the virtual vehicle development process. CaPI is one of three components of a measurement tool that automates the process of measuring various dimensions and comparing them to guidelines and targets. </br>
+The input for the inference models is an Excel file that contains the structural list of a vehicle model, including components and their metadata. For example:
 ![Sample excerpt input](images/sample_input.png)
 
-Out of the follwing list, the relevant car parts are identified and output in the format given below:
-- BLENDE HBL
-- BLENDE LADEKANTE
-- BLENDE BSAEULE HINTEN
-- BODENVERKLEIDUNG HINTEN
-- DACHANTENNE
-- DACHAUSSENHAUT
-- DICHTUNG HECKKLAPPE
-- EINLEGEBODEN GEPAECKRAUM
-- FRONTSCHEIBE
-- GLASDACH (SA)
-- HBL
-- HECKKLAPPE AUSSENHAUT
-- HECKSCHEIBE
-- HIMMEL (SA)
-- VERDECK
-- INNENSPIEGEL
-- KOPFSTUETZE_MITTE_HINTEN
-- LI ABDECKLEISTE EINSTIEG HINTEN
-- LI ABDECKUNG FENSTERRAHMEN HINTEN
-- LI ABDECKUNG FENSTERRAHMEN VORNE
-- LI BLENDE A-SAEULE
-- LI FENSTERFUEHRUNG
-- LI HALTEGRIFF HINTEN
-- LI HALTEGRIFF VORNE
-- LI KANTENSCHUTZ HINTEN
-- LI KANTENSCHUTZ VORNE
-- LI SEITENVERKLEIDUNG VORNE
-- LI SONNENBLENDE
-- SEITENVERKLEIDUNG GEPAECKRAUM
-- SITZBEZUG HINTEN
-- SPOILER
-- VERKLEIDUNG STOSSFAENGER
+The first goal of the AI system (model 1) is to classify the components of a vehicle as relevant and not relevant for the geometric measurements (binary classification task). The second goal (model 2) is to generate uniformly coded designations for the relevant car components (multi-class classification task).
 
-```
-  {
-    "Part number": ["Original part designation", "Uniform name"]
-  }
-```
-
+The output of the AI system is a list of all relevant components found in the structure list, with the appropriate, uniformly coded name for each component.
 This output is used by a CATIA macro to load the car parts into a CATIA parametric model, which then automatically performs the measurements and the comparisons with the guidelines. 
 
-The part number is used to load the parts from the database, the uniform name to assign the parts to the various measurements, and the original part designation to manually check whether the uniform name was correctly assigned by the machine learning model.
+CaPI is accessible via a REST API or a website. The REST-API is implemented for production to integrate the AI system in the measurement tool and the website is set up for the development process to test models and to get quick feedback from the users.
 
-CaPI is accessible via a ([REST-API](http://10.3.13.137:7070/docs#/default/post_relevant_parts_api_get_relevant_parts__post)) or a ([website](https://car-part-identification.streamlit.app/)). The REST-API is implemented for production to integrate the measurement tool and the website is set up for the development process to test models and to get quick feedback from the department/users.
+A detailed description of the project can be found in the master's thesis.
 
 ## 📖 Quick Index
 
@@ -78,7 +41,7 @@ pip install -r requirements.txt
 ## ⛏️ Architecture
 ![architecture](images/pipelines/architecture.svg)
 
-This project follows a three-component architecture, comprising of three main processes - prelabeling, training, and deployment.
+This project follows a three-component architecture, comprising three main processes - prelabeling, training, and deployment.
 
 **PRELABELING** </br>
 The prelabeling process, highlighted in orange, utilizes our already trained models to prelabel newly available data, thus reducing the manual effort required for data labeling. Developers only need to review the prelabeled data and make corrections to any misclassified parts.
@@ -89,29 +52,7 @@ The training process, highlighted in blue, uses the labeled data as input to the
 **DEPLOYMENT** </br>
 The deployment process, highlighted in green, has two options - website and REST-API.
 The website is used only for testing purposes, allowing developers to quickly test new models and receive feedback from the department/users.
-The REST-API is developed for production usage, allowing users to send data as a request and to receive the identiefied car parts of the machine learning models in a json-format.
-
-To better understand the structure of the code, the devoloped piplines to implement these processes are explained in the following briefly:
-
-### Data Preparation Pipeline
-![Data_preparation_pipeline](images/pipelines/data_preparation_pipeline.svg)
-
-This pipeline prepares the raw data, which means to remove irrelevant modules/samples, selecting relevant features, and adding/initializing the label columns.
-
-### Data Preprocessing Pipeline
-![data_preprocessing_pipeline](images/pipelines/data_preprocessing_pipeline.svg)
-
-This pipeline merges the labeled datasets, performes feature engineering, cleanses the data, augments the data, analyzes the data, and splits the dataset into training, validation, and test set.
-
-### Training Pipeline
-![Training pipeline](images/pipelines/training_pipeline.svg)
-
-This pipeline is used to train and evaluate new binary/multiclass models using grid search hyperparameter tuning and k-fold cross-validation. Currently, the machine learning methods LightGBM, XGBoost, and CatBoost are available. 
-
-### Explainability Pipeline
-![Explainability pipeline](images/pipelines/xai_pipeline.svg)
-
-This pipeline is used to generate insights about the predictions of the final models.
+The REST-API is developed for production usage, allowing users to send data as a request and to receive the identified car parts of the machine learning models in a JSON format.
 
 ## 🐍 Usage in Python
 Since there is no data provided in this repository, the first step is to **add the data to the root folder** by using the following folder structure:</br>
@@ -124,8 +65,8 @@ master-thesis/ </br>
 │  ├─ raw_for_labeling/ </br>
 
 ### Prelabeling New Data
-For prelabeling new data, the first step is to **add all new, raw datasets** (excel files) to the folder "data/raw_for_labeling". 
-Each excel file must contain the structure tree of a vehicle and needs at least the following attributes:
+For pre-labeling new data, the first step is to **add the raw data sets** (Excel files) to the folder "data/raw_for_labeling". 
+Each Excel file must contain the structural list of a vehicle model and needs at least the following attributes:
 - Sachnummer
 - Benennung (dt)
 - X-Min
@@ -158,8 +99,8 @@ Each excel file must contain the structure tree of a vehicle and needs at least 
 After adding all files, you can specify the following settings in the **src/config.yaml** file: 
 - **binary_column** and **multiclass_column**: Names of the label columns
 - **binary_label_1** and **binary_label_0**: The labels for the binary classification
-- **keep_modules**: Modules which should be kept
-- **relevant_features**: Features which should be kept
+- **keep_modules**: Modules that should be kept
+- **relevant_features**: Features that should be kept
 
 Now, run the following command from the root directory: </br>
 ```bash
